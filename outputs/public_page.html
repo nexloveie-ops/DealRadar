@@ -64,8 +64,7 @@ h1{font-size:clamp(30px,4.2vw,48px);line-height:1.08;letter-spacing:-.025em;marg
 .chip small{color:var(--strike);margin-left:4px}
 .chip[aria-pressed=true] small{color:#C9CFDA}
 .filter{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
-.filter output{font-weight:700;color:var(--ink);min-width:7.5ch}
-.filter input[type=range]{width:150px;accent-color:var(--blue)}
+
 .sort{appearance:none;-webkit-appearance:none;border:1px solid var(--line);background:var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2316213A' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center;
   border-radius:999px;padding:7px 38px 7px 14px;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer}
 .sort:hover{border-color:var(--strike)}
@@ -117,12 +116,12 @@ footer p{margin:0;max-width:62ch}
   .feature{grid-template-columns:96px minmax(0,1fr);padding:14px;gap:14px}
   .feature img{width:96px;height:96px}
   .feature .tag{font-size:32px}
-  .filter input[type=range]{width:110px}
+
   .seg button{padding:7px 10px;font-size:14px}
-  .filter.disc{width:100%}
-  .filter.disc .seg{flex:1;display:flex}
-  .filter.disc .seg button{flex:1;padding:6px 2px}
-  .filter.disc .seg button[data-v="0"]{flex:1.4}
+  .filter.disc,.filter.price{width:100%;flex-direction:column;align-items:stretch;gap:6px}
+  .filter.disc .seg,.filter.price .seg{display:flex;width:100%}
+  .filter.disc .seg button,.filter.price .seg button{flex:1;padding:7px 0;font-size:14px}
+  .long{display:none}
 }
 @media (max-width:380px){.grid{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
@@ -158,10 +157,19 @@ footer p{margin:0;max-width:62ch}
     <div class="chips" role="group" aria-label="Category" id="cats"></div>
   </div>
   <div class="row">
-    <label class="filter">Max price <input type="range" id="max" min="20" max="2000" step="10" value="2000" aria-describedby="maxOut"><output id="maxOut">Any price</output></label>
+    <div class="filter price"><span id="maxLabel">Price</span>
+      <div class="seg small" role="group" aria-labelledby="maxLabel" id="max">
+        <button type="button" data-v="2000">Any<span class="long"> price</span></button>
+        <button type="button" data-v="50"><span class="long">Under </span>€50</button>
+        <button type="button" data-v="100">€100</button>
+        <button type="button" data-v="250">€250</button>
+        <button type="button" data-v="500">€500</button>
+        <button type="button" data-v="1000">€1,000</button>
+      </div>
+    </div>
     <div class="filter disc"><span id="minLabel">Discount</span>
       <div class="seg small" role="group" aria-labelledby="minLabel" id="min">
-        <button type="button" data-v="0">Any saving</button>
+        <button type="button" data-v="0">Any<span class="long"> saving</span></button>
         <button type="button" data-v="20">20%+</button>
         <button type="button" data-v="30">30%+</button>
         <button type="button" data-v="40">40%+</button>
@@ -289,8 +297,8 @@ function renderControls(){
   const cats = ["All", ...CAT_ORDER.filter(c => counts[c])];
   if (!cats.includes(state.cat)) state.cat = "All";
   document.getElementById("cats").innerHTML = cats.map(c => `<button type="button" class="chip" data-c="${esc(c)}" aria-pressed="${state.cat===c}">${esc(c)}<small>${c==="All"?pool.length:counts[c]}</small></button>`).join("");
-  document.getElementById("max").value = state.max;
-  document.getElementById("maxOut").textContent = state.max>=2000 ? "Any price" : "Up to €" + state.max.toLocaleString("en-IE");
+  if (![50,100,250,500,1000,2000].includes(state.max)) state.max = 2000;
+  document.querySelectorAll("#max button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v===state.max)));
   document.querySelectorAll("#min button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v===state.min)));
   const full = document.getElementById("full");
   full.setAttribute("aria-pressed", String(state.full && state.min===0));
@@ -322,7 +330,7 @@ function feature(){
 
 document.getElementById("kinds").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.kind=b.dataset.k; state.shown=48; render(); });
 document.getElementById("cats").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.cat=b.dataset.c; state.shown=48; render(); });
-document.getElementById("max").addEventListener("input", e => { state.max=+e.target.value; state.shown=48; render(); });
+document.getElementById("max").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.max=+b.dataset.v; state.shown=48; render(); });
 document.getElementById("min").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.min=+b.dataset.v; state.shown=48; render(); });
 document.getElementById("full").addEventListener("click", () => { state.full=!state.full; state.shown=48; render(); });
 document.getElementById("sort").addEventListener("change", e => { state.sort=e.target.value; render(); });
