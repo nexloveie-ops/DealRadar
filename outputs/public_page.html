@@ -301,23 +301,38 @@ const SORTS = {
   low:(a,b)=>(a.price_minor??1e12)-(b.price_minor??1e12)
 };
 
+let steps = STEPS.slice();
 function renderPrice(){
   const range = document.getElementById("max");
-  range.max = STEPS.length-1;
-  const idx = STEPS.indexOf(state.max);
-  range.value = idx<0 ? STEPS.length-1 : idx;
-  const pool = D.filter(x => matches(x,false,true) && x.price_minor!=null);
-  const bins = STEPS.map((hi,i) => pool.filter(x => { const e=x.price_minor/100, lo=i?STEPS[i-1]:0; return e>lo && (hi==null ? true : e<=hi); }).length);
-  const top = Math.max(1, ...bins);
+  // Only price steps that hold deals for the current filters: no empty stretch below the cheapest or above the dearest.
+  const prices = D.filter(x => matches(x,false,true) && x.price_minor!=null).map(x => x.price_minor/100);
+  const lo = prices.length ? Math.min(...prices) : 0, hi = prices.length ? Math.max(...prices) : 0;
+  const base = STEPS.filter(v => v!=null);
+  let first = base.findIndex(v => v >= lo); if (first<0) first = base.length-1;
+  let last = base.findIndex(v => v >= hi); if (last<0) last = base.length-1;
+  const candidates = prices.length ? base.slice(first, last).concat([null]) : [null];
+  // Drop steps whose price band holds no deals; their band merges into the next step.
+  steps = []; let prev = -Infinity;
+  for (const v of candidates) {
+    if (v==null || prices.some(e => e>prev && e<=v)) { steps.push(v); if (v!=null) prev = v; }
+  }
+  if (steps.length < 2) steps = [base[first] ?? 10, null];
+  range.max = steps.length-1;
+  const idx = state.max==null ? -1 : steps.findIndex(v => v!=null && v>=state.max);
+  range.value = idx<0 ? steps.length-1 : idx;
+  const bins = steps.map((top,i) => prices.filter(e => (i ? e>steps[i-1] : true) && (top==null ? true : e<=top)).length);
+  const tallest = Math.max(1, ...bins);
   const hist = document.getElementById("hist");
-  if (hist.children.length!==bins.length) hist.innerHTML = bins.map(()=>"<i></i>").join("");
-  [...hist.children].forEach((el,i) => { el.style.height = Math.max(2, bins[i]/top*38)+"px"; el.className = i>+range.value ? "off" : ""; });
+  hist.innerHTML = bins.map((n,i) => `<i class="${i>+range.value?"off":""}" style="height:${n ? Math.max(3, n/tallest*38) : 0}px"></i>`).join("");
   const n = D.filter(x => matches(x,false,false)).length;
-  document.getElementById("maxOut").textContent = state.max==null ? "Any price" : "Up to €" + state.max.toLocaleString("en-IE");
+  const out = state.max==null || idx<0 ? "Any price" : "Up to €" + steps[idx].toLocaleString("en-IE");
+  document.getElementById("maxOut").textContent = out;
   document.getElementById("maxCount").textContent = n===1 ? "1 deal" : n.toLocaleString("en-IE")+" deals";
-  range.setAttribute("aria-valuetext", document.getElementById("maxOut").textContent);
-  const t = document.getElementById("ticks");
-  if (!t.children.length) t.innerHTML = TICKS.map(v => { const f=STEPS.indexOf(v)/(STEPS.length-1); return `<span style="left:calc(${f*100}% + ${9-18*f}px)">€${v>=1000?"1k":v}</span>`; }).join("") + `<span style="left:calc(100% - 9px)">Any</span>`;
+  range.setAttribute("aria-valuetext", out);
+  const span = steps.length-1;
+  const marks = steps.map((v,i) => [v,i]).filter(([v]) => v==null || TICKS.includes(v) || v===steps[0]);
+  document.getElementById("ticks").innerHTML = marks.map(([v,i]) => { const f=span? i/span : 1;
+    return `<span style="left:calc(${f*100}% + ${9-18*f}px)">${v==null ? (hi ? "€"+Math.ceil(hi).toLocaleString("en-IE") : "Any") : "€"+(v>=1000? v/1000+"k" : v)}</span>`; }).join("");
 }
 function renderControls(){
   document.getElementById("kinds").innerHTML = KINDS.map(([k,l]) => `<button type="button" data-k="${k}" aria-pressed="${state.kind===k}">${l}</button>`).join("");
@@ -358,7 +373,7 @@ function feature(){
 
 document.getElementById("kinds").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.kind=b.dataset.k; state.shown=48; render(); });
 document.getElementById("cats").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.cat=b.dataset.c; state.shown=48; render(); });
-document.getElementById("max").addEventListener("input", e => { state.max=STEPS[+e.target.value]; state.shown=48; render(); });
+document.getElementById("max").addEventListener("input", e => { state.max=steps[+e.target.value]; state.shown=48; render(); });
 document.getElementById("min").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.min=+b.dataset.v; state.shown=48; render(); });
 document.getElementById("full").addEventListener("click", () => { state.full=!state.full; state.shown=48; render(); });
 document.getElementById("sort").addEventListener("change", e => { state.sort=e.target.value; render(); });
