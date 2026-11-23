@@ -200,6 +200,12 @@ const when = iso => { if(!iso) return ""; const d=new Date(iso), n=new Date();
   return day.format(d)===day.format(n) ? dub.format(d)+" today" : day.format(d); };
 
 D.forEach(x => {
+  // Records written before these fields existed still render.
+  x.store = x.store || x.provider || "the shop";
+  x.title = x.title || "";
+  x.buy_url = x.buy_url || "#";
+  if (x.affiliate == null) x.affiliate = x.module === "amazon";
+  if (!x.price_source) x.price_source = x.module === "operator" ? "operator" : x.module === "retailer" ? "retailer" : "amazon_page";
   x.cat = CAT[(x.category||"").split(",")[0]] || "Other";
   x.saving = x.price_minor!=null && x.reference_minor!=null ? x.reference_minor - x.price_minor : null;
 });
@@ -286,7 +292,8 @@ function render(){
   renderControls();
   const list = D.filter(x => matches(x,false)).sort(SORTS[state.sort]);
   const grid = document.getElementById("grid");
-  grid.innerHTML = list.length ? list.slice(0,state.shown).map(card).join("")
+  const safe = x => { try { return card(x); } catch (e) { console.error("deal card", x && x.id, e); return ""; } };
+  grid.innerHTML = list.length ? list.slice(0,state.shown).map(safe).join("")
     : `<div class="empty"><b>No deals match these filters</b>Try a higher price limit, a smaller discount or another category.</div>`;
   if (!list.length) grid.style.display="block"; else grid.style.display="";
   document.getElementById("count").textContent = list.length===1 ? "1 deal" : list.length.toLocaleString("en-IE")+" deals";
