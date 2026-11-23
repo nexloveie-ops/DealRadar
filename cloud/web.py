@@ -11,6 +11,7 @@
   GET /health
 """
 import hmac
+import json
 import os
 import re
 import sys
@@ -51,6 +52,23 @@ def generated(latest):
 @app.get("/health")
 def health():
     return {"ok": True}
+
+
+# UCP agent profile (https://ucp.dev). Shops that offer a UCP catalogue (e.g. Harvey Norman, on Shopify) fetch it before
+# answering our read-only catalogue searches. We declare catalogue search and lookup only: no cart, checkout or orders.
+UCP_PROFILE = {"ucp": {"version": "2026-08-25", "services": {}, "payment_handlers": {}, "capabilities": {
+    "dev.ucp.shopping.catalog.search": [{"version": "2026-08-25", "spec": "https://ucp.dev/2026-08-25/specification/shopping/catalog/",
+                                         "schema": "https://ucp.dev/2026-08-25/schemas/shopping/catalog_search.json"}],
+    "dev.ucp.shopping.catalog.lookup": [{"version": "2026-08-25", "spec": "https://ucp.dev/2026-08-25/specification/shopping/catalog/",
+                                         "schema": "https://ucp.dev/2026-08-25/schemas/shopping/catalog_lookup.json"}]}}}
+
+
+@app.get("/ucp/profile.json")
+def ucp_profile():
+    r = Response(json.dumps(UCP_PROFILE), mimetype="application/json")
+    r.headers["Cache-Control"] = "public, max-age=3600"
+    r.headers["Last-Modified"] = "Mon, 23 Nov 2026 00:00:00 GMT"
+    return r
 
 
 @app.get("/")

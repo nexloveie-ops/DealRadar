@@ -24,8 +24,11 @@ INPUTS = {
     "amazon-leads": ROOT / "amazon-offers-service/web-data/offers.json",
     "mobile123-offers-service/data/offers.json": ROOT / "mobile123-offers-service/data/offers.json",
     "amazon-direct-rejected": ROOT / "amazon-offers-service/direct-data/rejected.json",
+    "harvey-norman": ROOT / "retailer-offers-service/hn-data/offers.json",
 }
 DISABLED_OPERATORS = set()  # operator ids switched off in the admin settings
+RETAIL_MIN_DISCOUNT = 30.0  # retail-chain items below this discount are not listed (admin setting)
+DISABLED_SHOPS = set()  # retail chains switched off in the admin settings
 AMAZON_SOURCE = "direct"  # "direct" = confirmed on Amazon product pages; "api" = Creators API; "web" = third-party leads only
 
 
@@ -99,11 +102,19 @@ def operator_rows():
 
 def retailer_rows():
     data = load("retailer-offers-service/data/offers.json")
+    hn = load("harvey-norman").get("offers", [])
+    offers = [o for o in data["offers"] if not (hn and o["provider_id"] == "harvey_norman")] + hn
     rows = []
     hosts = ["powercity.ie", "expert.ie", "currys.ie", "harveynorman.ie"]
-    for o in data["offers"]:
+    for o in offers:
         p, v = o["pricing"], o["verification"]
-        live = v["method"] == "direct_official_html"
+        if o["provider_id"] in DISABLED_SHOPS:
+            continue
+        # Only real discounts of at least RETAIL_MIN_DISCOUNT %: smaller ones are not worth listing.
+        if p.get("discount_percent") is None or p["discount_percent"] < RETAIL_MIN_DISCOUNT:
+            continue
+        ucp = v["method"] == "official_ucp_catalog"
+        live = v["method"] == "direct_official_html" or ucp
         hist = p.get("observed_history") or {}
         notes = []
         if not live:
@@ -120,7 +131,7 @@ def retailer_rows():
             "price_minor": p["device_price_minor"], "reference_minor": p["reference_price_minor"],
             "reference_label": {"retailer_was_price": "零售商 Was 价", "manufacturer_rrp": "制造商 RRP"}.get(p["reference_type"], p["reference_type"]),
             "discount_percent": p["discount_percent"],
-            "price_basis": "零售商官网（本次直接读取）" if live else "官网快照（非实时）",
+            "price_basis": "零售商官方商品目录接口（本次读取）" if ucp else ("零售商官网（本次直接读取）" if live else "官网快照（非实时）"),
             "who": "所有顾客", "ends_on": None, "status": o["status"], "can_list": o["distribution"]["can_list"],
             "store": o["provider_name"], "source_site": o["provider_name"], "price_source": "retailer",
             "checked_at": v.get("observed_at"), "condition_code": None,
@@ -267,7 +278,7 @@ def auto_publish(r, raw, now):
         return (True, "运营商官网及条款核对通过") if r["can_list"] else (False, "条款或资格不完整")
     if r["module"] == "retailer":
         v = (raw or {}).get("verification", {})
-        if v.get("method") != "direct_official_html":
+        if v.get("method") not in ("direct_official_html", "official_ucp_catalog"):
             return False, "非本次官网直接读取（快照）"
         if any("was_price_claim_needs_review" in i for i in v.get("issues", [])):
             r.update(reference_minor=None, discount_percent=None, reference_label="已隐藏：前 30 天观测到更低价")
@@ -310,7 +321,7 @@ def build_rows():
     rows = mobile123_rows() + operator_rows() + retailer_rows() + amazon_rows()
     raw = {}
     for key in ("prepay-offers-service/data/offers.json", "retailer-offers-service/data/offers.json", "amazon-offers-service/web-data/offers.json",
-                "mobile123-offers-service/data/offers.json"):
+                "mobile123-offers-service/data/offers.json", "harvey-norman"):
         for o in load(key).get("offers", []):
             raw[o["id"]] = o
     now = datetime.now(timezone.utc)

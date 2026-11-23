@@ -1,0 +1,92 @@
+{
+ "minimum_discount_percent": 30,
+ "max_pages": 4,
+ "page_size": 30,
+ "request_interval_seconds": 1.5,
+ "searches": [
+  {
+   "id": "hn-headphones",
+   "query": "headphones",
+   "category": "headphones",
+   "enabled": true
+  },
+  {
+   "id": "hn-earbuds",
+   "query": "earbuds",
+   "category": "headphones",
+   "enabled": true
+  },
+  {
+   "id": "hn-bluetooth-speaker",
+   "query": "bluetooth speaker",
+   "category": "speakers",
+   "enabled": true
+  },
+  {
+   "id": "hn-soundbar",
+   "query": "soundbar",
+   "category": "speakers",
+   "enabled": true
+  },
+  {
+   "id": "hn-laptop",
+   "query": "laptop",
+   "category": "computers",
+   "enabled": true
+  },
+  {
+   "id": "hn-tablet",
+   "query": "tablet",
+   "category": "tablets",
+   "enabled": true
+  },
+  {
+   "id": "hn-smartphone",
+   "query": "smartphone",
+   "category": "phones",
+   "enabled": true
+  },
+  {
+   "id": "hn-smartwatch",
+   "query": "smartwatch",
+   "category": "wearables",
+   "enabled": true
+  },
+  {
+   "id": "hn-camera",
+   "query": "camera",
+   "category": "cameras",
+   "enabled": true
+  },
+  {
+   "id": "hn-gaming",
+   "query": "gaming",
+   "category": "gaming",
+   "enabled": true
+  },
+  {
+   "id": "hn-monitor",
+   "query": "monitor",
+   "category": "monitors",
+   "enabled": true
+  },
+  {
+   "id": "hn-external-hard-drive",
+   "query": "external hard drive",
+   "category": "storage",
+   "enabled": true
+  },
+  {
+   "id": "hn-wifi-router",
+   "query": "wifi router",
+   "category": "networking",
+   "enabled": true
+  },
+  {
+   "id": "hn-power-bank",
+   "query": "power bank",
+   "category": "accessories",
+   "enabled": true
+  }
+ ]
+}

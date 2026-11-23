@@ -137,6 +137,25 @@ tr.off td{color:var(--faint)}
         <table><tbody id="ops"></tbody></table>
       </div>
       <div class="card">
+        <h2>Retail chains</h2>
+        <p class="lead">Turn a shop off to stop listing its deals. Only items at or above the minimum discount are listed.</p>
+        <table><tbody id="shops"></tbody></table>
+        <div class="row" style="margin-top:14px;align-items:flex-end">
+          <label style="flex:0 0 220px">Minimum discount (%)<input type="number" id="minDisc" min="0" max="90" step="1" inputmode="numeric"></label>
+          <span class="note" style="flex:1">Applies to Powercity, Expert and Harvey Norman. Currently set to <b id="minDiscNow">30</b>%.</span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Harvey Norman searches</h2>
+        <p class="lead">Harvey Norman's site blocks page reading, so the collector searches the shop's official product catalogue instead. Each search reads up to 120 products. The product title sets the category where it's clear; otherwise the category chosen here is used.</p>
+        <table><thead><tr><th>On</th><th>Search for</th><th>Category</th><th></th></tr></thead><tbody id="hnSearches"></tbody></table>
+        <div class="row" style="margin-top:14px">
+          <label style="flex:2">Search for<input type="text" id="newHnQ" maxlength="80" placeholder="noise cancelling headphones"></label>
+          <label>Category<select id="newHnCat"></select></label>
+          <button class="btn ghost" id="addHn" type="button">Add search</button>
+        </div>
+      </div>
+      <div class="card">
         <h2>Shop category pages</h2>
         <p class="lead">Pages the collector reads at Powercity and Expert. Paste a category page address from the shop's site. Other shops need a code adapter.</p>
         <table><thead><tr><th>On</th><th>Shop</th><th>Category</th><th>Page</th><th></th></tr></thead><tbody id="pages"></tbody></table>
@@ -280,6 +299,11 @@ function renderSettings() {
     <td>${esc(SHOP_NAMES[p.provider_id]||p.provider_id)}</td><td>${esc(CAT_NAMES[p.category]||p.category)}</td>
     <td class="url"><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.url.replace(/^https:\/\//,""))}</a></td>
     <td><button class="btn ghost small" data-delpage="${i}" type="button">Remove</button></td></tr>`).join("");
+  $("shops").innerHTML = s.shops.map((x,i) => `<tr><td style="width:56px">${sw(x.enabled,`data-shop="${i}" aria-label="List ${esc(x.name)} deals"`)}</td><td>${esc(x.name)}</td></tr>`).join("");
+  $("minDisc").value = s.retail_min_discount; $("minDiscNow").textContent = s.retail_min_discount;
+  $("hnSearches").innerHTML = s.harvey_norman_searches.map((x,i) => `<tr><td style="width:56px">${sw(x.enabled,`data-hn="${i}" aria-label="Use search ${esc(x.query)}"`)}</td>
+    <td>${esc(x.query)}</td><td><select data-hncat="${i}" aria-label="Category for ${esc(x.query)}">${data.options.categories.map(c => `<option value="${c}" ${c===x.category?"selected":""}>${esc(CAT_NAMES[c]||c)}</option>`).join("")}</select></td>
+    <td><button class="btn ghost small" data-delhn="${i}" type="button">Remove</button></td></tr>`).join("");
   $("kws").innerHTML = s.amazon_keywords.map((k,i) => `<tr><td style="width:56px">${sw(k.enabled,`data-kw="${i}" aria-label="Use keyword ${esc(k.query)}"`)}</td>
     <td>${esc(k.query)}</td><td><input type="text" data-alias="${i}" value="${esc(k.aliases.join(", "))}" aria-label="Other words for ${esc(k.query)}"></td>
     <td><button class="btn ghost small" data-delkw="${i}" type="button">Remove</button></td></tr>`).join("");
@@ -288,7 +312,7 @@ function renderSettings() {
 async function loadSettings() {
   data = await api("/api/admin/settings");
   $("newShop").innerHTML = Object.keys(data.options.shops).map(k => `<option value="${k}">${esc(SHOP_NAMES[k]||k)}</option>`).join("");
-  $("newCat").innerHTML = data.options.categories.map(c => `<option value="${c}">${esc(CAT_NAMES[c]||c)}</option>`).join("");
+  $("newCat").innerHTML = $("newHnCat").innerHTML = data.options.categories.map(c => `<option value="${c}">${esc(CAT_NAMES[c]||c)}</option>`).join("");
   $("unavailable").innerHTML = (data.options.unavailable_shops||[]).map(u => `<tr class="off"><td>${esc(u.name)}<div class="note">${esc(u.site)}</div></td><td><span class="pill">Not collected</span></td><td class="note">${esc(u.reason)}</td></tr>`).join("");
   renderSettings(); dirty = false;
   loadRun(); loadSchedule();
@@ -299,17 +323,27 @@ document.addEventListener("change", e => {
   if (t.dataset.op) { s.operators[+t.dataset.op].enabled = t.checked; touch(); }
   if (t.dataset.page) { s.retail_pages[+t.dataset.page].enabled = t.checked; touch(); }
   if (t.dataset.kw) { s.amazon_keywords[+t.dataset.kw].enabled = t.checked; touch(); }
+  if (t.dataset.shop) { s.shops[+t.dataset.shop].enabled = t.checked; touch(); }
+  if (t.dataset.hn) { s.harvey_norman_searches[+t.dataset.hn].enabled = t.checked; touch(); }
+  if (t.dataset.hncat) { s.harvey_norman_searches[+t.dataset.hncat].category = t.value; touch(); }
+  if (t.id === "minDisc") { s.retail_min_discount = t.value === "" ? t.value : +t.value; touch(); }
   if (t.dataset.alias) { s.amazon_keywords[+t.dataset.alias].aliases = t.value.split(",").map(x=>x.trim()).filter(Boolean); touch(); }
 });
 document.addEventListener("click", e => {
   const t = e.target, s = data && data.settings; if (!s) return;
   if (t.dataset.delpage) { s.retail_pages.splice(+t.dataset.delpage,1); renderSettings(); touch(); }
   if (t.dataset.delkw) { s.amazon_keywords.splice(+t.dataset.delkw,1); renderSettings(); touch(); }
+  if (t.dataset.delhn) { s.harvey_norman_searches.splice(+t.dataset.delhn,1); renderSettings(); touch(); }
 });
 $("addPage").onclick = () => {
   const url = $("newUrl").value.trim(); if (!url) { say($("saveMsg"), "Paste a category page address first.", false); return; }
   data.settings.retail_pages.push({provider_id: $("newShop").value, category: $("newCat").value, url, enabled: true});
   $("newUrl").value = ""; renderSettings(); touch();
+};
+$("addHn").onclick = () => {
+  const q = $("newHnQ").value.trim(); if (!q) { say($("saveMsg"), "Type what to search for first.", false); return; }
+  data.settings.harvey_norman_searches.push({query: q, category: $("newHnCat").value, enabled: true});
+  $("newHnQ").value = ""; renderSettings(); touch();
 };
 $("addKw").onclick = () => {
   const q = $("newKw").value.trim(); if (!q) { say($("saveMsg"), "Type a keyword first.", false); return; }

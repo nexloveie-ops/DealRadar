@@ -44,6 +44,8 @@ def modules(mode):
     m = {
         "prepay": {"dir": "prepay-offers-service", "script": "collect.py", "args": [], "state": ["offers.json"], "archive": True},
         "retailer": {"dir": "retailer-offers-service", "script": "collect.py", "args": [], "state": ["offers.json", "price-history.json"], "archive": True},
+        "harvey_norman": {"dir": "retailer-offers-service", "script": "harvey_norman.py", "args": [], "state": ["offers.json"],
+                          "archive": True, "no_cache": True},
         "mobile123": {"dir": "mobile123-offers-service", "script": "collect.py", "args": [], "state": ["offers.json"], "archive": True},
     }
     if mode == "local":
@@ -164,6 +166,8 @@ def main():
     current, settings_at, _ = admin_settings.load(db)
     applied = admin_settings.apply(current)
     combine_deals.DISABLED_OPERATORS = set(applied["disabled_operators"])
+    combine_deals.DISABLED_SHOPS = set(applied["disabled_shops"])
+    combine_deals.RETAIL_MIN_DISCOUNT = float(applied["retail_min_discount"])
     work = Path(tempfile.mkdtemp(prefix="dealradar-"))
     results = {}
     for key, spec in specs.items():
@@ -179,6 +183,7 @@ def main():
     combine_deals.INPUTS.update({
         "prepay-offers-service/data/offers.json": out["prepay"] / "offers.json",
         "retailer-offers-service/data/offers.json": out["retailer"] / "offers.json",
+        "harvey-norman": out["harvey_norman"] / "offers.json",
         "mobile123-offers-service/data/offers.json": out["mobile123"] / "offers.json",
         "amazon-offers-service/web-data/offers.json": out["amazon"] / "offers.json",
         "amazon-leads": out["amazon_leads"] / "offers.json" if "amazon_leads" in out else Path("/nonexistent"),

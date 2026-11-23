@@ -218,13 +218,6 @@
    "category": "mixed",
    "adapter": "access_probe",
    "url": "https://www.currys.ie/black-friday"
-  },
-  {
-   "id": "harvey-norman-headphones",
-   "provider_id": "harvey_norman",
-   "category": "headphones",
-   "adapter": "access_probe",
-   "url": "https://www.harveynorman.ie/collections/black-friday-headphones-deals"
   }
  ],
  "robots_checked_on": "2026-11-22"
