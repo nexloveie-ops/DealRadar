@@ -21,6 +21,8 @@ INPUTS = {
     "retailer-offers-service/data/offers.json": ROOT / "retailer-offers-service/data/offers.json",
     "amazon-offers-service/config.json": ROOT / "amazon-offers-service/config.json",
     "amazon-offers-service/web-data/offers.json": ROOT / "amazon-offers-service/direct-data/offers.json",
+    "amazon-leads": ROOT / "amazon-offers-service/web-data/offers.json",
+    "amazon-direct-rejected": ROOT / "amazon-offers-service/direct-data/rejected.json",
 }
 AMAZON_SOURCE = "direct"  # "direct" = confirmed on Amazon product pages; "api" = Creators API; "web" = third-party leads only
 
@@ -112,12 +114,24 @@ def amazon_rows():
     cfg = load("amazon-offers-service/config.json")
     tag = cfg["associate_tag"]
     data = load("amazon-offers-service/web-data/offers.json")
+    wanted = {"direct": "amazon_product_page", "api": "creators_api"}.get(AMAZON_SOURCE)
+    items = [(o, False) for o in data["offers"]]
+    if wanted:
+        # Owner decision 2026-11-23: when Amazon hides its price from the cloud, show the third-party deal-site
+        # price, labelled with its source and time. Never for an ASIN whose Amazon page gave a contrary verdict.
+        confirmed = {o["product"]["asin"] for o in data["offers"] if o["verification"].get("method") == wanted}
+        verdict = {r["asin"] for r in load("amazon-direct-rejected").get("records", [])
+                   if r.get("reason") in ("discount_not_above_threshold_on_product_page", "not_new", "unavailable")}
+        for o in load("amazon-leads").get("offers", []):
+            a = o["product"]["asin"]
+            if a not in confirmed and a not in verdict and o.get("status") == "web_candidate":
+                items.append((o, True))
+                confirmed.add(a)
     rows = []
-    for o in data["offers"]:
+    for o, fallback in items:
         p, v = o["pricing"], o["verification"]
         method = v.get("method")
-        wanted = {"direct": "amazon_product_page", "api": "creators_api"}.get(AMAZON_SOURCE)
-        if (wanted and method != wanted) or (not wanted and method in ("amazon_product_page", "creators_api")):
+        if not fallback and ((wanted and method != wanted) or (not wanted and method in ("amazon_product_page", "creators_api"))):
             continue
         api = method in ("amazon_product_page", "creators_api")
         asin = o["product"]["asin"]
@@ -133,14 +147,20 @@ def amazon_rows():
             notes.append("Amazon 商品页需加入购物车才显示价格")
         if o["status"] == "conflicting_quotes":
             notes.append("不同来源报价冲突")
+        basis = None
+        if fallback:
+            src = (o.get("sources") or [{}])[0]
+            site = {"goodcraic": "Good Craic Deals", "item": "Item.ie", "dealdepot": "DealDepot"}.get(src.get("kind"), src.get("kind") or "第三方")
+            when = (v.get("source_updated_at") or src.get("updated_at") or v.get("discovered_at") or "")[:10]
+            basis = f"第三方报价（{site}，更新于 {when}）；Amazon 未向服务器显示价格，以 Amazon 页面为准"
         rows.append({
             "module": "amazon", "module_name": "Amazon.ie", "provider": "Amazon.ie", "id": o["id"],
             "title": re.sub(r"^(amazon\s+)?b+lack friday( deal)?:\s*|^deal:\s*", "", o["product"]["name"], flags=re.I),
             "category": ",".join(o.get("matched_keyword_ids") or []),
             "price_minor": p["device_price_minor"], "reference_minor": p["reference_price_minor"],
-            "reference_label": (p.get("reference_label") or "Amazon 参考价") if api else "第三方参考价", "discount_percent": p["discount_percent"],
-            "price_basis": ("Amazon 商品页（核对时间见备注）" if method == "amazon_product_page" else "Amazon 官方 API") if api else "第三方报价（内部线索，未核实）", "who": "所有顾客", "ends_on": None, "status": o["status"],
-            "can_list": False, "fresh_until": v.get("fresh_until") or v.get("expires_at"), "price_public": api,
+            "reference_label": (p.get("reference_label") or "Amazon 参考价") if api else "第三方标注参考价", "discount_percent": p["discount_percent"],
+            "price_basis": ("Amazon 商品页（核对时间见备注）" if method == "amazon_product_page" else "Amazon 官方 API") if api else (basis or "第三方报价（内部线索，未核实）"), "who": "所有顾客", "ends_on": None, "status": o["status"],
+            "can_list": False, "fresh_until": v.get("fresh_until") or v.get("expires_at"), "price_public": api or fallback,
             "buy_url": amazon_link(asin, tag), "terms_url": None,
             "link_type": f"Amazon Associates（tag={tag}）", "asin": asin, "notes": "；".join(notes)})
     return rows

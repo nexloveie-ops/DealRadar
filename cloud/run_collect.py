@@ -52,7 +52,7 @@ def modules(mode):
         m["amazon_leads"] = {"dir": "amazon-offers-service", "script": "web_collect.py", "args": [], "state": ["offers.json"], "archive": True}
         # Shares state/amazon/ with the Mac runner (local/amazon_local.sh): both re-check earlier deals and keep
         # what the other confirmed until it expires.
-        m["amazon"] = {"dir": "amazon-offers-service", "script": "amazon_direct.py", "args": [], "state": ["offers.json", "search-cursor.json"],
+        m["amazon"] = {"dir": "amazon-offers-service", "script": "amazon_direct.py", "args": [], "state": ["offers.json", "search-cursor.json", "rejected.json"],
                        "archive": True, "leads_from": "amazon_leads", "previous_self": True}
     return m
 
@@ -173,6 +173,8 @@ def main():
         "prepay-offers-service/data/offers.json": out["prepay"] / "offers.json",
         "retailer-offers-service/data/offers.json": out["retailer"] / "offers.json",
         "amazon-offers-service/web-data/offers.json": out["amazon"] / "offers.json",
+        "amazon-leads": out["amazon_leads"] / "offers.json" if "amazon_leads" in out else Path("/nonexistent"),
+        "amazon-direct-rejected": out["amazon"] / "rejected.json",
     })
     combine_deals.AMAZON_SOURCE = "direct" if mode == "local" else mode
     rows = combine_deals.build_rows()
