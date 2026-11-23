@@ -39,6 +39,8 @@ button,select,input{font:inherit;color:inherit}
 .hero{background:var(--paper)}
 .hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:48px;align-items:center;padding-top:44px;padding-bottom:44px}
 h1{font-size:clamp(30px,4.2vw,48px);line-height:1.08;letter-spacing:-.025em;margin:0 0 16px;font-weight:700;max-width:18ch;text-wrap:balance}
+/* Desktop: the heading stays on one line; its size follows the text column (about 13.1 em wide, with a margin). */
+@media (min-width:861px){h1{white-space:nowrap;max-width:none;font-size:clamp(24px,calc((min(100vw,1240px) - 520px) / 14.2),48px)}}
 .lede{font-size:18px;color:var(--muted);margin:0;max-width:52ch}
 .feature{display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;align-items:center;text-decoration:none;background:var(--shelf);border-radius:4px;padding:20px}
 .feature img{width:150px;height:150px;object-fit:contain;background:var(--paper);border-radius:2px}
@@ -155,8 +157,8 @@ footer p{margin:0;max-width:62ch}
 
 <section class="hero"><div class="wrap">
   <div>
-    <h1>Phone and tech deals in Ireland, checked __RUNS__</h1>
-    <p class="lede">Deals from our own Mobile123 shop, plus Vodafone, Three, eir, Tesco Mobile, Expert, Powercity and Amazon.ie, with the old price next to the new one so you can see the real saving.</p>
+    <h1>Phone and tech deals in Ireland</h1>
+    <p class="lede">Deals from Mobile123 shop, plus Vodafone, Three, eir, Tesco Mobile, Expert, Powercity and Amazon.ie, with the old price next to the new one so you can see the real saving.</p>
   </div>
   <div id="feature"></div>
 </div></section>
