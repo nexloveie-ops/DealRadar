@@ -1,12 +1,13 @@
 """DealRadar web service (Cloud Run): UI page plus a read-only JSON API over Firestore.
 
   GET /                      public page: automatically published deals only
-  GET /internal              internal view: every record with its publish decision
+  GET /internal?key=...      internal view (needs INTERNAL_KEY on the service): every record and its publish decision
   GET /api/deals             published deals (public fields). ?module=operator|retailer|amazon ?discount=1
   GET /api/deals/<id>        one published deal
   GET /api/runs/latest       latest collection run summary
   GET /health
 """
+import hmac
 import os
 import sys
 import threading
@@ -56,6 +57,10 @@ def public_page():
 
 @app.get("/internal")
 def internal_page():
+    # The service is public; the internal view needs the INTERNAL_KEY set on the service (?key=...).
+    key = os.environ.get("INTERNAL_KEY")
+    if not key or not hmac.compare_digest(request.args.get("key", ""), key):
+        abort(404)
     rows, latest = snapshot()
     return Response(combine_deals.render_page(rows, generated(latest)), mimetype="text/html")
 

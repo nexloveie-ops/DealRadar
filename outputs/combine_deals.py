@@ -177,9 +177,7 @@ a.buy{color:var(--accent);text-decoration:none;white-space:nowrap}a.buy:hover{te
 <div class="bar"><input type="search" id="q" placeholder="搜索商品或商家，如 Galaxy A27、Sony"><label><input type="checkbox" id="disc" checked>只看有折扣</label><label><input type="checkbox" id="list">只看自动上线</label></div>
 <div class="wrap"><table><thead><tr><th data-k="module_name">来源</th><th data-k="title">商品 / 优惠</th><th data-k="price_minor" class="r">价格</th><th data-k="reference_minor" class="r">对比价</th><th data-k="discount_percent" class="r">降幅</th><th data-k="status">状态</th><th>购买链接</th></tr></thead><tbody id="tb"></tbody></table></div>
 <p class="foot" id="count"></p>
-<p class="foot">对比价不是统一的“原价”：运营商是同运营商非转网价或非会员价；零售店是零售商自己的 Was 价或制造商 RRP；Amazon 是第三方折扣网站标注的参考价。<br>
-Amazon 价格全部来自第三方折扣网站，未经 Amazon 官方核实。按 Amazon Associates 规则，对外发布的价格应来自 Amazon 官方接口并注明时间，这一列只供内部挑选，不能直接用于公开页面。Amazon 链接已带 Associates tag；运营商和零售店链接是官网原链接，没有联盟参数。<br>
-“可展示”只对运营商模块成立；零售店和 Amazon 记录目前都需要人工审核。</p>
+<p class="foot">__FOOT__</p>
 </main>
 <script>
 const D=__DATA__;
@@ -258,7 +256,12 @@ def render_page(rows, generated, public=False):
         rows = [r["public_view"] for r in rows if r.get("publish")]
     data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
     title = "Mobile123 爱尔兰优惠" if public else "Mobile123 优惠汇总（内部视图）"
-    return (PAGE.replace("__DATA__", data).replace("__TITLE__", title)
+    foot = ("对比价不是统一的“原价”：运营商是同运营商非转网价或非会员价；零售店是零售商标示的 Was 价或制造商 RRP；"
+            "Amazon 是 Amazon 商品页显示的 RRP / Was 价。<br>价格在标示时间从各商家官网读取，可能已经变化，请以商家页面为准。"
+            "Amazon 链接为 Amazon Associates 联盟链接（mobile123ie-21），通过链接购买 Mobile123 可能获得佣金。")
+    if not public:
+        foot += "<br>内部视图：显示所有记录及自动上线判定；“未上线”记录不会出现在公开页面和 API。"
+    return (PAGE.replace("__DATA__", data).replace("__TITLE__", title).replace("__FOOT__", foot)
             .replace("__GENERATED__", html.escape(generated.replace("T", " ").replace("+00:00", " UTC"))))
 
 
