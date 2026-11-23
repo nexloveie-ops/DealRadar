@@ -18,3 +18,4 @@ outputs/amazon-offers-service/data/
 outputs/amazon-offers-service/web-data/
 cloudbuild.yaml
 outputs/amazon-offers-service/direct-data/
+outputs/mobile123-offers-service/data/

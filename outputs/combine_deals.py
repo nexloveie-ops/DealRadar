@@ -22,6 +22,7 @@ INPUTS = {
     "amazon-offers-service/config.json": ROOT / "amazon-offers-service/config.json",
     "amazon-offers-service/web-data/offers.json": ROOT / "amazon-offers-service/direct-data/offers.json",
     "amazon-leads": ROOT / "amazon-offers-service/web-data/offers.json",
+    "mobile123-offers-service/data/offers.json": ROOT / "mobile123-offers-service/data/offers.json",
     "amazon-direct-rejected": ROOT / "amazon-offers-service/direct-data/rejected.json",
 }
 AMAZON_SOURCE = "direct"  # "direct" = confirmed on Amazon product pages; "api" = Creators API; "web" = third-party leads only
@@ -256,6 +257,8 @@ def auto_publish(r, raw, now):
         return False, "数据超过有效期"
     if r["status"] in ("unconfirmed", "stale", "expired", "scheduled"):
         return False, "本次未确认或不在有效期"
+    if r["module"] == "mobile123":
+        return True, "Mobile123 自营网店"
     if r["module"] == "operator":
         return (True, "运营商官网及条款核对通过") if r["can_list"] else (False, "条款或资格不完整")
     if r["module"] == "retailer":
@@ -274,17 +277,36 @@ def auto_publish(r, raw, now):
     return False, "未知模块"
 
 
+def mobile123_rows():
+    rows = []
+    for o in load("mobile123-offers-service/data/offers.json").get("offers", []):
+        p, v = o["pricing"], o["verification"]
+        rows.append({
+            "module": "mobile123", "module_name": "Mobile123", "provider": "Mobile123", "id": o["id"],
+            "title": o["product"]["name"], "category": o["product"]["category"],
+            "price_minor": p["device_price_minor"], "reference_minor": p["reference_price_minor"],
+            "reference_label": "Mobile123 原价", "discount_percent": p["discount_percent"],
+            "price_basis": "Mobile123 网店", "who": "所有顾客", "ends_on": None, "status": o["status"],
+            "can_list": o["distribution"]["can_list"], "fresh_until": v.get("fresh_until"),
+            "buy_url": official(o["links"]["landing_url"], ["mobile123.ie"]), "terms_url": None,
+            "link_type": "Mobile123 自营", "notes": "",
+            "store": "Mobile123", "source_site": "Mobile123", "price_source": "own_store", "checked_at": v.get("observed_at"),
+            "condition_code": None, "reference_kind": "was_price", "own_store": True})
+    return rows
+
+
 PUBLIC_FIELDS = ("id", "module", "module_name", "provider", "store", "title", "category", "image_url", "price_minor",
                  "reference_minor", "reference_label", "reference_kind", "discount_percent", "price_basis", "price_source",
                  "source_site", "checked_at", "condition_code", "min_top_up_minor", "summary_en", "who", "ends_on", "status",
-                 "fresh_until", "buy_url", "terms_url", "link_type", "affiliate", "asin")
+                 "fresh_until", "buy_url", "terms_url", "link_type", "affiliate", "asin", "own_store")
 
 
 def build_rows():
     """Internal rows (everything) with an automatic `publish` decision and the `public_view` to show publicly."""
-    rows = operator_rows() + retailer_rows() + amazon_rows()
+    rows = mobile123_rows() + operator_rows() + retailer_rows() + amazon_rows()
     raw = {}
-    for key in ("prepay-offers-service/data/offers.json", "retailer-offers-service/data/offers.json", "amazon-offers-service/web-data/offers.json"):
+    for key in ("prepay-offers-service/data/offers.json", "retailer-offers-service/data/offers.json", "amazon-offers-service/web-data/offers.json",
+                "mobile123-offers-service/data/offers.json"):
         for o in load(key).get("offers", []):
             raw[o["id"]] = o
     now = datetime.now(timezone.utc)
@@ -329,7 +351,7 @@ def main(out=OUT):
         for r in rows:
             w.writerow([(f"{r[c]/100:.2f}" if c.endswith("_minor") and r[c] is not None else r.get(c, "")) for c in cols])
     (out / "index.html").write_text(render_page(rows, generated))
-    counts = {m: sum(r["module"] == m for r in rows) for m in ("operator", "retailer", "amazon")}
+    counts = {m: sum(r["module"] == m for r in rows) for m in ("mobile123", "operator", "retailer", "amazon")}
     summary = {"total": len(rows), **counts, "with_discount": sum(r["discount_percent"] is not None for r in rows)}
     print(json.dumps(summary))
     return rows, generated

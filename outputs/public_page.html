@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Phone and tech deals in Ireland | mobile123</title>
-<meta name="description" content="Phone and tech deals from Vodafone, Three, eir, Tesco Mobile, Expert, Powercity and Amazon.ie, with prices checked twice a day.">
+<meta name="description" content="Phone and tech deals from Mobile123, Vodafone, Three, eir, Tesco Mobile, Expert, Powercity and Amazon.ie, with prices checked twice a day.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
@@ -73,6 +73,15 @@ h1{font-size:clamp(30px,4.2vw,48px);line-height:1.08;letter-spacing:-.025em;marg
 .pill[aria-pressed=true]{border-color:var(--ink);background:var(--ink);color:#fff}
 .pill:disabled{opacity:.45;cursor:default}
 .spacer{flex:1}
+.pricebar{width:320px;margin-right:12px}
+.pb-head{display:flex;align-items:baseline;gap:8px;font-size:14px;color:var(--muted);margin-bottom:4px}
+.pb-head b{color:var(--ink);font-size:15px}
+.hist{display:flex;align-items:flex-end;gap:2px;height:38px;margin:0 9px 2px}
+.hist i{flex:1;background:var(--blue);border-radius:2px 2px 0 0;min-height:2px}
+.hist i.off{background:#C9D0DC}
+.pricebar input[type=range]{width:100%;margin:0;accent-color:var(--blue);cursor:pointer}
+.ticks{position:relative;height:15px;font-size:11.5px;color:var(--strike)}
+.ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
 
 
 /* Grid of deals */
@@ -118,9 +127,12 @@ footer p{margin:0;max-width:62ch}
   .feature .tag{font-size:32px}
 
   .seg button{padding:7px 10px;font-size:14px}
-  .filter.disc,.filter.price{width:100%;flex-direction:column;align-items:stretch;gap:6px}
-  .filter.disc .seg,.filter.price .seg{display:flex;width:100%}
-  .filter.disc .seg button,.filter.price .seg button{flex:1;padding:7px 0;font-size:14px}
+  .pricebar{width:100%;margin:0 0 4px}
+  #kinds{max-width:100%;overflow-x:auto;scrollbar-width:none}
+  #kinds::-webkit-scrollbar{display:none}
+  .filter.disc{width:100%;flex-direction:column;align-items:stretch;gap:6px}
+  .filter.disc .seg{display:flex;width:100%}
+  .filter.disc .seg button{flex:1;padding:7px 0;font-size:14px}
   .long{display:none}
 }
 @media (max-width:380px){.grid{grid-template-columns:1fr}}
@@ -136,7 +148,7 @@ footer p{margin:0;max-width:62ch}
 <section class="hero"><div class="wrap">
   <div>
     <h1>Phone and tech deals in Ireland, checked twice a day</h1>
-    <p class="lede">Prices from Vodafone, Three, eir, Tesco Mobile, Expert, Powercity and Amazon.ie, with the old price next to the new one so you can see the real saving.</p>
+    <p class="lede">Deals from our own Mobile123 shop, plus Vodafone, Three, eir, Tesco Mobile, Expert, Powercity and Amazon.ie, with the old price next to the new one so you can see the real saving.</p>
   </div>
   <div id="feature"></div>
 </div></section>
@@ -157,15 +169,11 @@ footer p{margin:0;max-width:62ch}
     <div class="chips" role="group" aria-label="Category" id="cats"></div>
   </div>
   <div class="row">
-    <div class="filter price"><span id="maxLabel">Price</span>
-      <div class="seg small" role="group" aria-labelledby="maxLabel" id="max">
-        <button type="button" data-v="2000">Any<span class="long"> price</span></button>
-        <button type="button" data-v="50"><span class="long">Under </span>€50</button>
-        <button type="button" data-v="100">€100</button>
-        <button type="button" data-v="250">€250</button>
-        <button type="button" data-v="500">€500</button>
-        <button type="button" data-v="1000">€1,000</button>
-      </div>
+    <div class="pricebar">
+      <div class="pb-head"><span id="maxLabel">Price</span><b id="maxOut">Any price</b><span id="maxCount"></span></div>
+      <div class="hist" id="hist" aria-hidden="true"></div>
+      <input type="range" id="max" min="0" step="1" aria-labelledby="maxLabel" aria-describedby="maxOut">
+      <div class="ticks" id="ticks" aria-hidden="true"></div>
     </div>
     <div class="filter disc"><span id="minLabel">Discount</span>
       <div class="seg small" role="group" aria-labelledby="minLabel" id="min">
@@ -188,18 +196,20 @@ footer p{margin:0;max-width:62ch}
 
 <footer><div class="wrap">
   <div><h2>How prices are checked</h2><p>We read prices from each shop's own website twice a day, at 7am and 7pm. Every deal shows when its price was checked. Prices can change after that, so the shop's page has the final price.</p></div>
-  <div><h2>What the old price means</h2><p>For operators it is the same phone's price when you don't switch, or without Clubcard. For Expert and Powercity it is the shop's own Was price. For Amazon it is the RRP or Was price on Amazon. Where Amazon doesn't show us a price, the price comes from a deals site and says so.</p></div>
+  <div><h2>What the old price means</h2><p>For operators it is the same phone's price when you don't switch, or without Clubcard. For Mobile123, Expert and Powercity it is the shop's own Was price. For Amazon it is the RRP or Was price on Amazon. Where Amazon doesn't show us a price, the price comes from a deals site and says so.</p></div>
   <div><h2>Affiliate links</h2><p>Amazon links are affiliate links. If you buy through them, mobile123 may earn a commission at no extra cost to you. Links to operators and other shops are plain links.</p></div>
 </div></footer>
 
 <script>
 const D = __DATA__;
 const GENERATED = "__GENERATED_ISO__";
-const KINDS = [["all","All deals"],["operator","Switch & save"],["retailer","In-store"],["amazon","Amazon"]];
+const KINDS = [["all","All deals"],["mobile123","Mobile123"],["operator","Switch & save"],["retailer","In-store"],["amazon","Amazon"]];
+const STEPS = [10,20,30,40,50,60,75,100,125,150,200,250,300,400,500,750,1000,1500,2000,null];
+const TICKS = [50,100,250,500,1000];
 const CAT = {
   phones:"Phones", handset_discount:"Phones", bonus_credit:"Phones", headphones:"Audio", speakers:"Audio",
   computers:"Computers", monitors:"Computers", storage:"Computers", networking:"Computers", accessories:"Accessories",
-  tablets:"Tablets", wearables:"Watches", cameras:"Cameras", gaming:"Gaming",
+  tablets:"Tablets", wearables:"Watches", cameras:"Cameras", gaming:"Gaming", toys:"Toys & games",
   "fire-tv":"TV & smart home", "amazon-devices":"TV & smart home", "smart-home-expanded":"TV & smart home",
   jbl:"Audio", beats:"Audio", sony:"Audio", anker:"Audio", "audio-expanded":"Audio", "speakers-expanded":"Audio",
   logitech:"Computers", "peripherals-expanded":"Computers", "hard-drive":"Computers", nvme:"Computers",
@@ -207,7 +217,7 @@ const CAT = {
   "network-expanded":"Computers", "charging-expanded":"Accessories", "cameras-expanded":"Cameras",
   "wearables-expanded":"Watches", "brands-expanded":"Other"
 };
-const CAT_ORDER = ["Phones","Audio","Computers","Tablets","Watches","Cameras","TV & smart home","Gaming","Accessories","Other"];
+const CAT_ORDER = ["Phones","Audio","Computers","Tablets","Watches","Cameras","TV & smart home","Gaming","Accessories","Toys & games","Other"];
 const dub = new Intl.DateTimeFormat("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit",hour12:false});
 const day = new Intl.DateTimeFormat("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"});
 const eur = m => m==null ? "" : "€" + (m/100).toLocaleString("en-IE",{minimumFractionDigits:m%100?2:0,maximumFractionDigits:2});
@@ -221,17 +231,17 @@ D.forEach(x => {
   x.title = x.title || "";
   x.buy_url = x.buy_url || "#";
   if (x.affiliate == null) x.affiliate = x.module === "amazon";
-  if (!x.price_source) x.price_source = x.module === "operator" ? "operator" : x.module === "retailer" ? "retailer" : "amazon_page";
+  if (!x.price_source) x.price_source = x.module === "operator" ? "operator" : x.module === "retailer" ? "retailer" : x.module === "mobile123" ? "own_store" : "amazon_page";
   x.cat = CAT[(x.category||"").split(",")[0]] || "Other";
   x.saving = x.price_minor!=null && x.reference_minor!=null ? x.reference_minor - x.price_minor : null;
 });
 
-const state = {kind:"all", cat:"All", max:2000, min:0, full:false, sort:"pct", shown:48};
+const state = {kind:"all", cat:"All", max:null, min:0, full:false, sort:"pct", shown:48};
 (function readHash(){
   const h = new URLSearchParams(location.hash.slice(1));
   if (h.get("kind")) state.kind = h.get("kind");
   if (h.get("cat")) state.cat = h.get("cat");
-  if (h.get("max")) state.max = +h.get("max");
+  if (h.get("max") && STEPS.includes(+h.get("max"))) state.max = +h.get("max");
   if (h.get("min")) state.min = +h.get("min");
   if (h.get("full")) state.full = h.get("full")==="1";
   if (h.get("sort")) state.sort = h.get("sort");
@@ -240,7 +250,7 @@ function writeHash(){
   const h = new URLSearchParams();
   if (state.kind!=="all") h.set("kind",state.kind);
   if (state.cat!=="All") h.set("cat",state.cat);
-  if (state.max<2000) h.set("max",state.max);
+  if (state.max!=null) h.set("max",state.max);
   if (state.min) h.set("min",state.min);
   if (state.full) h.set("full","1");
   if (state.sort!=="pct") h.set("sort",state.sort);
@@ -255,6 +265,7 @@ function condition(x){
 }
 function source(x){
   if (x.price_source==="third_party") return `Price reported by ${esc(x.source_site)}, ${esc(when(x.checked_at))}. Check Amazon for today's price.`;
+  if (x.price_source==="own_store") return `Mobile123 price, checked ${esc(when(x.checked_at))}`;
   if (x.price_source==="operator") return x.ends_on ? `Offer ends ${esc(day.format(new Date(x.ends_on)))}` : `Price checked ${esc(when(x.checked_at))}`;
   return `Price checked ${esc(when(x.checked_at))}`;
 }
@@ -277,10 +288,10 @@ function card(x){
     </div></article>`;
 }
 
-function matches(x, ignoreCat){
+function matches(x, ignoreCat, ignoreMax){
   if (state.kind!=="all" && x.module!==state.kind) return false;
   if (!ignoreCat && state.cat!=="All" && x.cat!==state.cat) return false;
-  if (state.max<2000 && (x.price_minor==null || x.price_minor>state.max*100)) return false;
+  if (!ignoreMax && state.max!=null && (x.price_minor==null || x.price_minor>state.max*100)) return false;
   if (x.discount_percent==null) return state.full && state.min===0;
   return x.discount_percent >= state.min;
 }
@@ -290,6 +301,24 @@ const SORTS = {
   low:(a,b)=>(a.price_minor??1e12)-(b.price_minor??1e12)
 };
 
+function renderPrice(){
+  const range = document.getElementById("max");
+  range.max = STEPS.length-1;
+  const idx = STEPS.indexOf(state.max);
+  range.value = idx<0 ? STEPS.length-1 : idx;
+  const pool = D.filter(x => matches(x,false,true) && x.price_minor!=null);
+  const bins = STEPS.map((hi,i) => pool.filter(x => { const e=x.price_minor/100, lo=i?STEPS[i-1]:0; return e>lo && (hi==null ? true : e<=hi); }).length);
+  const top = Math.max(1, ...bins);
+  const hist = document.getElementById("hist");
+  if (hist.children.length!==bins.length) hist.innerHTML = bins.map(()=>"<i></i>").join("");
+  [...hist.children].forEach((el,i) => { el.style.height = Math.max(2, bins[i]/top*38)+"px"; el.className = i>+range.value ? "off" : ""; });
+  const n = D.filter(x => matches(x,false,false)).length;
+  document.getElementById("maxOut").textContent = state.max==null ? "Any price" : "Up to €" + state.max.toLocaleString("en-IE");
+  document.getElementById("maxCount").textContent = n===1 ? "1 deal" : n.toLocaleString("en-IE")+" deals";
+  range.setAttribute("aria-valuetext", document.getElementById("maxOut").textContent);
+  const t = document.getElementById("ticks");
+  if (!t.children.length) t.innerHTML = TICKS.map(v => { const f=STEPS.indexOf(v)/(STEPS.length-1); return `<span style="left:calc(${f*100}% + ${9-18*f}px)">€${v>=1000?"1k":v}</span>`; }).join("") + `<span style="left:calc(100% - 9px)">Any</span>`;
+}
 function renderControls(){
   document.getElementById("kinds").innerHTML = KINDS.map(([k,l]) => `<button type="button" data-k="${k}" aria-pressed="${state.kind===k}">${l}</button>`).join("");
   const pool = D.filter(x => matches(x,true));
@@ -297,8 +326,7 @@ function renderControls(){
   const cats = ["All", ...CAT_ORDER.filter(c => counts[c])];
   if (!cats.includes(state.cat)) state.cat = "All";
   document.getElementById("cats").innerHTML = cats.map(c => `<button type="button" class="chip" data-c="${esc(c)}" aria-pressed="${state.cat===c}">${esc(c)}<small>${c==="All"?pool.length:counts[c]}</small></button>`).join("");
-  if (![50,100,250,500,1000,2000].includes(state.max)) state.max = 2000;
-  document.querySelectorAll("#max button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v===state.max)));
+  renderPrice();
   document.querySelectorAll("#min button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v===state.min)));
   const full = document.getElementById("full");
   full.setAttribute("aria-pressed", String(state.full && state.min===0));
@@ -330,7 +358,7 @@ function feature(){
 
 document.getElementById("kinds").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.kind=b.dataset.k; state.shown=48; render(); });
 document.getElementById("cats").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.cat=b.dataset.c; state.shown=48; render(); });
-document.getElementById("max").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.max=+b.dataset.v; state.shown=48; render(); });
+document.getElementById("max").addEventListener("input", e => { state.max=STEPS[+e.target.value]; state.shown=48; render(); });
 document.getElementById("min").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.min=+b.dataset.v; state.shown=48; render(); });
 document.getElementById("full").addEventListener("click", () => { state.full=!state.full; state.shown=48; render(); });
 document.getElementById("sort").addEventListener("change", e => { state.sort=e.target.value; render(); });

@@ -42,6 +42,7 @@ def modules(mode):
     m = {
         "prepay": {"dir": "prepay-offers-service", "script": "collect.py", "args": [], "state": ["offers.json"], "archive": True},
         "retailer": {"dir": "retailer-offers-service", "script": "collect.py", "args": [], "state": ["offers.json", "price-history.json"], "archive": True},
+        "mobile123": {"dir": "mobile123-offers-service", "script": "collect.py", "args": [], "state": ["offers.json"], "archive": True},
     }
     if mode == "local":
         m["amazon"] = {"dir": "amazon-offers-service", "skip": True, "state": ["offers.json", "run-report.json"], "archive": False}
@@ -172,6 +173,7 @@ def main():
     combine_deals.INPUTS.update({
         "prepay-offers-service/data/offers.json": out["prepay"] / "offers.json",
         "retailer-offers-service/data/offers.json": out["retailer"] / "offers.json",
+        "mobile123-offers-service/data/offers.json": out["mobile123"] / "offers.json",
         "amazon-offers-service/web-data/offers.json": out["amazon"] / "offers.json",
         "amazon-leads": out["amazon_leads"] / "offers.json" if "amazon_leads" in out else Path("/nonexistent"),
         "amazon-direct-rejected": out["amazon"] / "rejected.json",
@@ -188,7 +190,7 @@ def main():
     hist_file = out["retailer"] / "price-history.json"
     history = json.loads(hist_file.read_text())["items"] if hist_file.exists() else {}
 
-    counts = {m: sum(r["module"] == m for r in rows) for m in ("operator", "retailer", "amazon")}
+    counts = {m: sum(r["module"] == m for r in rows) for m in ("mobile123", "operator", "retailer", "amazon")}
     counts.update(total=len(rows), with_discount=sum(r["discount_percent"] is not None for r in rows),
                   operator_listable=sum(r["module"] == "operator" and r["can_list"] for r in rows))
     reports = {}

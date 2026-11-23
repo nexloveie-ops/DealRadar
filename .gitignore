@@ -19,3 +19,4 @@ outputs/amazon-offers-service/direct-data/
 # The prepay tests check the last saved dataset, so only that file is kept.
 outputs/prepay-offers-service/data/*
 !outputs/prepay-offers-service/data/offers.json
+outputs/mobile123-offers-service/data/
