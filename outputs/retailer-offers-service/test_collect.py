@@ -146,6 +146,29 @@ class PriceHistory(unittest.TestCase):
         collect.apply_history([o], h, now)
         self.assertFalse(any("was_price_claim_needs_review" in i for i in o["verification"]["issues"]))
 
+    def test_price_drop_without_shop_was_price_uses_price_held_two_days(self):
+        now = datetime(2026,11,25,21,tzinfo=timezone.utc)
+        h = {"ie-retail-expert-item-1":[{"date":"2026-11-20","price_minor":9999}, {"date":"2026-11-21","price_minor":9999},
+                                         {"date":"2026-11-22","price_minor":12999}, {"date":"2026-11-25","price_minor":5999}]}
+        o = self.row("2026-11-25", 5999)
+        collect.apply_history([o], h, now)
+        p = o["pricing"]
+        # 129.99 was seen on one day only (a blip), so the reference is 99.99, held on two days.
+        self.assertEqual((p["reference_price_minor"], p["reference_type"], p["discount_percent"]), (9999, "observed_price_drop", 40.0))
+        self.assertEqual(p["reference_period"], {"starts_on": "2026-11-20", "ends_on": "2026-11-21"})
+        self.assertIn("reference_is_price_observed_by_dealradar_not_a_shop_was_price", o["verification"]["issues"])
+
+    def test_no_drop_from_a_single_day_or_a_shop_was_price(self):
+        now = datetime(2026,11,25,21,tzinfo=timezone.utc)
+        h = {"ie-retail-expert-item-1":[{"date":"2026-11-20","price_minor":9999}, {"date":"2026-11-25","price_minor":5999}]}
+        o = self.row("2026-11-25", 5999)
+        collect.apply_history([o], h, now)
+        self.assertIsNone(o["pricing"]["reference_price_minor"])
+        h["ie-retail-expert-item-1"].insert(0, {"date":"2026-11-19","price_minor":9999})
+        o = self.row("2026-11-25", 5999, 6999)
+        collect.apply_history([o], h, now)
+        self.assertEqual((o["pricing"]["reference_price_minor"], o["pricing"]["reference_type"]), (6999, "retailer_was_price"))
+
     def test_snapshots_never_enter_history(self):
         import json
         data = json.loads((collect.ROOT / "reference-snapshots.json").read_text())

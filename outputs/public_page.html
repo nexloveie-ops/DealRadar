@@ -204,7 +204,7 @@ footer p{margin:0;max-width:62ch}
 
 <footer><div class="wrap">
   <div><h2>How prices are checked</h2><p>We read prices from each shop's own website __RUNS__, at __TIMES__. Every deal shows when its price was checked. Prices can change after that, so the shop's page has the final price.</p></div>
-  <div><h2>What the old price means</h2><p>For operators it is the same phone's price when you don't switch, or without Clubcard. For Mobile123, Expert and Powercity it is the shop's own Was price. For Amazon it is the RRP or Was price on Amazon. Where Amazon doesn't show us a price, the price comes from a deals site and says so.</p></div>
+  <div><h2>What the old price means</h2><p>For operators it is the same phone's price when you don't switch, or without Clubcard. For Mobile123, Expert and Harvey Norman it is the shop's own Was price. Powercity doesn't show one, so for Powercity it is a higher price we saw there ourselves on at least two days in the last month. For Amazon it is the RRP or Was price on Amazon. Where Amazon doesn't show us a price, the price comes from a deals site and says so.</p></div>
   <div><h2>Affiliate links</h2><p>Amazon links are affiliate links. If you buy through them, Deal Radar may earn a commission at no extra cost to you. Links to operators and other shops are plain links.</p></div>
 </div></footer>
 
@@ -275,6 +275,7 @@ function source(x){
   if (x.price_source==="third_party") return `Price reported by ${esc(x.source_site)}, ${esc(when(x.checked_at))}. Check Amazon for today's price.`;
   if (x.price_source==="own_store") return `Mobile123 price, checked ${esc(when(x.checked_at))}`;
   if (x.price_source==="operator") return x.ends_on ? `Offer ends ${esc(day.format(new Date(x.ends_on)))}` : `Price checked ${esc(when(x.checked_at))}`;
+  if (x.reference_kind==="price_drop" && x.reference_seen_on) return `Price drop: we saw ${eur(x.reference_minor)} here on ${esc(day.format(new Date(x.reference_seen_on)))}. Price checked ${esc(when(x.checked_at))}`;
   return `Price checked ${esc(when(x.checked_at))}`;
 }
 function card(x){

@@ -173,7 +173,8 @@
               "enum": [
                 null,
                 "retailer_was_price",
-                "manufacturer_rrp"
+                "manufacturer_rrp",
+                "observed_price_drop"
               ]
             },
             "discount_minor": {

@@ -256,6 +256,25 @@ def apply_history(offers, history, now):
         prior = [p["price_minor"] for p in points if since <= p["date"] < (today or "9999")]
         o["pricing"]["observed_history"] = {"first_observed_on":points[0]["date"], "days_observed":len(points),
             "prior_30d_low_minor":min(prior) if prior else None, "prior_30d_days_observed":len(prior)}
+        # No Was price from the shop (Powercity never shows one): a real price drop that this collector saw itself
+        # counts as a discount. The reference is the highest price seen on at least two separate days in the previous
+        # 30 days, so a one-day blip can't make a fake "was" price. It is labelled as our own observation.
+        if o["pricing"]["reference_price_minor"] is None and prior:
+            counts = {}
+            for p in points:
+                if since <= p["date"] < (today or "9999"):
+                    counts[p["price_minor"]] = counts.get(p["price_minor"], 0) + 1
+            held = [price for price, n in counts.items() if n >= 2]
+            now_price = o["pricing"]["device_price_minor"]
+            if held and max(held) > now_price:
+                ref = max(held)
+                seen = [p["date"] for p in points if p["price_minor"] == ref and since <= p["date"] < (today or "9999")]
+                saving, percent = discount(now_price, ref)
+                o["pricing"].update(reference_price_minor=ref, reference_type="observed_price_drop", discount_minor=saving,
+                                    discount_percent=percent,
+                                    reference_period={"starts_on": min(seen), "ends_on": max(seen)})
+                o["offer_kind"] = "handset_discount" if o["product"]["category"] == "phones" else "product_discount"
+                o["verification"]["issues"].append("reference_is_price_observed_by_dealradar_not_a_shop_was_price")
         # An ongoing sale (same price on earlier days) is fine. Only a strictly lower price seen in the previous
         # 30 days means today's "discount" is worse than what this collector already saw.
         if prior and o["pricing"]["reference_price_minor"] is not None and min(prior) < o["pricing"]["device_price_minor"]:

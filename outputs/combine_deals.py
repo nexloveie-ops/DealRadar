@@ -129,13 +129,15 @@ def retailer_rows():
             "module": "retailer", "module_name": "连锁零售店", "provider": o["provider_name"], "id": o["id"],
             "title": o["product"]["name"], "category": o["product"]["category"],
             "price_minor": p["device_price_minor"], "reference_minor": p["reference_price_minor"],
-            "reference_label": {"retailer_was_price": "零售商 Was 价", "manufacturer_rrp": "制造商 RRP"}.get(p["reference_type"], p["reference_type"]),
+            "reference_label": {"retailer_was_price": "零售商 Was 价", "manufacturer_rrp": "制造商 RRP",
+                                "observed_price_drop": "我们此前观测到的价格"}.get(p["reference_type"], p["reference_type"]),
             "discount_percent": p["discount_percent"],
             "price_basis": "零售商官方商品目录接口（本次读取）" if ucp else ("零售商官网（本次直接读取）" if live else "官网快照（非实时）"),
             "who": "所有顾客", "ends_on": None, "status": o["status"], "can_list": o["distribution"]["can_list"],
             "store": o["provider_name"], "source_site": o["provider_name"], "price_source": "retailer",
             "checked_at": v.get("observed_at"), "condition_code": None,
-            "reference_kind": {"retailer_was_price": "was_price", "manufacturer_rrp": "rrp"}.get(p["reference_type"]),
+            "reference_kind": {"retailer_was_price": "was_price", "manufacturer_rrp": "rrp", "observed_price_drop": "price_drop"}.get(p["reference_type"]),
+            "reference_seen_on": (p.get("reference_period") or {}).get("ends_on") if p["reference_type"] == "observed_price_drop" else None,
             "fresh_until": v.get("fresh_until"), "buy_url": official(o["links"]["landing_url"], hosts),
             "terms_url": None, "link_type": "官网链接（无联盟）", "notes": "；".join(notes)})
     return rows
@@ -311,7 +313,7 @@ def mobile123_rows():
 
 
 PUBLIC_FIELDS = ("id", "module", "module_name", "provider", "store", "title", "category", "image_url", "price_minor",
-                 "reference_minor", "reference_label", "reference_kind", "discount_percent", "price_basis", "price_source",
+                 "reference_minor", "reference_label", "reference_kind", "reference_seen_on", "discount_percent", "price_basis", "price_source",
                  "source_site", "checked_at", "condition_code", "min_top_up_minor", "summary_en", "who", "ends_on", "status",
                  "fresh_until", "buy_url", "terms_url", "link_type", "affiliate", "asin", "own_store")
 
