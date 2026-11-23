@@ -1,0 +1,26 @@
+{
+  "country": "IE",
+  "currency": "EUR",
+  "timezone": "Europe/Dublin",
+  "freshness_hours": 24,
+  "sources": [
+    {"id":"vodafone-phones","provider":"vodafone","url":"https://www.vodafone.ie/mobile/pay-as-you-go","role":"landing"},
+    {"id":"vodafone-catalogue","provider":"vodafone","url":"https://www.vodafone.ie/mobile/api/get-products/pay-as-you-go?limit=50&pageNumber=1","role":"catalogue"},
+    {"id":"vodafone-terms-index","provider":"vodafone","url":"https://www.vodafone.ie/terms","role":"discovery"},
+    {"id":"vodafone-christmas-2026","provider":"vodafone","url":"https://binaries.vodafone.co.uk/tizrehont83j/1Y3o8SFl1tBv0NFVZRWfUs/b270be64daeb6c537cc9f948805b8ebd/Vodafone_Pay_as_you_go_Black_Friday_and_Christmas_Offers_2026_Terms_and_Conditions.pdf","role":"terms"},
+    {"id":"vodafone-xiaomi-gift","provider":"vodafone","url":"https://binaries.vodafone.co.uk/tizrehont83j/1B6ht9uwIIZhP9fEShprmM/6ba8e12adcee6e0acd4899d71b963e90/Xiaomi_gift_with_purchase_redemption_offer_2026.pdf","role":"candidate_terms"},
+    {"id":"three-phones","provider":"three","url":"https://www.three.ie/deals/prepay-phones-and-plans.html","role":"landing"},
+    {"id":"three-terms-index","provider":"three","url":"https://www.three.ie/legal/promotions.html","role":"discovery"},
+    {"id":"three-november-2026","provider":"three","url":"https://www.three.ie/pdfs/legal/november-2026-prepay-device-port-in-terms.pdf","role":"terms"},
+    {"id":"three-dunnes-2026","provider":"three","url":"https://www.three.ie/content/dam/3ie-wotf/pdfs/legal/prepay-dunnes-terms.pdf","role":"candidate_terms"},
+    {"id":"eir-prepay","provider":"eir","url":"https://www.eir.ie/shop/mobile/prepay","role":"landing"},
+    {"id":"eir-phones","provider":"eir","url":"https://www.eir.ie/shop/mobile/prepay/handsets","role":"landing"},
+    {"id":"eir-existing","provider":"eir","url":"https://www.eir.ie/store/mobile/phones/prepay","role":"candidate_landing"},
+    {"id":"eir-terms-index","provider":"eir","url":"https://www.eir.ie/termsandconditions/","role":"discovery"},
+    {"id":"eir-50-off","provider":"eir","url":"https://www.eir.ie/.content/pdf/terms/eirmobile/50e-off-prepay-handsets.pdf","role":"terms"},
+    {"id":"eir-old-free-credit","provider":"eir","url":"https://www.eir.ie/opencms/export/sites/default/.content/pdf/terms/eirmobile/Prepay-1-month-free-credit.pdf","role":"candidate_terms"},
+    {"id":"tesco-phones","provider":"tesco_mobile","url":"https://www.tescomobile.ie/prepay-phones","role":"listing"},
+    {"id":"tesco-home","provider":"tesco_mobile","url":"https://www.tescomobile.ie/","role":"landing"},
+    {"id":"tesco-terms-index","provider":"tesco_mobile","url":"https://www.tescomobile.ie/terms-and-conditions","role":"discovery"}
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "mode":"public_html_no_api",
+  "pages_per_directory":8,
+  "delay_seconds":0.7,
+  "freshness_hours":24,
+  "maximum_source_age_days":30,
+  "max_amazon_checks":5,
+  "sources":[
+    {"id":"gcd-audio","adapter":"goodcraic","url":"https://www.goodcraicdeals.ie/category/electronics/audio","paginate":true},
+    {"id":"gcd-computing","adapter":"goodcraic","url":"https://www.goodcraicdeals.ie/category/electronics/computing","paginate":true},
+    {"id":"gcd-tv","adapter":"goodcraic","url":"https://www.goodcraicdeals.ie/category/electronics/tvs-and-home-cinema","paginate":true},
+    {"id":"gcd-phones","adapter":"goodcraic","url":"https://www.goodcraicdeals.ie/category/electronics/phones-and-tablets","paginate":true},
+    {"id":"gcd-smart-home","adapter":"goodcraic","url":"https://www.goodcraicdeals.ie/category/electronics/smart-home","paginate":true},
+    {"id":"gcd-amazon","adapter":"goodcraic","url":"https://www.goodcraicdeals.ie/retailer/amazon.ie","paginate":true},
+    {"id":"gcd-cameras","adapter":"goodcraic","url":"https://www.goodcraicdeals.ie/category/electronics/cameras-and-photography","paginate":true},
+    {"id":"gcd-wearables","adapter":"goodcraic","url":"https://www.goodcraicdeals.ie/category/electronics/wearables","paginate":true},
+    {"id":"gcd-other-electronics","adapter":"goodcraic","url":"https://www.goodcraicdeals.ie/category/electronics/other-electronics","paginate":true},
+    {"id":"item-spotted","adapter":"item_spotted","url":"https://item.ie/deals/spotted","paginate":false},
+    {"id":"dealdepot-amazon","adapter":"dealdepot","url":"https://dealdepot.ie/store/amazon-ie/?sort=discount","paginate":true,"pages":10}
+  ]
+}

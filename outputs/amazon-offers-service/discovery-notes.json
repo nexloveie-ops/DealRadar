@@ -1,0 +1,10 @@
+{
+  "checked_on":"2026-11-22",
+  "method":"web search of public Amazon.ie pages; not Creators API",
+  "verified_current_discounts":0,
+  "notes":[
+    {"asin":"B0CJY6W8WT","keyword":"nvme","url":"https://www.amazon.ie/Lexar-Heatsink-7400MB-6500MB-internal/dp/B0CJY6W8WT","decision":"not_a_discount_candidate","reason":"The 40% text describes lower power consumption, not a price reduction. No current offer pair verified."},
+    {"asin":"B0DC8RVRBZ","keyword":"nvme","url":"https://www.amazon.ie/Crucial-Desktop-Handheld-Consoles-Internal/dp/B0DC8RVRBZ","decision":"not_a_discount_candidate","reason":"The 40% text concerns performance per power, not a price reduction. No current offer pair verified."},
+    {"asin":"B0CXDMYS8C","keyword":"anker","url":"https://www.amazon.ie/Anker-Portable-Samsung-Charging-Battery/dp/B0CXDMYS8C","decision":"needs_offer_data","reason":"Indexed product summary shows no featured offer; snapshot is not proof of current price or stock."}
+  ]
+}

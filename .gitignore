@@ -1,0 +1,20 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+# Raw evidence, local scratch and generated outputs stay out of the repository.
+work/
+sites/
+outputs/*.zip
+outputs/*.png
+outputs/*.txt
+outputs/*.html
+outputs/*.json
+outputs/combined-deals/
+outputs/retailer-offers-service/data/
+outputs/amazon-offers-service/data/
+outputs/amazon-offers-service/web-data/
+outputs/amazon-offers-service/direct-data/
+# The prepay tests check the last saved dataset, so only that file is kept.
+outputs/prepay-offers-service/data/*
+!outputs/prepay-offers-service/data/offers.json

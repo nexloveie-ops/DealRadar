@@ -1,0 +1,250 @@
+{
+  "module_id": "amazon_promotions",
+  "module_name": "Amazon.ie 优惠与联盟对接",
+  "marketplace": "www.amazon.ie",
+  "currency": "EUR",
+  "language": "en_IE",
+  "associate_tag": "mobile123ie-21",
+  "registered_site": "https://www.mobile123.ie",
+  "minimum_discount_percent": 40,
+  "discount_comparison": ">",
+  "condition": "New",
+  "pages_per_keyword": 5,
+  "items_per_page": 10,
+  "request_interval_seconds": 1.1,
+  "api_cache_hours": 23,
+  "keywords": [
+    {
+      "id": "fire-tv",
+      "query": "amazon fire stick",
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "jbl",
+      "query": "jbl",
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "beats",
+      "query": "beats",
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "sony",
+      "query": "sony",
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "anker",
+      "query": "anker",
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "logitech",
+      "query": "logitech",
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "hard-drive",
+      "query": "hard drive",
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "nvme",
+      "query": "nvme",
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "audio-expanded",
+      "query": "headphones",
+      "aliases": [
+        "headphone",
+        "earbuds",
+        "earphones",
+        "headset",
+        "headsets"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "speakers-expanded",
+      "query": "speaker",
+      "aliases": [
+        "speakers",
+        "soundbar",
+        "sound bar"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "amazon-devices",
+      "query": "echo",
+      "aliases": [
+        "kindle",
+        "alexa"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "storage-expanded",
+      "query": "ssd",
+      "aliases": [
+        "hdd",
+        "solid state",
+        "external hard disk",
+        "flash drive",
+        "memory card",
+        "microsd"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "charging-expanded",
+      "query": "charger",
+      "aliases": [
+        "charging",
+        "power bank",
+        "powerbank",
+        "usb hub",
+        "usb-c hub"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "computers-expanded",
+      "query": "laptop",
+      "aliases": [
+        "notebook",
+        "macbook",
+        "chromebook",
+        "mini pc",
+        "tablet",
+        "ipad",
+        "surface pro"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "displays-expanded",
+      "query": "monitor",
+      "aliases": [
+        "projector",
+        "smart tv",
+        "television",
+        "oled tv"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "peripherals-expanded",
+      "query": "keyboard",
+      "aliases": [
+        "gaming mouse",
+        "wireless mouse",
+        "controller",
+        "webcam"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "network-expanded",
+      "query": "router",
+      "aliases": [
+        "wifi mesh",
+        "wi-fi mesh",
+        "range extender"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "smart-home-expanded",
+      "query": "ring",
+      "aliases": [
+        "video doorbell",
+        "security camera",
+        "tapo",
+        "philips hue",
+        "smart plug",
+        "smart radiator",
+        "smart thermostat"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "cameras-expanded",
+      "query": "camera",
+      "aliases": [
+        "dji",
+        "microphone",
+        "dash cam"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "wearables-expanded",
+      "query": "smartwatch",
+      "aliases": [
+        "smart watch",
+        "fitness tracker",
+        "garmin"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    },
+    {
+      "id": "brands-expanded",
+      "query": "sennheiser",
+      "aliases": [
+        "bose",
+        "edifier",
+        "jlab",
+        "razer",
+        "steelseries",
+        "corsair",
+        "ugreen",
+        "belkin",
+        "baseus",
+        "crucial",
+        "sandisk",
+        "seagate",
+        "kingston",
+        "tp-link",
+        "reolink"
+      ],
+      "enabled": true,
+      "search_index": "Electronics"
+    }
+  ],
+  "distribution": {
+    "auto_publish_blog": false,
+    "app_approved": false,
+    "amazon_price_alerts_approved": false,
+    "allow_cross_retailer_price_comparison": false
+  },
+  "direct": {
+    "max_searches_per_run": 6,
+    "search_interval_seconds": 10,
+    "request_interval_seconds": 3,
+    "max_product_checks": 80,
+    "note": "Owner chose direct Amazon.ie collection without the Creators API on 2026-11-23. Search triggers Amazon's bot challenge after about 10 quick requests, so searches are few per run and rotate through keywords; any challenge stops that step."
+  }
+}

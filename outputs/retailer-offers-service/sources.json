@@ -1,0 +1,231 @@
+{
+ "module_id": "retailer_promotions",
+ "module_name": "连锁零售店优惠",
+ "country": "IE",
+ "currency": "EUR",
+ "freshness_hours": 24,
+ "minimum_discount_percent": 0,
+ "sources": [
+  {
+   "id": "powercity-headphones",
+   "provider_id": "powercity",
+   "category": "headphones",
+   "adapter": "powercity_cards",
+   "url": "https://powercity.ie/groups/view?class=20&grp=30",
+   "request_delay_seconds": 0.7
+  },
+  {
+   "id": "powercity-speakers",
+   "provider_id": "powercity",
+   "category": "speakers",
+   "adapter": "powercity_cards",
+   "url": "https://powercity.ie/groups/view?class=20&grp=20",
+   "request_delay_seconds": 0.7
+  },
+  {
+   "id": "powercity-computers",
+   "provider_id": "powercity",
+   "category": "computers",
+   "adapter": "powercity_cards",
+   "url": "https://powercity.ie/groups/view?class=30&grp=10",
+   "request_delay_seconds": 0.7
+  },
+  {
+   "id": "powercity-tablets",
+   "provider_id": "powercity",
+   "category": "tablets",
+   "adapter": "powercity_cards",
+   "url": "https://powercity.ie/groups/view?class=28&grp=10",
+   "request_delay_seconds": 0.7
+  },
+  {
+   "id": "powercity-phones",
+   "provider_id": "powercity",
+   "category": "phones",
+   "adapter": "powercity_cards",
+   "url": "https://powercity.ie/groups/view?class=34&grp=10",
+   "request_delay_seconds": 0.7
+  },
+  {
+   "id": "powercity-storage",
+   "provider_id": "powercity",
+   "category": "storage",
+   "adapter": "powercity_cards",
+   "url": "https://powercity.ie/groups/view?class=55&grp=30",
+   "request_delay_seconds": 0.7
+  },
+  {
+   "id": "powercity-cameras",
+   "provider_id": "powercity",
+   "category": "cameras",
+   "adapter": "powercity_cards",
+   "url": "https://powercity.ie/groups/view?class=25&grp=10",
+   "request_delay_seconds": 0.7
+  },
+  {
+   "id": "powercity-gaming",
+   "provider_id": "powercity",
+   "category": "gaming",
+   "adapter": "powercity_cards",
+   "url": "https://powercity.ie/groups/view?class=35&grp=20",
+   "request_delay_seconds": 0.7
+  },
+  {
+   "id": "powercity-networking",
+   "provider_id": "powercity",
+   "category": "networking",
+   "adapter": "powercity_cards",
+   "url": "https://powercity.ie/groups/view?class=27&grp=20",
+   "request_delay_seconds": 0.7
+  },
+  {
+   "id": "powercity-accessories",
+   "provider_id": "powercity",
+   "category": "accessories",
+   "adapter": "powercity_cards",
+   "url": "https://powercity.ie/groups/view?class=55&grp=25",
+   "request_delay_seconds": 0.7
+  },
+  {
+   "id": "powercity-storage-cards",
+   "provider_id": "powercity",
+   "category": "storage",
+   "adapter": "powercity_cards",
+   "url": "https://powercity.ie/groups/view?class=25&grp=30",
+   "request_delay_seconds": 0.7
+  },
+  {
+   "id": "powercity-camera-accessories",
+   "provider_id": "powercity",
+   "category": "accessories",
+   "adapter": "powercity_cards",
+   "url": "https://powercity.ie/groups/view?class=40&grp=30",
+   "request_delay_seconds": 0.7
+  },
+  {
+   "id": "expert-headphones",
+   "provider_id": "expert",
+   "category": "headphones",
+   "adapter": "expert_cards",
+   "url": "https://www.expert.ie/tv-audio/headphones/",
+   "max_pages": 3,
+   "request_delay_seconds": 10,
+   "delay_basis": "Expert robots.txt Crawl-delay: 10"
+  },
+  {
+   "id": "expert-speakers",
+   "provider_id": "expert",
+   "category": "speakers",
+   "adapter": "expert_cards",
+   "url": "https://www.expert.ie/tv-audio/speakers/",
+   "max_pages": 3,
+   "request_delay_seconds": 10,
+   "delay_basis": "Expert robots.txt Crawl-delay: 10"
+  },
+  {
+   "id": "expert-laptops",
+   "provider_id": "expert",
+   "category": "computers",
+   "adapter": "expert_cards",
+   "url": "https://www.expert.ie/computing/laptops/",
+   "max_pages": 3,
+   "request_delay_seconds": 10,
+   "delay_basis": "Expert robots.txt Crawl-delay: 10"
+  },
+  {
+   "id": "expert-tablets",
+   "provider_id": "expert",
+   "category": "tablets",
+   "adapter": "expert_cards",
+   "url": "https://www.expert.ie/computing/tablets/",
+   "max_pages": 3,
+   "request_delay_seconds": 10,
+   "delay_basis": "Expert robots.txt Crawl-delay: 10"
+  },
+  {
+   "id": "expert-mobile-phones",
+   "provider_id": "expert",
+   "category": "phones",
+   "adapter": "expert_cards",
+   "url": "https://www.expert.ie/technology/mobile-phones/",
+   "max_pages": 3,
+   "request_delay_seconds": 10,
+   "delay_basis": "Expert robots.txt Crawl-delay: 10"
+  },
+  {
+   "id": "expert-wearables",
+   "provider_id": "expert",
+   "category": "wearables",
+   "adapter": "expert_cards",
+   "url": "https://www.expert.ie/technology/wearables/",
+   "max_pages": 3,
+   "request_delay_seconds": 10,
+   "delay_basis": "Expert robots.txt Crawl-delay: 10"
+  },
+  {
+   "id": "expert-cameras",
+   "provider_id": "expert",
+   "category": "cameras",
+   "adapter": "expert_cards",
+   "url": "https://www.expert.ie/technology/cameras/",
+   "max_pages": 3,
+   "request_delay_seconds": 10,
+   "delay_basis": "Expert robots.txt Crawl-delay: 10"
+  },
+  {
+   "id": "expert-storage",
+   "provider_id": "expert",
+   "category": "storage",
+   "adapter": "expert_cards",
+   "url": "https://www.expert.ie/technology/storage/",
+   "max_pages": 3,
+   "request_delay_seconds": 10,
+   "delay_basis": "Expert robots.txt Crawl-delay: 10"
+  },
+  {
+   "id": "expert-networking",
+   "provider_id": "expert",
+   "category": "networking",
+   "adapter": "expert_cards",
+   "url": "https://www.expert.ie/technology/networking/",
+   "max_pages": 3,
+   "request_delay_seconds": 10,
+   "delay_basis": "Expert robots.txt Crawl-delay: 10"
+  },
+  {
+   "id": "expert-gaming-computers-consoles",
+   "provider_id": "expert",
+   "category": "gaming",
+   "adapter": "expert_cards",
+   "url": "https://www.expert.ie/gaming-essentials/gaming-computers-consoles/",
+   "max_pages": 3,
+   "request_delay_seconds": 10,
+   "delay_basis": "Expert robots.txt Crawl-delay: 10"
+  },
+  {
+   "id": "expert-gaming-monitors",
+   "provider_id": "expert",
+   "category": "monitors",
+   "adapter": "expert_cards",
+   "url": "https://www.expert.ie/gaming-essentials/gaming-monitors/",
+   "max_pages": 3,
+   "request_delay_seconds": 10,
+   "delay_basis": "Expert robots.txt Crawl-delay: 10"
+  },
+  {
+   "id": "currys-sale",
+   "provider_id": "currys",
+   "category": "mixed",
+   "adapter": "access_probe",
+   "url": "https://www.currys.ie/black-friday"
+  },
+  {
+   "id": "harvey-norman-headphones",
+   "provider_id": "harvey_norman",
+   "category": "headphones",
+   "adapter": "access_probe",
+   "url": "https://www.harveynorman.ie/collections/black-friday-headphones-deals"
+  }
+ ],
+ "robots_checked_on": "2026-11-22"
+}

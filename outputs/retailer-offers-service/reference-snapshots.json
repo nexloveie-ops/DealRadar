@@ -1,0 +1,16 @@
+{
+  "method":"official_product_pages_via_web_tool",
+  "retrieved_on":"2026-11-22",
+  "origin_fetched_at":null,
+  "cache_age":"web tool reports crawled today; exact origin request timestamp unavailable",
+  "automatically_refreshable":false,
+  "publication_policy":"Reference candidates only. Live price, new condition, stock and delivery need checking before publication or notification. Never refresh this date on replay.",
+  "products":[
+    {"provider_id":"harvey_norman","sku":"jlab-jbuds-mini-black","name":"JLab JBuds Mini earbuds — Black","category":"headphones","current_price_minor":2490,"reference_price_minor":4990,"reference_type":"retailer_was_price","evidence":"€24.90; WAS €49.90","url":"https://www.harveynorman.ie/products/jlab-jbuds-mini-true-wireless-earbuds-black"},
+    {"provider_id":"harvey_norman","sku":"acer-al15-33p-c7ee","name":"Acer Aspire Lite AL15-33P-C7EE — N150 / 4GB / 128GB / Silver","category":"computers","current_price_minor":22900,"reference_price_minor":44900,"reference_type":"retailer_was_price","evidence":"€229; WAS €449","url":"https://www.harveynorman.ie/products/acer-aspire-lite-15-6-intel-n150-4gb-128gb"},
+    {"provider_id":"harvey_norman","sku":"jbl-tune-beam-2-black","name":"JBL Tune Beam 2 earbuds — Black","category":"headphones","current_price_minor":5995,"reference_price_minor":9900,"reference_type":"retailer_was_price","evidence":"€59.95; WAS €99","url":"https://www.harveynorman.ie/products/jbl-tune-beam-2-in-ear-noise-cancelling-earbuds-black"},
+    {"provider_id":"harvey_norman","sku":"soundcore-q21i-black","name":"Soundcore Q21I headphones — Black","category":"headphones","current_price_minor":2995,"reference_price_minor":4900,"reference_type":"retailer_was_price","evidence":"€29.95; WAS €49","url":"https://www.harveynorman.ie/products/soundcore-q21i-over-ear-true-wireless-noise-cancelling-headphones-black"},
+    {"provider_id":"currys","sku":"10289322","name":"Google Pixel 10 — 256GB / Obsidian","category":"phones","current_price_minor":57900,"reference_price_minor":79900,"reference_type":"retailer_was_price","reference_period":{"starts_on":"2026-09-23","ends_on":"2026-11-10"},"evidence":"€579.00; Was €799.00 (from 23/09/26 to 10/11/26)","url":"https://www.currys.ie/products/google-pixel-10-256-gb-obsidian-10289322.html"},
+    {"provider_id":"currys","sku":"10269562","name":"Garmin fenix 8 AMOLED — 47mm / Slate Grey & Black","category":"wearables","current_price_minor":59900,"reference_price_minor":79900,"reference_type":"retailer_was_price","reference_period":{"starts_on":"2026-07-22","ends_on":"2026-11-01"},"evidence":"€599.00; Was €799.00 (from 22/07/26 to 01/11/26)","url":"https://www.currys.ie/products/garmin-fenix-8-amoled-smart-watch-slate-grey-and-black-47-mm-10269562.html"}
+  ]
+}

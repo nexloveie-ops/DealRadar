@@ -1,0 +1,578 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mobile123.ie/schemas/prepay-offers-v1.json",
+  "title": "Mobile123 Irish Prepay promotion dataset",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "dataset",
+    "generated_at",
+    "scope",
+    "offers",
+    "sources",
+    "coverage"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "dataset": {
+      "const": "mobile123-ie-prepay-promotions"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scope": {
+      "type": "object"
+    },
+    "offers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/offer"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "provider_id",
+          "adapter_status",
+          "observed_offers",
+          "coverage",
+          "error"
+        ]
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "minor": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "copy": {
+      "type": "object",
+      "required": [
+        "en_IE",
+        "zh_CN"
+      ],
+      "properties": {
+        "en_IE": {
+          "type": "string"
+        },
+        "zh_CN": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "id",
+        "provider",
+        "url",
+        "role",
+        "fetch_status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "provider": {
+          "enum": [
+            "vodafone",
+            "three",
+            "eir",
+            "tesco_mobile"
+          ]
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "role": {
+          "type": "string"
+        },
+        "fetch_status": {
+          "enum": [
+            "ok",
+            "failed"
+          ]
+        },
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "offer": {
+      "type": "object",
+      "required": [
+        "id",
+        "schema_version",
+        "country",
+        "currency",
+        "service_type",
+        "provider_id",
+        "provider_name",
+        "offer_kind",
+        "title",
+        "summary",
+        "campaign_id",
+        "product",
+        "eligibility",
+        "pricing",
+        "benefits",
+        "validity",
+        "channels",
+        "stock_status",
+        "device_condition",
+        "status",
+        "verification",
+        "source_ids",
+        "links",
+        "media",
+        "lifecycle",
+        "distribution"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^ie-prepay-[a-z0-9-]+$"
+        },
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "country": {
+          "const": "IE"
+        },
+        "currency": {
+          "const": "EUR"
+        },
+        "service_type": {
+          "const": "prepay"
+        },
+        "provider_id": {
+          "enum": [
+            "vodafone",
+            "three",
+            "eir",
+            "tesco_mobile"
+          ]
+        },
+        "provider_name": {
+          "type": "string"
+        },
+        "offer_kind": {
+          "enum": [
+            "handset_discount",
+            "bonus_credit",
+            "gift",
+            "cashback"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/copy"
+        },
+        "summary": {
+          "$ref": "#/$defs/copy"
+        },
+        "campaign_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "product": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "eligibility": {
+          "type": "object",
+          "required": [
+            "customer_groups",
+            "port_in_required",
+            "excluded_origin_networks",
+            "clubcard_required",
+            "minimum_top_up_minor",
+            "conditions",
+            "allowed_origin_networks"
+          ],
+          "properties": {
+            "customer_groups": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "port_in",
+                  "new_number",
+                  "existing",
+                  "not_specified"
+                ]
+              }
+            },
+            "port_in_required": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "clubcard_required": {
+              "type": "boolean"
+            },
+            "minimum_top_up_minor": {
+              "$ref": "#/$defs/minor"
+            },
+            "excluded_origin_networks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "allowed_origin_networks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "pricing": {
+          "type": "object",
+          "required": [
+            "device_price_minor",
+            "reference_price_minor",
+            "reference_type",
+            "discount_minor",
+            "discount_percent",
+            "includes_required_top_up"
+          ],
+          "properties": {
+            "device_price_minor": {
+              "$ref": "#/$defs/minor"
+            },
+            "reference_price_minor": {
+              "$ref": "#/$defs/minor"
+            },
+            "discount_minor": {
+              "$ref": "#/$defs/minor"
+            },
+            "reference_type": {
+              "enum": [
+                null,
+                "same_provider_non_port_in_price",
+                "same_provider_current_non_clubcard_price"
+              ]
+            },
+            "discount_percent": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100
+            },
+            "includes_required_top_up": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "benefits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "type",
+              "description",
+              "value_minor",
+              "fulfilment",
+              "can_publish",
+              "verification_status"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "gift",
+                  "bonus_credit",
+                  "top_up_voucher",
+                  "cashback",
+                  "handset_discount"
+                ]
+              },
+              "description": {
+                "type": "string"
+              },
+              "value_minor": {
+                "$ref": "#/$defs/minor"
+              },
+              "fulfilment": {
+                "type": "string"
+              },
+              "can_publish": {
+                "type": "boolean"
+              },
+              "verification_status": {
+                "enum": [
+                  "terms_verified",
+                  "needs_review"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "validity": {
+          "type": "object",
+          "required": [
+            "starts_on",
+            "ends_on",
+            "claim_by",
+            "timezone",
+            "redeem_by",
+            "support_query_by"
+          ],
+          "properties": {
+            "starts_on": {
+              "$ref": "#/$defs/date"
+            },
+            "ends_on": {
+              "$ref": "#/$defs/date"
+            },
+            "claim_by": {
+              "$ref": "#/$defs/date"
+            },
+            "timezone": {
+              "const": "Europe/Dublin"
+            },
+            "redeem_by": {
+              "$ref": "#/$defs/date"
+            },
+            "support_query_by": {
+              "$ref": "#/$defs/date"
+            }
+          },
+          "additionalProperties": false
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "online",
+              "retail_store",
+              "franchise_store",
+              "not_specified"
+            ]
+          }
+        },
+        "stock_status": {
+          "enum": [
+            "unknown",
+            "in_stock",
+            "out_of_stock"
+          ]
+        },
+        "device_condition": {
+          "enum": [
+            "new",
+            "not_applicable"
+          ]
+        },
+        "status": {
+          "enum": [
+            "active",
+            "active_end_unknown",
+            "needs_review",
+            "expired",
+            "scheduled",
+            "stale",
+            "unconfirmed"
+          ]
+        },
+        "verification": {
+          "type": "object",
+          "required": [
+            "level",
+            "issues",
+            "verified_at",
+            "field_evidence",
+            "fresh_until"
+          ],
+          "properties": {
+            "level": {
+              "enum": [
+                "terms_verified",
+                "listing_only"
+              ]
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "verified_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "fresh_until": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "field_evidence": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        },
+        "source_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "links": {
+          "type": "object",
+          "required": [
+            "landing_url",
+            "terms_url",
+            "affiliate_url"
+          ],
+          "properties": {
+            "landing_url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "terms_url": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "uri"
+            },
+            "affiliate_url": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "uri"
+            }
+          },
+          "additionalProperties": false
+        },
+        "media": {
+          "type": "object",
+          "required": [
+            "image_url",
+            "usage_rights",
+            "publish_image"
+          ],
+          "properties": {
+            "image_url": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "uri"
+            },
+            "usage_rights": {
+              "const": "not_verified"
+            },
+            "publish_image": {
+              "const": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "lifecycle": {
+          "type": "object",
+          "required": [
+            "first_seen_at",
+            "last_seen_at",
+            "content_hash"
+          ],
+          "properties": {
+            "first_seen_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "last_seen_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "content_hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "distribution": {
+          "type": "object",
+          "required": [
+            "can_list",
+            "notification_ready",
+            "notification_blockers"
+          ],
+          "properties": {
+            "can_list": {
+              "type": "boolean"
+            },
+            "notification_ready": {
+              "const": false
+            },
+            "notification_blockers": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "combinability": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

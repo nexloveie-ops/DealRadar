@@ -1,0 +1,26 @@
+# Built and deployed by the Cloud Build trigger on every push to main (GitHub nexloveie-ops/DealRadar).
+# The Docker build runs all module tests; any failure stops the deployment.
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_IMAGE}:${BUILD_ID}", "-t", "${_IMAGE}:latest", "."]
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args: ["push", "--all-tags", "${_IMAGE}"]
+  - id: deploy-web
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args: ["run", "deploy", "dealradar-web", "--image", "${_IMAGE}:${BUILD_ID}", "--region", "${_REGION}", "--quiet"]
+  - id: update-job
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args: ["run", "jobs", "update", "dealradar-collect", "--image", "${_IMAGE}:${BUILD_ID}", "--region", "${_REGION}", "--quiet"]
+images:
+  - ${_IMAGE}:${BUILD_ID}
+logsBucket: gs://dealradar-515523-buildlogs
+options:
+  logging: GCS_ONLY
+substitutions:
+  _REGION: europe-west1
+  _IMAGE: europe-west1-docker.pkg.dev/dealradar-515523/dealradar/app
+serviceAccount: projects/dealradar-515523/serviceAccounts/dealradar-builder@dealradar-515523.iam.gserviceaccount.com
