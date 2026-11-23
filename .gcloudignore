@@ -8,6 +8,7 @@ outputs/*.zip
 outputs/*.png
 outputs/*.txt
 outputs/*.html
+!outputs/public_page.html
 outputs/*.json
 outputs/combined-deals/
 outputs/prepay-offers-service/data/*

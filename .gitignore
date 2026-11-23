@@ -9,6 +9,7 @@ outputs/*.zip
 outputs/*.png
 outputs/*.txt
 outputs/*.html
+!outputs/public_page.html
 outputs/*.json
 outputs/combined-deals/
 outputs/retailer-offers-service/data/
