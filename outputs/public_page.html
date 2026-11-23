@@ -203,7 +203,7 @@ footer p{margin:0;max-width:62ch}
 <script>
 const D = __DATA__;
 const GENERATED = "__GENERATED_ISO__";
-const KINDS = [["all","All deals"],["mobile123","Mobile123"],["operator","Switch & save"],["retailer","In-store"],["amazon","Amazon"]];
+const KINDS = [["all","All deals"],["operator","Switch & save"],["retailer","In-store"],["amazon","Amazon"],["mobile123","Mobile123"]];
 const STEPS = [10,20,30,40,50,60,75,100,125,150,200,250,300,400,500,750,1000,1500,2000,null];
 const TICKS = [50,100,250,500,1000];
 const CAT = {
@@ -289,7 +289,8 @@ function card(x){
 }
 
 function matches(x, ignoreCat, ignoreMax){
-  if (state.kind!=="all" && x.module!==state.kind) return false;
+  // Mobile123's own products only appear in the Mobile123 tab, never mixed into All deals.
+  if (state.kind==="all" ? x.module==="mobile123" : x.module!==state.kind) return false;
   if (!ignoreCat && state.cat!=="All" && x.cat!==state.cat) return false;
   if (!ignoreMax && state.max!=null && (x.price_minor==null || x.price_minor>state.max*100)) return false;
   if (x.discount_percent==null) return state.full && state.min===0;
@@ -361,7 +362,7 @@ function render(){
   writeHash();
 }
 function feature(){
-  const pick = D.filter(x => x.discount_percent!=null && x.image_url && x.price_source!=="third_party")
+  const pick = D.filter(x => x.discount_percent!=null && x.image_url && x.price_source!=="third_party" && x.module!=="mobile123")
                .sort((a,b)=>b.discount_percent-a.discount_percent)[0];
   if (!pick) return;
   document.getElementById("feature").innerHTML = `<a class="feature" href="${esc(pick.buy_url)}" target="_blank" rel="noopener${pick.affiliate?" sponsored":""}">
