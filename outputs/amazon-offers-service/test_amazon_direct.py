@@ -8,7 +8,7 @@ class AmazonDirectParsing(unittest.TestCase):
         raw = '''<div data-component-type="s-search-result" data-asin="B0C665WWTD"><h2>JBL</h2>
         <div data-cy="title-recipe">JBL Tune 520BT Wireless On-Ear Headphones</div>
         <span class="a-price"><span class="a-offscreen">€43.30</span></span>
-        <span class="a-price a-text-price"><span class="a-offscreen">€99.99</span></span></div>
+        <span class="a-price a-text-price" data-a-strike="true"><span class="a-offscreen">€99.99</span></span></div>
         <a class="s-pagination-next" href="/s?page=2">Next</a>'''
         rows, more = ad.parse_search(raw)
         self.assertTrue(more)
@@ -47,7 +47,7 @@ class SearchListingFallback(unittest.TestCase):
         card = lambda a, now, was: (f'<div data-component-type="s-search-result" data-asin="{a}"><h2>Item {a}</h2>'
                                     f'<img class="s-image" src="https://m.media-amazon.com/images/I/{a}.jpg">'
                                     f'<span class="a-price"><span class="a-offscreen">€{now}</span></span>'
-                                    f'<span class="a-price a-text-price"><span class="a-offscreen">€{was}</span></span></div>')
+                                    f'<span class="a-price a-text-price" data-a-strike="true"><span class="a-offscreen">€{was}</span></span></div>')
         search = card("B000000001", "30.00", "100.00") + card("B000000002", "20.00", "50.00") + card("B000000003", "90.00", "100.00")
         calls = []
 
@@ -84,6 +84,24 @@ class SearchPlan(unittest.TestCase):
         self.assertEqual([k["id"] for k in ad.plan_searches(kws, stats, 6)], ["b", "d", "c", "f", "e", "a"])
         self.assertEqual([k["id"] for k in ad.plan_searches(kws, stats, 4)], ["b", "d", "f", "e"])
         self.assertEqual([k["id"] for k in ad.plan_searches(kws, {}, 2)], ["a", "b"])
+
+
+class ListingSanity(unittest.TestCase):
+    def test_unit_price_is_not_a_was_price(self):
+        raw = """<div data-component-type="s-search-result" data-asin="B0D4H554KW"><h2>Echo Ease Tinnitus Inhaler</h2>
+        <span class="a-price"><span class="a-offscreen">€5.91</span></span>
+        <span class="a-price a-text-price" data-a-size="b"><span class="a-offscreen">€591.00</span></span></div>
+        <div data-component-type="s-search-result" data-asin="B0C665WWTD"><h2>JBL Tune 520BT</h2>
+        <span class="a-price"><span class="a-offscreen">€43.30</span></span>
+        <span class="a-price a-text-price" data-a-strike="true"><span class="a-offscreen">€99.99</span></span></div>"""
+        rows, _ = ad.parse_search(raw)
+        self.assertEqual([r["strike_minor"] for r in rows], [None, 9999])
+
+    def test_non_tech_titles(self):
+        for t in ["JBL Pronovo Lotl Grano, Main Food for Axolotl", "Echo Ease Tinnitus Inhaler", "Echoes of Bluebell History: a book"]:
+            self.assertTrue(ad.NOT_TECH.search(t), t)
+        for t in ["Apple MacBook Air 13", "Echo Dot (2022 model)", "JBL Tune 520BT", "Kindle Paperwhite"]:
+            self.assertIsNone(ad.NOT_TECH.search(t), t)
 
 
 if __name__ == "__main__":

@@ -30,6 +30,13 @@ HOST = "https://www.amazon.ie"
 NOT_NEW = re.compile(r"\b(renewed|refurbished|reconditioned|pre-?owned|used)\b", re.I)
 
 
+# Not tech products, even when a brand name matches (JBL also makes aquarium food).
+NOT_TECH = re.compile(r"\b(aquarium|axolotl|fish food|pet food|dog|cat food|inhaler|tinnitus|supplement|vitamin|capsules|"
+                      r"paperback|hardcover|kindle edition|audiobook|book|novel|perfume|shampoo|cream|toy figure)\b", re.I)
+# A search-listing discount above this is almost always a parsing or listing error, not a real deal.
+MAX_LISTING_DISCOUNT = 90
+
+
 class Blocked(Exception):
     pass
 
@@ -80,7 +87,9 @@ def parse_search(raw):
         titles = [t.get_text(" ", strip=True) for t in it.select('[data-cy="title-recipe"], h2')]
         title = max(titles, key=len) if titles else ""
         now = it.select_one(".a-price:not(.a-text-price) .a-offscreen")
-        was = it.select_one(".a-price.a-text-price .a-offscreen")
+        # Only a struck-through price is a "was" price. Other small prices in the card are unit prices
+        # ("€591.00/100 g") or other offers, never a reference.
+        was = it.select_one('.a-price.a-text-price[data-a-strike="true"] .a-offscreen')
         img = it.select_one("img.s-image")
         src = img.get("src") if img else ""
         rows.append({"asin": asin, "title": title, "price_minor": price(now.get_text() if now else None),
@@ -191,6 +200,8 @@ def main():
             reason = "price_hidden_in_basket" if p["price_hidden"] else "no_price_on_product_page"
         elif pct is None or pct <= threshold:
             reason = "discount_not_above_threshold_on_product_page"
+        elif NOT_TECH.search(title or ""):
+            reason = "not_a_tech_product"
         elif NOT_NEW.search(title or ""):
             reason = "not_new"
         elif p["availability"] and re.search(r"unavailable|out of stock", p["availability"], re.I):
@@ -230,7 +241,8 @@ def main():
         if h.get("origin") != "amazon_search" or h["asin"] in listed:
             return False
         saving, pct = exact_discount(h.get("price_minor"), h.get("strike_minor"))
-        if pct is None or pct <= threshold or NOT_NEW.search(h.get("title") or ""):
+        if pct is None or pct <= threshold or pct > MAX_LISTING_DISCOUNT or NOT_NEW.search(h.get("title") or "") \
+                or NOT_TECH.search(h.get("title") or ""):
             return False
         listed.add(h["asin"])
         checked.add(h["asin"])
@@ -269,7 +281,8 @@ def main():
         for kw in plan_searches(keywords, stats, max_searches):
             fetch.interval = search_gap
             try:
-                raw, _ = fetch.get(f"{HOST}/s?k={quote_plus(kw['query'])}", "search-" + kw["id"])
+                # Electronics department only: a bare "echo" or "jbl" search otherwise returns books, pet food, health products.
+                raw, _ = fetch.get(f"{HOST}/s?k={quote_plus(kw['query'])}&i=electronics", "search-" + kw["id"])
             except Blocked as exc:
                 report["search_blocked"] = str(exc)
                 break
