@@ -26,6 +26,8 @@ APP = Path(__file__).resolve().parent.parent
 OUTPUTS = APP / "outputs"
 sys.path.insert(0, str(OUTPUTS))
 import combine_deals  # noqa: E402
+sys.path.insert(0, str(APP / "cloud"))
+import settings as admin_settings  # noqa: E402
 
 BATCH = 400
 
@@ -158,6 +160,10 @@ def main():
     db = firestore.Client(database=os.environ.get("FIRESTORE_DATABASE", "(default)"))
     mode = amazon_mode()
     specs = modules(mode)
+    # Admin settings (Firestore settings/sources) decide which pages and keywords the collectors use.
+    current, settings_at, _ = admin_settings.load(db)
+    applied = admin_settings.apply(current)
+    combine_deals.DISABLED_OPERATORS = set(applied["disabled_operators"])
     work = Path(tempfile.mkdtemp(prefix="dealradar-"))
     results = {}
     for key, spec in specs.items():
@@ -200,7 +206,8 @@ def main():
             rep = json.loads(f.read_text())
             reports[key] = {k: rep.get(k) for k in ("generated_at", "counts", "duration_seconds", "providers", "api_status", "errors") if k in rep}
     run_doc = {"run_id": run_id, "started_at": started_at.isoformat(timespec="seconds"), "finished_at": generated,
-               "load_only": args.load_only, "amazon_mode": mode, "modules": results,
+               "load_only": args.load_only, "amazon_mode": mode, "modules": results, "settings_updated_at": settings_at,
+               "disabled_operators": applied["disabled_operators"],
                "modules_ok": all(r["ok"] for r in results.values()), "counts": counts, "module_reports": reports}
 
     written, removed = write_firestore(db, rows, raw_by_id, history, run_doc, generated)

@@ -38,5 +38,53 @@ class AmazonDirectParsing(unittest.TestCase):
         self.assertTrue(ad.NOT_NEW.search("Apple iPhone 13 (Renewed)"))
 
 
+class SearchListingFallback(unittest.TestCase):
+    """From cloud IPs Amazon hides product-page prices but its search results show them."""
+
+    def test_hidden_page_uses_search_listing_and_blocked_hits_still_listed(self):
+        import json, sys, tempfile
+        from unittest import mock
+        card = lambda a, now, was: (f'<div data-component-type="s-search-result" data-asin="{a}"><h2>Item {a}</h2>'
+                                    f'<img class="s-image" src="https://m.media-amazon.com/images/I/{a}.jpg">'
+                                    f'<span class="a-price"><span class="a-offscreen">€{now}</span></span>'
+                                    f'<span class="a-price a-text-price"><span class="a-offscreen">€{was}</span></span></div>')
+        search = card("B000000001", "30.00", "100.00") + card("B000000002", "20.00", "50.00") + card("B000000003", "90.00", "100.00")
+        calls = []
+
+        def get(self, url, key):
+            calls.append(url)
+            if "/s?" in url:
+                return search, "s"
+            if url.endswith("B000000001"):
+                return "<div>add this item to your basket</div>", "h"
+            raise ad.Blocked(f"HTTP 503 at {url}")
+
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(ad.Fetcher, "get", get), mock.patch("time.sleep"):
+            cfg = json.loads((ad.ROOT / "config.json").read_text())
+            cfg["direct"]["max_searches_per_run"] = 1
+            with mock.patch.object(ad.Path, "read_text", lambda self, *a, **k: json.dumps(cfg) if self.name == "config.json" else open(self).read()):
+                with mock.patch.object(sys, "argv", ["x", "--cache", d + "/c", "--out", d + "/o"]):
+                    ad.main()
+            out = json.loads(open(d + "/o/offers.json").read())["offers"]
+        got = {o["product"]["asin"]: o for o in out}
+        self.assertEqual(set(got), {"B000000001", "B000000002"})  # 10% off is below threshold
+        o = got["B000000001"]
+        self.assertEqual(o["verification"]["method"], "amazon_search_listing")
+        self.assertEqual((o["pricing"]["device_price_minor"], o["pricing"]["reference_price_minor"]), (3000, 10000))
+        self.assertEqual(o["media"]["image_url"], "https://m.media-amazon.com/images/I/B000000001.jpg")
+        self.assertEqual(got["B000000002"]["verification"]["method"], "amazon_search_listing")
+
+
+class SearchPlan(unittest.TestCase):
+    def test_productive_first_then_stalest(self):
+        kws = [{"id": i} for i in "abcdef"]
+        stats = {"a": {"qualifying": 0, "searched_at": "2026-11-23T19"}, "b": {"qualifying": 11, "searched_at": "2026-11-23T19"},
+                 "c": {"qualifying": 2, "searched_at": "2026-11-23T07"}, "d": {"qualifying": 9, "searched_at": "2026-11-23T19"},
+                 "e": {"qualifying": 0, "searched_at": "2026-11-22T07"}}
+        self.assertEqual([k["id"] for k in ad.plan_searches(kws, stats, 6)], ["b", "d", "c", "f", "e", "a"])
+        self.assertEqual([k["id"] for k in ad.plan_searches(kws, stats, 4)], ["b", "d", "f", "e"])
+        self.assertEqual([k["id"] for k in ad.plan_searches(kws, {}, 2)], ["a", "b"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -25,6 +25,7 @@ INPUTS = {
     "mobile123-offers-service/data/offers.json": ROOT / "mobile123-offers-service/data/offers.json",
     "amazon-direct-rejected": ROOT / "amazon-offers-service/direct-data/rejected.json",
 }
+DISABLED_OPERATORS = set()  # operator ids switched off in the admin settings
 AMAZON_SOURCE = "direct"  # "direct" = confirmed on Amazon product pages; "api" = Creators API; "web" = third-party leads only
 
 
@@ -69,6 +70,8 @@ def operator_rows():
     data = load("prepay-offers-service/data/offers.json")
     rows = []
     for o in data["offers"]:
+        if o.get("provider_id") in DISABLED_OPERATORS:
+            continue
         p, e, v = o["pricing"], o["eligibility"], o["validity"]
         who = "转网 (port-in)" if e.get("port_in_required") else ("Clubcard 会员" if e.get("clubcard_required") else "未说明")
         notes = [o["summary"].get("zh_CN") or o["summary"].get("en_IE") or ""]
@@ -137,7 +140,7 @@ def amazon_rows():
     if wanted:
         # Owner decision 2026-11-23: when Amazon hides its price from the cloud, show the third-party deal-site
         # price, labelled with its source and time. Never for an ASIN whose Amazon page gave a contrary verdict.
-        confirmed = {o["product"]["asin"] for o in data["offers"] if o["verification"].get("method") == wanted}
+        confirmed = {o["product"]["asin"] for o in data["offers"] if o["verification"].get("method") in (wanted, "amazon_search_listing")}
         rejected = load("amazon-direct-rejected").get("records", [])
         verdict = {r["asin"] for r in rejected
                    if r.get("reason") in ("discount_not_above_threshold_on_product_page", "not_new", "unavailable")}
@@ -151,13 +154,14 @@ def amazon_rows():
     for o, fallback in items:
         p, v = o["pricing"], o["verification"]
         method = v.get("method")
-        if not fallback and ((wanted and method != wanted) or (not wanted and method in ("amazon_product_page", "creators_api"))):
+        listing = method == "amazon_search_listing" and AMAZON_SOURCE == "direct"
+        if not fallback and not listing and ((wanted and method != wanted) or (not wanted and method in ("amazon_product_page", "creators_api", "amazon_search_listing"))):
             continue
-        api = method in ("amazon_product_page", "creators_api")
+        api = method in ("amazon_product_page", "creators_api") or listing
         asin = o["product"]["asin"]
         check = (v.get("amazon_page_check") or {}).get("status")
         if api:
-            src = "Amazon 商品页" if method == "amazon_product_page" else "Amazon 官方 API"
+            src = {"amazon_product_page": "Amazon 商品页", "amazon_search_listing": "Amazon 搜索结果"}.get(method, "Amazon 官方 API")
             notes = [f"{src}价格，核对于 {v.get('verified_at', '')[:16].replace('T', ' ')} UTC；以 Amazon 页面为准"]
             if o["product"].get("seller") and o["product"]["seller"] != "Amazon.ie":
                 notes.append("卖家：" + o["product"]["seller"])
@@ -179,7 +183,7 @@ def amazon_rows():
             "category": ",".join(o.get("matched_keyword_ids") or []),
             "price_minor": p["device_price_minor"], "reference_minor": p["reference_price_minor"],
             "reference_label": (p.get("reference_label") or "Amazon 参考价") if api else "第三方标注参考价", "discount_percent": p["discount_percent"],
-            "price_basis": ("Amazon 商品页（核对时间见备注）" if method == "amazon_product_page" else "Amazon 官方 API") if api else (basis or "第三方报价（内部线索，未核实）"), "who": "所有顾客", "ends_on": None, "status": o["status"],
+            "price_basis": ({"amazon_product_page": "Amazon 商品页（核对时间见备注）", "amazon_search_listing": "Amazon 搜索结果价格（商品页对服务器隐藏价格）"}.get(method, "Amazon 官方 API")) if api else (basis or "第三方报价（内部线索，未核实）"), "who": "所有顾客", "ends_on": None, "status": o["status"],
             "can_list": False, "fresh_until": v.get("fresh_until") or v.get("expires_at"), "price_public": api or fallback,
             "buy_url": amazon_link(asin, tag), "terms_url": None,
             "link_type": f"Amazon Associates（tag={tag}）", "asin": asin, "notes": "；".join(notes),
@@ -321,11 +325,13 @@ def build_rows():
     return rows
 
 
-def render_page(rows, generated, public=False):
+def render_page(rows, generated, public=False, schedule=("twice a day", "7am and 7pm")):
     if public:
         rows = [r["public_view"] for r in rows if r.get("publish")]
         data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
-        return (ROOT / "public_page.html").read_text().replace("__DATA__", data).replace("__GENERATED_ISO__", html.escape(generated or ""))
+        words, times = schedule
+        return ((ROOT / "public_page.html").read_text().replace("__DATA__", data).replace("__GENERATED_ISO__", html.escape(generated or ""))
+                .replace("__RUNS__", html.escape(words)).replace("__TIMES__", html.escape(times)))
     data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
     title = "Deal Radar Ireland" if public else "Deal Radar 优惠汇总（内部视图）"
     foot = ("对比价不是统一的“原价”：运营商是同运营商非转网价或非会员价；零售店是零售商标示的 Was 价或制造商 RRP；"

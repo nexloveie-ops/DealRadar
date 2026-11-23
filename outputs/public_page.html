@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Deal Radar Ireland | Phone and tech deals, checked twice a day</title>
-<meta name="description" content="Deal Radar Ireland: phone and tech deals from Vodafone, Three, eir, Tesco Mobile, Expert, Powercity, Amazon.ie and Mobile123, with prices checked twice a day.">
+<title>Deal Radar Ireland | Phone and tech deals, checked __RUNS__</title>
+<meta name="description" content="Deal Radar Ireland: phone and tech deals from Vodafone, Three, eir, Tesco Mobile, Expert, Powercity, Amazon.ie and Mobile123, with prices checked __RUNS__.">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
 <link rel="icon" type="image/png" sizes="64x64" href="/static/favicon-64.png">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
@@ -155,7 +155,7 @@ footer p{margin:0;max-width:62ch}
 
 <section class="hero"><div class="wrap">
   <div>
-    <h1>Phone and tech deals in Ireland, checked twice a day</h1>
+    <h1>Phone and tech deals in Ireland, checked __RUNS__</h1>
     <p class="lede">Deals from our own Mobile123 shop, plus Vodafone, Three, eir, Tesco Mobile, Expert, Powercity and Amazon.ie, with the old price next to the new one so you can see the real saving.</p>
   </div>
   <div id="feature"></div>
@@ -203,7 +203,7 @@ footer p{margin:0;max-width:62ch}
 </div></main>
 
 <footer><div class="wrap">
-  <div><h2>How prices are checked</h2><p>We read prices from each shop's own website twice a day, at 7am and 7pm. Every deal shows when its price was checked. Prices can change after that, so the shop's page has the final price.</p></div>
+  <div><h2>How prices are checked</h2><p>We read prices from each shop's own website __RUNS__, at __TIMES__. Every deal shows when its price was checked. Prices can change after that, so the shop's page has the final price.</p></div>
   <div><h2>What the old price means</h2><p>For operators it is the same phone's price when you don't switch, or without Clubcard. For Mobile123, Expert and Powercity it is the shop's own Was price. For Amazon it is the RRP or Was price on Amazon. Where Amazon doesn't show us a price, the price comes from a deals site and says so.</p></div>
   <div><h2>Affiliate links</h2><p>Amazon links are affiliate links. If you buy through them, Deal Radar may earn a commission at no extra cost to you. Links to operators and other shops are plain links.</p></div>
 </div></footer>
@@ -291,7 +291,7 @@ function card(x){
       ${price}
       ${cond ? `<p class="cond">${cond}</p>` : ""}
       <p class="src">${source(x)}</p>
-      <a class="go" href="${esc(x.buy_url)}" target="_blank" rel="noopener${x.affiliate?" sponsored":""}">Go to ${esc(x.store.replace(".ie",""))}</a>
+      <a class="go" data-deal="${esc(x.id)}" href="${esc(x.buy_url)}" target="_blank" rel="noopener${x.affiliate?" sponsored":""}">Go to ${esc(x.store.replace(".ie",""))}</a>
       <p class="aff">${x.affiliate ? "Affiliate link" : ""}</p>
     </div></article>`;
 }
@@ -381,7 +381,7 @@ function feature(){
   const pick = D.filter(x => x.discount_percent!=null && x.image_url && x.price_source!=="third_party" && x.module!=="mobile123")
                .sort((a,b)=>b.discount_percent-a.discount_percent)[0];
   if (!pick) return;
-  document.getElementById("feature").innerHTML = `<a class="feature" href="${esc(pick.buy_url)}" target="_blank" rel="noopener${pick.affiliate?" sponsored":""}">
+  document.getElementById("feature").innerHTML = `<a class="feature" data-deal="${esc(pick.id)}" href="${esc(pick.buy_url)}" target="_blank" rel="noopener${pick.affiliate?" sponsored":""}">
     <img src="${esc(pick.image_url)}" alt="" referrerpolicy="no-referrer">
     <div><p class="label">Biggest discount right now, at ${esc(pick.store)}</p><p class="name">${esc(pick.title)}</p>
     <div class="priceline">${tag(pick.price_minor)}<span class="was">${eur(pick.reference_minor)}</span></div>
@@ -395,6 +395,12 @@ document.getElementById("min").addEventListener("click", e => { const b=e.target
 document.getElementById("full").addEventListener("click", () => { state.full=!state.full; state.shown=48; render(); });
 document.getElementById("sort").addEventListener("change", e => { state.sort=e.target.value; render(); });
 document.getElementById("more").addEventListener("click", () => { state.shown+=48; render(); });
+// Count clicks on shop buttons. The link itself still goes straight to the shop.
+document.addEventListener("click", e => {
+  const a = e.target.closest("a[data-deal]");
+  if (!a || !navigator.sendBeacon) return;
+  try { navigator.sendBeacon("/api/click", new Blob([JSON.stringify({id: a.dataset.deal})], {type: "application/json"})); } catch (_) {}
+});
 if (GENERATED) document.getElementById("checked").textContent = "Prices last checked " + when(GENERATED);
 feature(); render();
 </script>

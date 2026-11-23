@@ -81,8 +81,11 @@ def parse_search(raw):
         title = max(titles, key=len) if titles else ""
         now = it.select_one(".a-price:not(.a-text-price) .a-offscreen")
         was = it.select_one(".a-price.a-text-price .a-offscreen")
+        img = it.select_one("img.s-image")
+        src = img.get("src") if img else ""
         rows.append({"asin": asin, "title": title, "price_minor": price(now.get_text() if now else None),
                      "strike_minor": price(was.get_text() if was else None),
+                     "image_url": src if src.startswith("https://m.media-amazon.com/") else None,
                      "sponsored": bool(it.select_one(".puis-sponsored-label-text, .s-sponsored-label-info-icon"))})
     nxt = soup.select_one("a.s-pagination-next")
     return rows, bool(nxt)
@@ -120,6 +123,21 @@ def reference_type(label):
     return "amazon_reference_unlabelled"
 
 
+def plan_searches(keywords, stats, n, top=None):
+    """Amazon allows only a few searches per run from the cloud, so spend them well: first the keywords whose last
+    search found the most qualifying deals, then the keywords searched longest ago (never-searched first), so every
+    keyword still gets its turn and new deals can be found."""
+    if n <= 0 or not keywords:
+        return []
+    top = max(1, n // 2) if top is None else top
+    st = lambda k: stats.get(k["id"]) or {}
+    productive = sorted([k for k in keywords if st(k).get("qualifying", 0) > 0],
+                        key=lambda k: (-st(k)["qualifying"], st(k).get("searched_at", "")))[:top]
+    chosen = {k["id"] for k in productive}
+    stale = sorted([k for k in keywords if k["id"] not in chosen], key=lambda k: st(k).get("searched_at", ""))
+    return (productive + stale)[:n]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--cache", required=True)
@@ -142,18 +160,24 @@ def main():
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     cursor_file = out / "search-cursor.json"
-    cursor = json.loads(cursor_file.read_text()).get("next", 0) if cursor_file.exists() else 0
+    stats = (json.loads(cursor_file.read_text()).get("stats") or {}) if cursor_file.exists() else {}
     report = {"generated_at": now.isoformat(), "mode": "amazon_direct", "searches": [], "blocked": None,
               "search_blocked": None, "errors": []}
-    offers, rejected, checked = [], [], set()
+    offers, rejected, checked, hidden = [], [], set(), set()
 
     def confirm(h):
         """Read the Amazon product page for one candidate; keep it only if the page itself shows > threshold."""
+        if h["asin"] in hidden:  # its page already hid the price this run; don't fetch it twice
+            listing_offer(h, datetime.now(timezone.utc))
+            return
         if h["asin"] in checked or len(checked) >= max_checks:
             return
         checked.add(h["asin"])
         try:
             raw, sha = fetch.get(f"{HOST}/dp/{h['asin']}", "dp-" + h["asin"])
+        except Blocked:
+            checked.discard(h["asin"])  # not reached; carried over, or listed from search below
+            raise
         except RuntimeError as exc:
             checked.discard(h["asin"])  # a network error is not a verdict; a previous deal is carried over
             rejected.append({"asin": h["asin"], "reason": "product_page_error", "detail": str(exc)})
@@ -171,7 +195,10 @@ def main():
             reason = "not_new"
         elif p["availability"] and re.search(r"unavailable|out of stock", p["availability"], re.I):
             reason = "unavailable"
+        if reason == "price_hidden_in_basket" and listing_offer(h, observed, p.get("image_url"), sha):
+            return  # Amazon's own search listing showed the price this run; use it
         if reason == "price_hidden_in_basket":
+            hidden.add(h["asin"])
             checked.discard(h["asin"])  # hidden from this network is not a verdict; an earlier confirmed deal is carried over
         if reason:
             rejected.append({"asin": h["asin"], "title": title, "reason": reason, "image_url": p.get("image_url"), "price_minor": p["price_minor"],
@@ -195,7 +222,39 @@ def main():
             "media": {"image_url": p.get("image_url"), "publish_image": bool(p.get("image_url"))},
             "distribution": {"can_list": True, "notification_ready": False}})
 
+    listed = set()
+
+    def listing_offer(h, observed, image=None, sha=None):
+        """Amazon hides product-page prices from cloud servers, but its search results show price and strike price.
+        Publish that listing price (Amazon's own, read this run) when it clears the threshold."""
+        if h.get("origin") != "amazon_search" or h["asin"] in listed:
+            return False
+        saving, pct = exact_discount(h.get("price_minor"), h.get("strike_minor"))
+        if pct is None or pct <= threshold or NOT_NEW.search(h.get("title") or ""):
+            return False
+        listed.add(h["asin"])
+        checked.add(h["asin"])
+        img = image or h.get("image_url")
+        offers.append({
+            "id": "ie-amazon-" + h["asin"], "module_id": "amazon_promotions", "provider_id": "amazon_ie", "provider_name": "Amazon.ie",
+            "country": "IE", "currency": "EUR", "offer_kind": "product_discount",
+            "product": {"asin": h["asin"], "name": h["title"], "condition": "new_inferred", "seller": None},
+            "pricing": {"device_price_minor": h["price_minor"], "reference_price_minor": h["strike_minor"],
+                        "reference_type": "amazon_search_strike_price", "reference_label": None,
+                        "discount_minor": saving, "discount_percent": pct, "includes_delivery": False, "delivery_cost_minor": None},
+            "eligibility": {"prime_required": None, "coupon_required": None, "conditions": []},
+            "stock_status": "unknown", "availability_text": "", "status": "active", "matched_keyword_ids": sorted(h["keywords"]),
+            "discovered_via": "amazon_search", "validity": {"starts_on": None, "ends_on": None},
+            "verification": {"method": "amazon_search_listing", "verified_at": observed.isoformat(),
+                             "fresh_until": (observed + timedelta(hours=valid_hours)).isoformat(), "page_sha256": sha,
+                             "issues": ["price_from_amazon_search_results_at_verified_at;product_page_hid_price;may_change"]},
+            "links": {"landing_url": affiliate_link(h["asin"], tag), "affiliate_url": affiliate_link(h["asin"], tag), "tag": tag},
+            "media": {"image_url": img, "publish_image": bool(img)},
+            "distribution": {"can_list": True, "notification_ready": False}})
+        return True
+
     keywords = [k for k in c["keywords"] if k.get("enabled", True)]
+    hits = {}
     try:
         # 0. Re-check every Amazon deal confirmed before, so earlier finds stay current.
         for o in previous:
@@ -207,9 +266,7 @@ def main():
                 confirm({"asin": o["product"]["asin"], "title": o["product"]["name"],
                          "keywords": set(o.get("matched_keyword_ids") or []), "origin": "third_party_lead"})
         # 2. A few Amazon searches per run, rotating through the keywords; then confirm their hits.
-        hits = {}
-        for i in range(min(max_searches, len(keywords))):
-            kw = keywords[(cursor + i) % len(keywords)]
+        for kw in plan_searches(keywords, stats, max_searches):
             fetch.interval = search_gap
             try:
                 raw, _ = fetch.get(f"{HOST}/s?k={quote_plus(kw['query'])}", "search-" + kw["id"])
@@ -229,12 +286,19 @@ def main():
                     qualifying += 1
                     hits.setdefault(r["asin"], {**r, "keywords": set(), "origin": "amazon_search"})["keywords"].add(kw["id"])
             report["searches"].append({"keyword_id": kw["id"], "results": len(rows), "qualifying": qualifying})
-        cursor = (cursor + len(report["searches"])) % max(1, len(keywords))
+            stats[kw["id"]] = {"searched_at": datetime.now(timezone.utc).isoformat(), "qualifying": qualifying}
         for h in hits.values():
             confirm(h)
     except Blocked as exc:
         report["blocked"] = str(exc)
-    write_json(cursor_file, {"next": cursor, "keywords": len(keywords)})
+    # Search hits whose product page was not reached (blocked or check limit): the search listing price still stands.
+    observed = datetime.now(timezone.utc)
+    for h in hits.values():
+        if h["asin"] not in checked:
+            listing_offer(h, observed)
+    report["from_search_listing"] = len(listed)
+    ids = {k["id"] for k in keywords}
+    write_json(cursor_file, {"keywords": len(keywords), "stats": {k: v for k, v in stats.items() if k in ids}})
     # Deals not reached this run (cut short) stay until their own expiry, with their original check time.
     carried = 0
     for o in previous:
