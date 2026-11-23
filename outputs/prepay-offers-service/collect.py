@@ -419,7 +419,9 @@ def parse_vodafone(fetcher, asof, pins):
         item["pricing"]["includes_required_top_up"]=False
         item["validity"]=dict(offers[0]["validity"])
         item["channels"]=["online"]
-        item["links"].update(landing_url="https://www.vodafone.ie/mobile/"+row["id"]+"?mobiletype=pay-as-you-go",terms_url=fetcher.records[sid]["url"])
+        # Same route the Vodafone site builds for its phone cards: /mobile/<brand>-<model id>?mobiletype=pay-as-you-go
+        slug=re.sub(r"[^a-z0-9]+","-",(brand or "").lower()).strip("-")
+        item["links"].update(landing_url="https://www.vodafone.ie/mobile/"+(slug+"-" if slug else "")+row["id"]+"?mobiletype=pay-as-you-go",terms_url=fetcher.records[sid]["url"])
         item["verification"].update(level="terms_verified",field_evidence={"pricing":"vodafone-catalogue:productOffering[id="+row["id"]+"].productOfferingPrice", "eligibility":sid+":offer-specific-terms", "storage":sid+":offer-2;A27-128GB" if row["id"]=="galaxy-a27-5g" else "not_confirmed_for_starting_variant"})
         item["summary"]={"en_IE":"Official Prepay catalogue Switch & Save price; minimum activation top-up is additional.","zh_CN":"官网 Prepay 商品列表转网价；最低激活充值另计。"}
         item["status"]="active"
