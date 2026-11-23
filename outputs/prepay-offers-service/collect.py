@@ -207,6 +207,25 @@ def pin_review(offer, pins, docs, records):
                 offer["status"] = "needs_review"
 
 
+def three_product_link(fetcher, name):
+    """Three's own phone page for this handset, taken from links on the Three prepay page; None if not found."""
+    doc = fetcher.documents.get("three-phones")
+    if not doc or "raw" not in doc:
+        return None
+    want = [t for t in re.findall(r"[a-z0-9]+", name.lower()) if not re.fullmatch(r"\d+gb", t)]
+    best = None
+    raw = doc["raw"].decode("utf-8", errors="replace") if isinstance(doc["raw"], bytes) else doc["raw"]
+    for href in re.findall(r'href="(https://www\.three\.ie/shop/phones/([a-z0-9-]+)\.html)', raw):
+        url, slug = href
+        tokens = slug.split("-")
+        if "refurbished" in tokens:
+            continue
+        if all(t in tokens for t in want):
+            if best is None or len(tokens) < len(best[1]):
+                best = (url, tokens)
+    return best[0] if best else None
+
+
 def parse_three(fetcher, asof, pins):
     sid = "three-november-2026"
     if sid not in fetcher.documents:
@@ -238,7 +257,7 @@ def parse_three(fetcher, asof, pins):
         offer["validity"].update(starts_on=start, ends_on=end)
         offer["channels"] = ["online", "retail_store"]
         offer["links"]["terms_url"] = fetcher.records[sid]["url"]
-        offer["links"]["landing_url"] = fetcher.records["three-phones"]["url"]
+        offer["links"]["landing_url"] = three_product_link(fetcher, name) or fetcher.records["three-phones"]["url"]
         offer["verification"].update(level="terms_verified", field_evidence={"pricing":sid+":eligible-handset-table", "eligibility":sid+":port-in-eligibility", "validity":sid+":offer-date-header"})
         # The footer repeats a conflicting 2025 start year; preserve and expose this source issue.
         if "11/11/2025" in text:
