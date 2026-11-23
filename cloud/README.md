@@ -14,7 +14,7 @@ The project has two parts:
 | Firestore (Native, europe-west1) | `(default)` | `deals` (one doc per record), `price_history`, `runs`, `meta/latest` |
 | Cloud Storage | `gs://dealradar-515523-data` | `state/` files the next run needs (previous offers, price history, Amazon search cursor); `runs/` and `evidence/` per run, deleted after 90 days; `archive/local-2026-11-22/` = the data collected on the Mac before migration |
 | Cloud Run Job | `dealradar-collect` | `python cloud/run_collect.py`, 1 CPU, 1 GiB, 45 min timeout |
-| Cloud Run service | `dealradar-web` | https://dealradar-web-815864259513.europe-west1.run.app (Google sign-in with access required) |
+| Cloud Run service | `dealradar-web` | https://dealradar-web-815864259513.europe-west1.run.app (public) |
 | Cloud Scheduler | `dealradar-collect-07`, `dealradar-collect-19` | 07:00 and 19:00 Europe/Dublin |
 | Artifact Registry | `europe-west1-docker.pkg.dev/dealradar-515523/dealradar/app` | one image for the job and the service |
 | Build logs | `gs://dealradar-515523-buildlogs` | Cloud Build output |
@@ -24,17 +24,10 @@ Service accounts (least privilege): `dealradar-collector` (Firestore read/write,
 ## Web endpoints
 
 - `/` public page: automatically published deals only
-- `/internal` every record with its publish decision and reason
+- `/internal?key=...` every record with its publish decision and reason (key in Secret Manager)
 - `/api/deals` published deals as JSON (`?module=operator|retailer|amazon`, `?discount=1`)
 - `/api/deals/<id>`, `/api/runs/latest`, `/health`
 
-Access is restricted to Google accounts granted `roles/run.invoker` on the service. To open the page in a browser without making it public:
-
-```sh
-gcloud run services proxy dealradar-web --region europe-west1 --project dealradar-515523
-```
-
-then visit http://localhost:8080. Making it public is one command (`gcloud run services add-iam-policy-binding dealradar-web --member=allUsers --role=roles/run.invoker ...`), if the organisation policy allows it.
 
 ## Automatic publication (no human step)
 
@@ -57,13 +50,25 @@ Plain requests only. Amazon's bot challenge appeared after ~10 quick searches in
 
 ## Deploying a change
 
+Push to `main` on https://github.com/nexloveie-ops/DealRadar. The Cloud Build trigger `dealradar-main` (europe-west1, GitHub connection `dealradar-github`) runs `cloudbuild.yaml` as `dealradar-builder`:
+
+1. builds the image; the Docker build runs every module's tests and stops on any failure;
+2. pushes `app:<BUILD_ID>` and `app:latest`;
+3. deploys `dealradar-web` and updates `dealradar-collect` to that image.
+
+Build logs go to `gs://dealradar-515523-buildlogs`. Run one collection by hand with `gcloud run jobs execute dealradar-collect --region europe-west1 --project dealradar-515523`; rebuild Firestore from saved state without collecting with `--args=cloud/run_collect.py,--load-only`.
+
+## Public access
+
+`dealradar-web` allows unauthenticated access (`allUsers` has `roles/run.invoker`): https://dealradar-web-815864259513.europe-west1.run.app. `/internal` returns 404 unless `?key=` matches the `INTERNAL_KEY` secret (`dealradar-internal-key` in Secret Manager):
+
 ```sh
-gcloud builds submit --project dealradar-515523 --region europe-west1 --config cloudbuild.yaml --substitutions=_TAG=vN .
-gcloud run jobs update dealradar-collect --project dealradar-515523 --region europe-west1 --image europe-west1-docker.pkg.dev/dealradar-515523/dealradar/app:vN
-gcloud run deploy dealradar-web --project dealradar-515523 --region europe-west1 --image europe-west1-docker.pkg.dev/dealradar-515523/dealradar/app:vN
+gcloud secrets versions access latest --secret dealradar-internal-key --project dealradar-515523
 ```
 
-The image build runs all module tests and fails if any fail. Run one collection by hand with `gcloud run jobs execute dealradar-collect --region europe-west1 --project dealradar-515523`. Rebuild Firestore from the saved state without collecting: add `--args=cloud/run_collect.py,--load-only`.
+## Known limitation: Amazon from Google Cloud
+
+From Cloud Run, Amazon.ie hides product-page prices ("add this item to your basket") and answers searches with 503. The same requests from a home connection returned prices. Not worked around. Options: run the Amazon step on a home machine and upload its output, or use the Creators API.
 
 ## Cost
 
