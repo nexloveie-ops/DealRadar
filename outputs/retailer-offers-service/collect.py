@@ -144,6 +144,9 @@ def parse_powercity(raw, source, meta):
             urljoin(source["url"], link["href"]), meta["fetched_at"], source["id"], "direct_official_html")
         row["product"].update(condition="new_inferred", condition_basis="standard retail category, explicit available stock, display/refurb markers absent", title_truncated=title.endswith("..."))
         row["stock_status"] = "in_stock"
+        img = card.select_one(".productimage a img[src]")
+        if img and "/productimages/" in img["src"]:
+            row["media"]["image_url"] = urljoin("https://powercity.ie/", img["src"])
         row["verification"]["issues"] = ["no_verified_reference_price;discount_not_computed", "delivery_cost_not_checked", "new_condition_inferred_from_catalogue"]
         row["verification"]["fresh_until"] = (datetime.fromisoformat(meta["fetched_at"]) + timedelta(hours=24)).isoformat()
         promos = name_node.select_one(".promotions")
@@ -214,6 +217,9 @@ def parse_expert(raw, source, meta):
         row["product"].update(condition="new_inferred", condition_basis="standard retail category, Add to Cart offered, display/refurb markers absent",
             model_code=title.rsplit("|", 1)[1].strip() if "|" in title else None, brand=_text(card.select_one(".card-text--brand")) or None)
         row["stock_status"] = "available_to_order"
+        img = card.select_one("img.card-image[src]")
+        if img and img["src"].startswith("https://"):
+            row["media"]["image_url"] = img["src"]
         row["verification"]["issues"] = issues
         row["verification"]["fresh_until"] = (datetime.fromisoformat(meta["fetched_at"]) + timedelta(hours=24)).isoformat()
         found.append(row)

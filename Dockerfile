@@ -8,6 +8,7 @@ COPY outputs/prepay-offers-service/ outputs/prepay-offers-service/
 COPY outputs/retailer-offers-service/ outputs/retailer-offers-service/
 COPY outputs/amazon-offers-service/ outputs/amazon-offers-service/
 COPY outputs/combine_deals.py outputs/combine_deals.py
+COPY outputs/public_page.html outputs/public_page.html
 COPY cloud/ cloud/
 # Each module's offline regression tests must pass in this image.
 RUN cd outputs/prepay-offers-service && python -m unittest -q \

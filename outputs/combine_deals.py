@@ -53,7 +53,15 @@ def name_of(o):
     p = o.get("product") or {}
     name = p.get("name") or (o.get("title") or {}).get("en_IE") or o["id"]
     variant = p.get("variant_label")
+    # Collector notes such as "Catalogue starting variant; confirm storage on product page" are not product names.
+    if variant and re.search(r";|confirm|catalogue|starting variant", variant, re.I):
+        variant = None
     return f"{name} ({variant})" if variant and variant not in name else name
+
+
+def v_check(o):
+    v = o.get("verification") or {}
+    return v.get("verified_at") or (o.get("lifecycle") or {}).get("last_seen_at")
 
 
 def operator_rows():
@@ -76,7 +84,12 @@ def operator_rows():
             "can_list": o["distribution"]["can_list"], "fresh_until": o["verification"].get("fresh_until"),
             "buy_url": official(o["links"].get("landing_url"), ["vodafone.ie", "three.ie", "eir.ie", "tescomobile.ie"]),
             "terms_url": o["links"].get("terms_url"), "link_type": "官网链接（无联盟）",
-            "notes": "；".join(n for n in notes if n)})
+            "notes": "；".join(n for n in notes if n),
+            "store": o["provider_name"], "source_site": o["provider_name"], "price_source": "operator",
+            "checked_at": v_check(o), "condition_code": "port_in" if e.get("port_in_required") else ("clubcard" if e.get("clubcard_required") else None),
+            "min_top_up_minor": e.get("minimum_top_up_minor"),
+            "reference_kind": {"same_provider_non_port_in_price": "non_switch_price", "same_provider_current_non_clubcard_price": "non_member_price"}.get(p.get("reference_type")),
+            "summary_en": (o.get("summary") or {}).get("en_IE")})
     return rows
 
 
@@ -105,6 +118,9 @@ def retailer_rows():
             "discount_percent": p["discount_percent"],
             "price_basis": "零售商官网（本次直接读取）" if live else "官网快照（非实时）",
             "who": "所有顾客", "ends_on": None, "status": o["status"], "can_list": o["distribution"]["can_list"],
+            "store": o["provider_name"], "source_site": o["provider_name"], "price_source": "retailer",
+            "checked_at": v.get("observed_at"), "condition_code": None,
+            "reference_kind": {"retailer_was_price": "was_price", "manufacturer_rrp": "rrp"}.get(p["reference_type"]),
             "fresh_until": v.get("fresh_until"), "buy_url": official(o["links"]["landing_url"], hosts),
             "terms_url": None, "link_type": "官网链接（无联盟）", "notes": "；".join(notes)})
     return rows
@@ -116,12 +132,15 @@ def amazon_rows():
     data = load("amazon-offers-service/web-data/offers.json")
     wanted = {"direct": "amazon_product_page", "api": "creators_api"}.get(AMAZON_SOURCE)
     items = [(o, False) for o in data["offers"]]
+    images = {}
     if wanted:
         # Owner decision 2026-11-23: when Amazon hides its price from the cloud, show the third-party deal-site
         # price, labelled with its source and time. Never for an ASIN whose Amazon page gave a contrary verdict.
         confirmed = {o["product"]["asin"] for o in data["offers"] if o["verification"].get("method") == wanted}
-        verdict = {r["asin"] for r in load("amazon-direct-rejected").get("records", [])
+        rejected = load("amazon-direct-rejected").get("records", [])
+        verdict = {r["asin"] for r in rejected
                    if r.get("reason") in ("discount_not_above_threshold_on_product_page", "not_new", "unavailable")}
+        images = {r["asin"]: r["image_url"] for r in rejected if r.get("image_url")}
         for o in load("amazon-leads").get("offers", []):
             a = o["product"]["asin"]
             if a not in confirmed and a not in verdict and o.get("status") == "web_candidate":
@@ -162,7 +181,13 @@ def amazon_rows():
             "price_basis": ("Amazon 商品页（核对时间见备注）" if method == "amazon_product_page" else "Amazon 官方 API") if api else (basis or "第三方报价（内部线索，未核实）"), "who": "所有顾客", "ends_on": None, "status": o["status"],
             "can_list": False, "fresh_until": v.get("fresh_until") or v.get("expires_at"), "price_public": api or fallback,
             "buy_url": amazon_link(asin, tag), "terms_url": None,
-            "link_type": f"Amazon Associates（tag={tag}）", "asin": asin, "notes": "；".join(notes)})
+            "link_type": f"Amazon Associates（tag={tag}）", "asin": asin, "notes": "；".join(notes),
+            "store": "Amazon.ie", "condition_code": None, "affiliate": True,
+            "price_source": "amazon_page" if api else "third_party",
+            "source_site": "Amazon.ie" if api else ({"goodcraic": "Good Craic Deals", "item": "Item.ie", "dealdepot": "DealDepot"}.get(((o.get("sources") or [{}])[0]).get("kind"), "a deals site")),
+            "checked_at": v.get("verified_at") if api else (v.get("source_updated_at") or ((o.get("sources") or [{}])[0]).get("updated_at")),
+            "reference_kind": ({"amazon_rrp": "rrp", "amazon_was_price": "was_price", "amazon_median_price": "median_price"}.get(p.get("reference_type"), "reference")) if api else "listed_reference",
+            "image_hint": images.get(asin)})
     return rows
 
 
@@ -249,9 +274,10 @@ def auto_publish(r, raw, now):
     return False, "未知模块"
 
 
-PUBLIC_FIELDS = ("id", "module", "module_name", "provider", "title", "category", "price_minor", "reference_minor",
-                 "reference_label", "discount_percent", "price_basis", "who", "ends_on", "status", "fresh_until",
-                 "buy_url", "terms_url", "link_type", "asin")
+PUBLIC_FIELDS = ("id", "module", "module_name", "provider", "store", "title", "category", "image_url", "price_minor",
+                 "reference_minor", "reference_label", "reference_kind", "discount_percent", "price_basis", "price_source",
+                 "source_site", "checked_at", "condition_code", "min_top_up_minor", "summary_en", "who", "ends_on", "status",
+                 "fresh_until", "buy_url", "terms_url", "link_type", "affiliate", "asin")
 
 
 def build_rows():
@@ -264,6 +290,8 @@ def build_rows():
     now = datetime.now(timezone.utc)
     for r in rows:
         r.setdefault("price_public", True)
+        hint = r.pop("image_hint", None)
+        r["image_url"] = ((raw.get(r["id"]) or {}).get("media") or {}).get("image_url") or hint
         shadow = dict(r)
         r["publish"], r["publish_reason"] = auto_publish(shadow, raw.get(r["id"]), now)
         r["public_view"] = {k: shadow.get(k) for k in PUBLIC_FIELDS} if r["publish"] else None
@@ -274,6 +302,8 @@ def build_rows():
 def render_page(rows, generated, public=False):
     if public:
         rows = [r["public_view"] for r in rows if r.get("publish")]
+        data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
+        return (ROOT / "public_page.html").read_text().replace("__DATA__", data).replace("__GENERATED_ISO__", html.escape(generated or ""))
     data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
     title = "Mobile123 爱尔兰优惠" if public else "Mobile123 优惠汇总（内部视图）"
     foot = ("对比价不是统一的“原价”：运营商是同运营商非转网价或非会员价；零售店是零售商标示的 Was 价或制造商 RRP；"

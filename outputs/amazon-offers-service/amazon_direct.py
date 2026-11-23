@@ -102,7 +102,9 @@ def parse_product(raw):
     label = ""
     if basis_node:
         label = re.sub(r"\s+", " ", basis_node.get_text(" ", strip=True).replace(basis or "", "")).strip(" :")
-    return {"title": text("#productTitle"), "price_minor": price(now), "reference_minor": price(basis),
+    img = s.select_one("#landingImage") or s.select_one("#imgTagWrapperId img")
+    image = img.get("src") if img and (img.get("src") or "").startswith("https://m.media-amazon.com/") else None
+    return {"title": text("#productTitle"), "image_url": image, "price_minor": price(now), "reference_minor": price(basis),
             "reference_label": label[:40] or None, "seller": text("#merchantInfoFeature_feature_div .offer-display-feature-text-message"),
             "availability": (text("#availability") or "")[:80], "price_hidden": "add this item to your basket" in raw}
 
@@ -172,7 +174,7 @@ def main():
         if reason == "price_hidden_in_basket":
             checked.discard(h["asin"])  # hidden from this network is not a verdict; an earlier confirmed deal is carried over
         if reason:
-            rejected.append({"asin": h["asin"], "title": title, "reason": reason, "price_minor": p["price_minor"],
+            rejected.append({"asin": h["asin"], "title": title, "reason": reason, "image_url": p.get("image_url"), "price_minor": p["price_minor"],
                              "reference_minor": p["reference_minor"], "discovered_via": h["origin"]})
             return
         offers.append({
@@ -190,7 +192,7 @@ def main():
                              "fresh_until": (observed + timedelta(hours=valid_hours)).isoformat(), "page_sha256": sha,
                              "issues": ["price_from_amazon_page_at_verified_at;may_change"]},
             "links": {"landing_url": affiliate_link(h["asin"], tag), "affiliate_url": affiliate_link(h["asin"], tag), "tag": tag},
-            "media": {"image_url": None, "publish_image": False},
+            "media": {"image_url": p.get("image_url"), "publish_image": bool(p.get("image_url"))},
             "distribution": {"can_list": True, "notification_ready": False}})
 
     keywords = [k for k in c["keywords"] if k.get("enabled", True)]
