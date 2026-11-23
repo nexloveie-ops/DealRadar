@@ -169,6 +169,8 @@ def main():
             reason = "not_new"
         elif p["availability"] and re.search(r"unavailable|out of stock", p["availability"], re.I):
             reason = "unavailable"
+        if reason == "price_hidden_in_basket":
+            checked.discard(h["asin"])  # hidden from this network is not a verdict; an earlier confirmed deal is carried over
         if reason:
             rejected.append({"asin": h["asin"], "title": title, "reason": reason, "price_minor": p["price_minor"],
                              "reference_minor": p["reference_minor"], "discovered_via": h["origin"]})

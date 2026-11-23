@@ -137,7 +137,14 @@ class PriceHistory(unittest.TestCase):
         o = self.row("2026-11-22", 3495, 5995)
         collect.apply_history([o], h, now)
         self.assertEqual(o["pricing"]["observed_history"]["prior_30d_low_minor"], 3000)
-        self.assertIn("observed_lower_or_equal_price_in_prior_30d;was_price_claim_needs_review", o["verification"]["issues"])
+        self.assertIn("observed_lower_price_in_prior_30d;was_price_claim_needs_review", o["verification"]["issues"])
+
+    def test_ongoing_sale_at_same_price_is_not_flagged(self):
+        now = datetime(2026,11,23,1,tzinfo=timezone.utc)
+        h = {"ie-retail-expert-item-1":[{"date":"2026-11-22","price_minor":3495}, {"date":"2026-11-23","price_minor":3495}]}
+        o = self.row("2026-11-23", 3495, 5995)
+        collect.apply_history([o], h, now)
+        self.assertFalse(any("was_price_claim_needs_review" in i for i in o["verification"]["issues"]))
 
     def test_snapshots_never_enter_history(self):
         import json

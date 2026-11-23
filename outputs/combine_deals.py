@@ -91,7 +91,7 @@ def retailer_rows():
             notes.append("检索工具快照，读取时间不明，不能自动刷新")
         if o["eligibility"].get("conditions"):
             notes.append("促销文字：" + "; ".join(o["eligibility"]["conditions"])[:120] + "（未计入价格）")
-        if any("observed_lower_or_equal_price_in_prior_30d" in i for i in v["issues"]):
+        if any("was_price_claim_needs_review" in i for i in v["issues"]):
             notes.append("前 30 天曾观测到更低价，Was 价需复核")
         if hist:
             notes.append(f"已观测 {hist['days_observed']} 天")

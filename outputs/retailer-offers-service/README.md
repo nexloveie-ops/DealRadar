@@ -7,7 +7,7 @@
 - **Expert Ireland（expert.ie，新增）**：11 个 3C 公开分类（耳机、音箱、笔记本、平板、手机、穿戴、相机、存储、网络、游戏主机、显示器），每类最多 3 页。商品卡直接给出现价、零售商 “Was” 价，个别为 “RRP”。现价低于参考价时计算折扣；参考价不高于现价时不算折扣。只收“Add to Cart”可下单的商品，缺货、预订、翻新、展示机排除。没有库存数字，因此 stock_status 为 `available_to_order`，不是 `in_stock`。
 - **Expert 的 Was 价是零售商自己的说法**。爱尔兰/欧盟规定降价宣传应以前 30 天最低价为参考，但本程序无法核实这一点，直到自己的价格历史积累满 30 天。所以这些折扣都是 `needs_review`，`can_list` 仍为 false。
 - **Powercity**：12 个公开分类（原 6 个，新增相机、游戏主机、网络、手机配件、存储卡、相机配件）。目录没有 Was/RRP，只保存现价观察，不伪造折扣。条件促销文字单独保存，不叠加进现价。
-- **价格历史（新增）**：`data/price-history.json` 保存本程序自己直接观测到的价格，每件商品每天一条，保留 90 天。Powercity 以后可以据此判断降价；Expert 的 Was 价如果高于本程序在前 30 天观测到的最低价，会标出 `observed_lower_or_equal_price_in_prior_30d;was_price_claim_needs_review`。离线重放不写入历史，参考快照永远不进历史。
+- **价格历史（新增）**：`data/price-history.json` 保存本程序自己直接观测到的价格，每件商品每天一条，保留 90 天。Powercity 以后可以据此判断降价；如果本程序在前 30 天观测到比今天更低的价格，会标出 `observed_lower_price_in_prior_30d;was_price_claim_needs_review`，公开页面只显示现价不显示折扣；同价持续促销不受影响。离线重放不写入历史，参考快照永远不进历史。
 - **Currys、Harvey Norman**：返回 403，响应头为 `server: cloudflare`。Currys 是直接拦截（“Attention Required”），Harvey Norman 要求浏览器 JS 验证（`cf-mitigated: challenge`），连 robots.txt 也被拦。本程序不伪装浏览器、不绕过验证。六条参考快照没有准确读取时间，不能自动刷新或通知。
 - **DID Electrical**：公开页面和 Shopify 商品 JSON 在少量请求后即返回 429 `local_rate_limited`，未接入。
 - 尚未部署服务器、创建定时任务、更新 App、发送提醒或发布 Blog。

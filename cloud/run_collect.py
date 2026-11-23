@@ -50,7 +50,10 @@ def modules(mode):
     else:
         # Third-party deal sites as extra leads, then Amazon.ie search + product-page confirmation.
         m["amazon_leads"] = {"dir": "amazon-offers-service", "script": "web_collect.py", "args": [], "state": ["offers.json"], "archive": True}
-        m["amazon"] = {"dir": "amazon-offers-service", "script": "amazon_direct.py", "args": [], "state": ["search-cursor.json"], "archive": True, "leads_from": "amazon_leads"}
+        # Shares state/amazon/ with the Mac runner (local/amazon_local.sh): both re-check earlier deals and keep
+        # what the other confirmed until it expires.
+        m["amazon"] = {"dir": "amazon-offers-service", "script": "amazon_direct.py", "args": [], "state": ["offers.json", "search-cursor.json"],
+                       "archive": True, "leads_from": "amazon_leads", "previous_self": True}
     return m
 
 
@@ -68,6 +71,10 @@ def run_collector(key, spec, work):
     cmd = [sys.executable, spec["script"], "--out", str(out)] + ([] if spec.get("no_cache") else ["--cache", str(cache)]) + spec["args"]
     if spec.get("leads_from"):
         cmd += ["--leads", str(work / "out" / spec["leads_from"] / "offers.json")]
+    if spec.get("previous_self") and (out / "offers.json").exists():
+        prev = work / f"{key}-previous.json"
+        prev.write_bytes((out / "offers.json").read_bytes())
+        cmd += ["--previous", str(prev)]
     started = time.monotonic()
     try:
         p = subprocess.run(cmd, cwd=OUTPUTS / spec["dir"], capture_output=True, text=True, timeout=1500, env=os.environ.copy())

@@ -250,9 +250,10 @@ def apply_history(offers, history, now):
         prior = [p["price_minor"] for p in points if since <= p["date"] < (today or "9999")]
         o["pricing"]["observed_history"] = {"first_observed_on":points[0]["date"], "days_observed":len(points),
             "prior_30d_low_minor":min(prior) if prior else None, "prior_30d_days_observed":len(prior)}
-        if prior and o["pricing"]["reference_price_minor"] is not None and min(prior) < o["pricing"]["reference_price_minor"] \
-                and min(prior) <= o["pricing"]["device_price_minor"]:
-            o["verification"]["issues"].append("observed_lower_or_equal_price_in_prior_30d;was_price_claim_needs_review")
+        # An ongoing sale (same price on earlier days) is fine. Only a strictly lower price seen in the previous
+        # 30 days means today's "discount" is worse than what this collector already saw.
+        if prior and o["pricing"]["reference_price_minor"] is not None and min(prior) < o["pricing"]["device_price_minor"]:
+            o["verification"]["issues"].append("observed_lower_price_in_prior_30d;was_price_claim_needs_review")
     return offers
 
 
