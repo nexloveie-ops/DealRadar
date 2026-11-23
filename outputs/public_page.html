@@ -3,8 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Phone and tech deals in Ireland | mobile123</title>
-<meta name="description" content="Phone and tech deals from Mobile123, Vodafone, Three, eir, Tesco Mobile, Expert, Powercity and Amazon.ie, with prices checked twice a day.">
+<title>Deal Radar Ireland | Phone and tech deals, checked twice a day</title>
+<meta name="description" content="Deal Radar Ireland: phone and tech deals from Vodafone, Three, eir, Tesco Mobile, Expert, Powercity, Amazon.ie and Mobile123, with prices checked twice a day.">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/static/favicon-64.png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<meta property="og:site_name" content="Deal Radar Ireland">
+<meta property="og:title" content="Deal Radar Ireland">
+<meta property="og:image" content="/static/dealradar-logo-square.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
@@ -24,9 +30,9 @@ button,select,input{font:inherit;color:inherit}
 
 /* Top bar */
 .top{background:var(--paper);border-bottom:1px solid var(--line)}
-.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px}
-.brand{font-weight:700;font-size:22px;letter-spacing:-.02em;text-decoration:none;color:var(--blue)}
-.brand span{color:var(--ink);font-weight:500}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:76px}
+.brand{display:flex;align-items:center}
+.brand img{display:block;height:54px;width:auto}
 .checked{font-size:14px;color:var(--muted)}
 
 /* Hero */
@@ -115,6 +121,8 @@ footer p{margin:0;max-width:62ch}
   .controls{position:static}
   .hero .wrap{grid-template-columns:1fr;gap:26px;padding-top:28px;padding-bottom:28px}
   .checked{display:none}
+  .brand img{height:46px}
+  .top .wrap{height:66px}
 }
 @media (max-width:560px){
   .wrap{padding:0 16px}
@@ -141,7 +149,7 @@ footer p{margin:0;max-width:62ch}
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <a class="brand" href="https://www.mobile123.ie/">mobile123 <span>deals</span></a>
+  <a class="brand" href="/" aria-label="Deal Radar Ireland home"><img src="/static/dealradar-logo.png" alt="Deal Radar Ireland" width="190" height="54"></a>
   <span class="checked" id="checked"></span>
 </div></header>
 
@@ -197,7 +205,7 @@ footer p{margin:0;max-width:62ch}
 <footer><div class="wrap">
   <div><h2>How prices are checked</h2><p>We read prices from each shop's own website twice a day, at 7am and 7pm. Every deal shows when its price was checked. Prices can change after that, so the shop's page has the final price.</p></div>
   <div><h2>What the old price means</h2><p>For operators it is the same phone's price when you don't switch, or without Clubcard. For Mobile123, Expert and Powercity it is the shop's own Was price. For Amazon it is the RRP or Was price on Amazon. Where Amazon doesn't show us a price, the price comes from a deals site and says so.</p></div>
-  <div><h2>Affiliate links</h2><p>Amazon links are affiliate links. If you buy through them, mobile123 may earn a commission at no extra cost to you. Links to operators and other shops are plain links.</p></div>
+  <div><h2>Affiliate links</h2><p>Amazon links are affiliate links. If you buy through them, Deal Radar may earn a commission at no extra cost to you. Links to operators and other shops are plain links.</p></div>
 </div></footer>
 
 <script>
@@ -331,7 +339,15 @@ function renderPrice(){
   document.getElementById("maxCount").textContent = n===1 ? "1 deal" : n.toLocaleString("en-IE")+" deals";
   range.setAttribute("aria-valuetext", out);
   const span = steps.length-1;
-  const marks = steps.map((v,i) => [v,i]).filter(([v]) => v==null || TICKS.includes(v) || v===steps[0]);
+  // Labels need about 11% of the track each; drop a label that would collide with the one before it or with the end label.
+  const gap = span ? Math.ceil(span*0.11) : 1;
+  const marks = [];
+  steps.forEach((v,i) => {
+    if (!(v==null || TICKS.includes(v) || i===0)) return;
+    if (v!=null && span-i < gap) return;
+    if (marks.length && i-marks[marks.length-1][1] < gap) return;
+    marks.push([v,i]);
+  });
   document.getElementById("ticks").innerHTML = marks.map(([v,i]) => { const f=span? i/span : 1;
     return `<span style="left:calc(${f*100}% + ${9-18*f}px)">${v==null ? (hi ? "€"+Math.ceil(hi).toLocaleString("en-IE") : "Any") : "€"+(v>=1000? v/1000+"k" : v)}</span>`; }).join("");
 }

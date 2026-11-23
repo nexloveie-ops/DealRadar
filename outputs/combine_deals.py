@@ -194,7 +194,7 @@ def amazon_rows():
 
 PAGE = """<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mobile123 deals review</title>
+<title>Deal Radar internal view</title>
 <style>
 :root{--bg:#fbfaf7;--card:#fff;--ink:#1d1d1b;--muted:#6b6a64;--faint:#9a988f;--line:#e6e3da;--accent:#1f5fa8;--accent-bg:#e7f0fb;--ok:#2f6b12;--ok-bg:#eaf3de;--warn:#7a4a06;--warn-bg:#faeeda;--gray-bg:#f1efe8}
 @media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#1f1f1d;--ink:#ecebe6;--muted:#a8a69e;--faint:#7d7b74;--line:#34332f;--accent:#8db8ec;--accent-bg:#1b2f47;--ok:#a9d27a;--ok-bg:#24351a;--warn:#f0c27a;--warn-bg:#3d2c10;--gray-bg:#2a2a27}}
@@ -327,7 +327,7 @@ def render_page(rows, generated, public=False):
         data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
         return (ROOT / "public_page.html").read_text().replace("__DATA__", data).replace("__GENERATED_ISO__", html.escape(generated or ""))
     data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
-    title = "Mobile123 爱尔兰优惠" if public else "Mobile123 优惠汇总（内部视图）"
+    title = "Deal Radar Ireland" if public else "Deal Radar 优惠汇总（内部视图）"
     foot = ("对比价不是统一的“原价”：运营商是同运营商非转网价或非会员价；零售店是零售商标示的 Was 价或制造商 RRP；"
             "Amazon 是 Amazon 商品页显示的 RRP / Was 价。<br>价格在标示时间从各商家官网读取，可能已经变化，请以商家页面为准。"
             "Amazon 链接为 Amazon Associates 联盟链接（mobile123ie-21），通过链接购买 Mobile123 可能获得佣金。")
