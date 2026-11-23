@@ -31,7 +31,11 @@ BATCH = 400
 
 
 def amazon_mode():
-    return "api" if os.environ.get("AMAZON_CREATORS_CLIENT_ID") and os.environ.get("AMAZON_CREATORS_CLIENT_SECRET") else "direct"
+    if os.environ.get("AMAZON_CREATORS_CLIENT_ID") and os.environ.get("AMAZON_CREATORS_CLIENT_SECRET"):
+        return "api"
+    # "local": Amazon.ie hides prices from Google Cloud addresses, so the Amazon step runs on the owner's Mac
+    # (local/amazon_local.sh) and uploads to state/amazon/. The cloud job only reads that upload.
+    return os.environ.get("AMAZON_MODE", "direct")
 
 
 def modules(mode):
@@ -39,7 +43,9 @@ def modules(mode):
         "prepay": {"dir": "prepay-offers-service", "script": "collect.py", "args": [], "state": ["offers.json"], "archive": True},
         "retailer": {"dir": "retailer-offers-service", "script": "collect.py", "args": [], "state": ["offers.json", "price-history.json"], "archive": True},
     }
-    if mode == "api":
+    if mode == "local":
+        m["amazon"] = {"dir": "amazon-offers-service", "skip": True, "state": ["offers.json", "run-report.json"], "archive": False}
+    elif mode == "api":
         m["amazon"] = {"dir": "amazon-offers-service", "script": "collect.py", "args": ["--live"], "state": [], "archive": False, "no_cache": True}
     else:
         # Third-party deal sites as extra leads, then Amazon.ie search + product-page confirmation.
@@ -149,8 +155,9 @@ def main():
     for key, spec in specs.items():
         files = spec["state"] + (["offers.json", "run-report.json"] if args.load_only else [])
         download_state(bucket, key, sorted(set(files)), work / "out" / key)
-        if args.load_only:
-            results[key] = {"exit_code": None, "ok": True, "duration_seconds": 0, "log_tail": "load-only"}
+        if args.load_only or spec.get("skip"):
+            results[key] = {"exit_code": None, "ok": True, "duration_seconds": 0,
+                            "log_tail": "load-only" if args.load_only else "collected on the owner's Mac; read from state/"}
         else:
             results[key] = run_collector(key, spec, work)
 
@@ -160,7 +167,7 @@ def main():
         "retailer-offers-service/data/offers.json": out["retailer"] / "offers.json",
         "amazon-offers-service/web-data/offers.json": out["amazon"] / "offers.json",
     })
-    combine_deals.AMAZON_SOURCE = mode
+    combine_deals.AMAZON_SOURCE = "direct" if mode == "local" else mode
     rows = combine_deals.build_rows()
     generated = datetime.now(timezone.utc).isoformat(timespec="seconds")
     raw_by_id = {}

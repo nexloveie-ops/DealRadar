@@ -123,13 +123,19 @@ def main():
     ap.add_argument("--cache", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--leads", help="Optional third-party candidates (web_collect offers.json) to confirm as well")
+    ap.add_argument("--previous", help="Previous amazon_direct offers.json: re-checked first, and kept until expiry if not reached")
     args = ap.parse_args()
     started, now = time.monotonic(), datetime.now(timezone.utc)
     c = json.loads((ROOT / "config.json").read_text())
     d = c.get("direct", {})
     max_searches = int(d.get("max_searches_per_run", 6))
     search_gap, page_gap = float(d.get("search_interval_seconds", 10)), float(d.get("request_interval_seconds", 3))
-    max_checks, threshold, tag = int(d.get("max_product_checks", 80)), float(c["minimum_discount_percent"]), c["associate_tag"]
+    max_checks, threshold, tag = int(d.get("max_product_checks", 150)), float(c["minimum_discount_percent"]), c["associate_tag"]
+    valid_hours = float(d.get("price_valid_hours", 36))
+    previous = []
+    if args.previous and Path(args.previous).exists():
+        previous = [o for o in json.loads(Path(args.previous).read_text()).get("offers", [])
+                    if o.get("verification", {}).get("method") == "amazon_product_page"]
     fetch = Fetcher(args.cache, page_gap)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -147,6 +153,7 @@ def main():
         try:
             raw, sha = fetch.get(f"{HOST}/dp/{h['asin']}", "dp-" + h["asin"])
         except RuntimeError as exc:
+            checked.discard(h["asin"])  # a network error is not a verdict; a previous deal is carried over
             rejected.append({"asin": h["asin"], "reason": "product_page_error", "detail": str(exc)})
             return
         observed = datetime.now(timezone.utc)
@@ -178,7 +185,7 @@ def main():
             "availability_text": p["availability"], "status": "active", "matched_keyword_ids": sorted(h["keywords"]),
             "discovered_via": h["origin"], "validity": {"starts_on": None, "ends_on": None},
             "verification": {"method": "amazon_product_page", "verified_at": observed.isoformat(),
-                             "fresh_until": (observed + timedelta(hours=12)).isoformat(), "page_sha256": sha,
+                             "fresh_until": (observed + timedelta(hours=valid_hours)).isoformat(), "page_sha256": sha,
                              "issues": ["price_from_amazon_page_at_verified_at;may_change"]},
             "links": {"landing_url": affiliate_link(h["asin"], tag), "affiliate_url": affiliate_link(h["asin"], tag), "tag": tag},
             "media": {"image_url": None, "publish_image": False},
@@ -186,6 +193,10 @@ def main():
 
     keywords = [k for k in c["keywords"] if k.get("enabled", True)]
     try:
+        # 0. Re-check every Amazon deal confirmed before, so earlier finds stay current.
+        for o in previous:
+            confirm({"asin": o["product"]["asin"], "title": o["product"]["name"],
+                     "keywords": set(o.get("matched_keyword_ids") or []), "origin": o.get("discovered_via", "previous")})
         # 1. Third-party leads: confirm each on its Amazon product page.
         if args.leads and Path(args.leads).exists():
             for o in json.loads(Path(args.leads).read_text()).get("offers", []):
@@ -220,14 +231,22 @@ def main():
     except Blocked as exc:
         report["blocked"] = str(exc)
     write_json(cursor_file, {"next": cursor, "keywords": len(keywords)})
+    # Deals not reached this run (cut short) stay until their own expiry, with their original check time.
+    carried = 0
+    for o in previous:
+        if o["product"]["asin"] not in checked and datetime.fromisoformat(o["verification"]["fresh_until"]) > now:
+            o["verification"]["issues"] = sorted(set(o["verification"].get("issues", []) + ["not_rechecked_this_run"]))
+            offers.append(o)
+            carried += 1
+    report["carried_over"] = carried
     offers.sort(key=lambda o: -o["pricing"]["discount_percent"])
     report.update(duration_seconds=round(time.monotonic() - started, 1), requests=fetch.count, candidates=len(checked),
-                  confirmed=len(offers), rejected=len(rejected))
+                  confirmed=len(offers) - carried, rejected=len(rejected))
     write_json(out / "offers.json", {"schema_version": "1.0.0", "module_id": "amazon_promotions", "generated_at": now.isoformat(),
                                      "source": "amazon_direct", "offers": offers})
     write_json(out / "rejected.json", {"records": rejected})
     write_json(out / "run-report.json", report)
-    print(json.dumps({k: report[k] for k in ("duration_seconds", "requests", "candidates", "confirmed", "rejected", "blocked", "search_blocked")}))
+    print(json.dumps({k: report[k] for k in ("duration_seconds", "requests", "candidates", "confirmed", "carried_over", "rejected", "blocked", "search_blocked")}))
     return 2 if report["blocked"] or report["search_blocked"] or report["errors"] else 0
 
 

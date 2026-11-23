@@ -244,7 +244,8 @@
     "max_searches_per_run": 6,
     "search_interval_seconds": 10,
     "request_interval_seconds": 3,
-    "max_product_checks": 80,
-    "note": "Owner chose direct Amazon.ie collection without the Creators API on 2026-11-23. Search triggers Amazon's bot challenge after about 10 quick requests, so searches are few per run and rotate through keywords; any challenge stops that step."
+    "max_product_checks": 150,
+    "note": "Owner chose direct Amazon.ie collection without the Creators API on 2026-11-23. Search triggers Amazon's bot challenge after about 10 quick requests, so searches are few per run and rotate through keywords; any challenge stops that step.",
+    "price_valid_hours": 36
   }
 }
