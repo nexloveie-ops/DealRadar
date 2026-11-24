@@ -14,7 +14,7 @@
         "product":{"type":"object","required":["asin","name","condition"],"properties":{"asin":{"type":"string","pattern":"^[A-Z0-9]{10}$"},"name":{"type":"string","minLength":1},"condition":{"const":"unconfirmed"}}},
         "pricing":{"type":"object","required":["device_price_minor","reference_price_minor","reference_type","discount_percent","discount_exact_fraction"],"properties":{
           "device_price_minor":{"type":"integer","minimum":1},"reference_price_minor":{"type":"integer","minimum":1},"reference_type":{"type":"string"},
-          "discount_percent":{"type":"number","minimum":40,"maximum":100},"discount_exact_fraction":{"type":"object","required":["saving_minor","reference_minor"]}}},
+          "discount_percent":{"type":"number","minimum":20,"maximum":100},"discount_exact_fraction":{"type":"object","required":["saving_minor","reference_minor"]}}},
         "verification":{"type":"object","required":["method","verified_at","discovered_at","fresh_until","source_quote_checked_at","source_updated_at","issues","amazon_page_check"],"properties":{
           "method":{"const":"public_html_third_party"},"verified_at":{"type":"null"},
           "discovered_at":{"type":"string","format":"date-time"},"fresh_until":{"type":"string","format":"date-time"},

@@ -110,4 +110,14 @@ class PublicWebRules(unittest.TestCase):
         self.assertIsNone(rows[0]['price']);self.assertIsNone(rows[0]['reference'])
 
 
+class SchemaMatchesThreshold(unittest.TestCase):
+    def test_schema_minimum_matches_config_threshold(self):
+        # 2026-11-24: the threshold moved to 20% but this schema still said 40, and one 36.84% lead failed the whole step.
+        import json
+        root = __import__("pathlib").Path(__file__).resolve().parent
+        schema = json.loads((root / "web-offers.schema.json").read_text())
+        minimum = schema["properties"]["offers"]["items"]["properties"]["pricing"]["properties"]["discount_percent"]["minimum"]
+        self.assertLessEqual(minimum, json.loads((root / "config.json").read_text())["minimum_discount_percent"])
+
+
 if __name__=='__main__':unittest.main()
