@@ -21,3 +21,5 @@ outputs/prepay-offers-service/data/*
 !outputs/prepay-offers-service/data/offers.json
 outputs/mobile123-offers-service/data/
 outputs/retailer-offers-service/hn-data/
+outputs/retailer-offers-service/very-data/
+outputs/retailer-offers-service/very-cache/

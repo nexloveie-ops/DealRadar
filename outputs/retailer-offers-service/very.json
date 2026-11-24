@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "client_config_url": "https://cnstrc.com/js/cust/the-very-group_MgRYWn.js",
+  "api_origin": "https://wpkmgeuco-zone.cnstrc.com",
+  "page_size": 200,
+  "max_pages_per_category": 3,
+  "max_workers": 3,
+  "timeout_seconds": 25,
+  "max_attempts": 2,
+  "freshness_hours": 24,
+  "minimum_discount_percent_exclusive": 20,
+  "categories": [
+    {"category": "phones", "group_id": "technology-mobile-phones"},
+    {"category": "computers", "group_id": "technology-laptops"},
+    {"category": "tablets", "group_id": "technology-tablets"},
+    {"category": "monitors", "group_id": "technology-pc-monitors"},
+    {"category": "storage", "group_id": "technology-data-storage"}
+  ]
+}

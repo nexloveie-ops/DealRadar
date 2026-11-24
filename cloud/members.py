@@ -53,6 +53,7 @@ CHANNELS = [
     {"id": "harvey_norman", "name": "Harvey Norman", "group": "Shops", "stores": ["Harvey Norman"], "setting": ("shops", "harvey_norman")},
     {"id": "expert", "name": "Expert", "group": "Shops", "stores": ["Expert Ireland", "Expert"], "setting": ("shops", "expert")},
     {"id": "powercity", "name": "Powercity", "group": "Shops", "stores": ["Powercity"], "setting": ("shops", "powercity")},
+    {"id": "very", "name": "Very.ie", "group": "Shops", "stores": ["Very.ie"], "setting": ("shops", "very")},
     {"id": "amazon", "name": "Amazon.ie", "group": "Online", "stores": ["Amazon.ie"], "setting": None},
     {"id": "mobile123", "name": "Mobile123", "group": "Online", "stores": ["Mobile123"], "setting": None},
 ]

@@ -16,8 +16,9 @@ OPERATORS = {"vodafone": "Vodafone", "three": "Three", "eir": "eir", "tesco_mobi
 RETAIL_ADAPTERS = {"powercity": ("powercity_cards", "powercity.ie", 0.7, 1), "expert": ("expert_cards", "www.expert.ie", 10, 3)}
 RETAIL_CATEGORIES = ["headphones", "speakers", "computers", "tablets", "phones", "storage", "wearables", "cameras",
                      "gaming", "networking", "accessories", "monitors"]
-SHOPS = {"powercity": "Powercity", "expert": "Expert", "harvey_norman": "Harvey Norman"}
+SHOPS = {"powercity": "Powercity", "expert": "Expert", "harvey_norman": "Harvey Norman", "very": "Very.ie"}
 DOC = ("settings", "sources")
+PUBLIC_MIN_DISCOUNT = 30.0  # default for retail chains and Amazon on the public page; 20-30% stays members only
 # Shops checked but not collected, shown read-only in the admin panel with the reason.
 UNAVAILABLE_SHOPS = [
     {"name": "Currys", "site": "currys.ie", "reason": "Blocks automated access (Cloudflare, HTTP 403). Needs a product feed or affiliate programme."},
@@ -31,7 +32,8 @@ def defaults():
     hn = json.loads((OUTPUTS / "retailer-offers-service/harvey-norman.json").read_text())
     return {
         "shops": [{"id": k, "name": v, "enabled": True} for k, v in SHOPS.items()],
-        "retail_min_discount": float(hn.get("minimum_discount_percent", 30)),
+        # Public page minimum; not harvey-norman.json's value, which is the 20% collection minimum.
+        "retail_min_discount": PUBLIC_MIN_DISCOUNT,
         "harvey_norman_searches": [{"id": x["id"], "query": x["query"], "category": x["category"], "enabled": x.get("enabled", True)}
                                    for x in hn["searches"]],
         "operators": [{"id": k, "name": v, "enabled": True} for k, v in OPERATORS.items()],

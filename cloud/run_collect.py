@@ -46,6 +46,7 @@ def modules(mode):
     m = {
         "prepay": {"dir": "prepay-offers-service", "script": "collect.py", "args": [], "state": ["offers.json"], "archive": True},
         "retailer": {"dir": "retailer-offers-service", "script": "collect.py", "args": [], "state": ["offers.json", "price-history.json"], "archive": True},
+        "very": {"dir": "retailer-offers-service", "script": "very.py", "args": [], "state": ["offers.json"], "archive": True},
         "harvey_norman": {"dir": "retailer-offers-service", "script": "harvey_norman.py", "args": [], "state": ["offers.json"],
                           "archive": True, "no_cache": True},
         # Products members watch (Harvey Norman, Expert, Powercity, Mobile123); Amazon ones go to the Amazon step.
@@ -233,6 +234,8 @@ def main():
     # Admin settings (Firestore settings/sources) decide which pages and keywords the collectors use.
     current, settings_at, _ = admin_settings.load(db)
     applied = admin_settings.apply(current)
+    if "very" in applied["disabled_shops"]:
+        specs["very"]["args"] = ["--disabled"]
     combine_deals.DISABLED_OPERATORS = set(applied["disabled_operators"])
     combine_deals.DISABLED_SHOPS = set(applied["disabled_shops"])
     combine_deals.PUBLIC_MIN_DISCOUNT = float(applied["retail_min_discount"])
@@ -279,6 +282,7 @@ def main():
         "prepay-offers-service/data/offers.json": out["prepay"] / "offers.json",
         "retailer-offers-service/data/offers.json": out["retailer"] / "offers.json",
         "harvey-norman": out["harvey_norman"] / "offers.json",
+        "very": out["very"] / "offers.json",
         "mobile123-offers-service/data/offers.json": out["mobile123"] / "offers.json",
         "amazon-offers-service/web-data/offers.json": out["amazon"] / "offers.json",
         "amazon-leads": out["amazon_leads"] / "offers.json" if "amazon_leads" in out else Path("/nonexistent"),

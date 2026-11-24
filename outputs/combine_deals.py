@@ -25,6 +25,7 @@ INPUTS = {
     "mobile123-offers-service/data/offers.json": ROOT / "mobile123-offers-service/data/offers.json",
     "amazon-direct-rejected": ROOT / "amazon-offers-service/direct-data/rejected.json",
     "harvey-norman": ROOT / "retailer-offers-service/hn-data/offers.json",
+    "very": ROOT / "retailer-offers-service/very-data/offers.json",
 }
 DISABLED_OPERATORS = set()  # operator ids switched off in the admin settings
 # Collected: every retail-chain and Amazon discount of at least COLLECT_MIN_DISCOUNT %.
@@ -106,7 +107,7 @@ def operator_rows():
 def retailer_rows():
     data = load("retailer-offers-service/data/offers.json")
     hn = load("harvey-norman").get("offers", [])
-    offers = [o for o in data["offers"] if not (hn and o["provider_id"] == "harvey_norman")] + hn
+    offers = [o for o in data["offers"] if not (hn and o["provider_id"] == "harvey_norman")] + hn + load("very").get("offers", [])
     rows = []
     hosts = ["powercity.ie", "expert.ie", "currys.ie", "harveynorman.ie"]
     for o in offers:
@@ -117,7 +118,8 @@ def retailer_rows():
         if p.get("discount_percent") is None or p["discount_percent"] < COLLECT_MIN_DISCOUNT:
             continue
         ucp = v["method"] == "official_ucp_catalog"
-        live = v["method"] == "direct_official_html" or ucp
+        constructor = o["provider_id"] == "very" and v["method"] == "direct_storefront_constructor_json"
+        live = v["method"] == "direct_official_html" or ucp or constructor
         hist = p.get("observed_history") or {}
         notes = []
         if not live:
@@ -135,13 +137,13 @@ def retailer_rows():
             "reference_label": {"retailer_was_price": "零售商 Was 价", "manufacturer_rrp": "制造商 RRP",
                                 "observed_price_drop": "我们此前观测到的价格"}.get(p["reference_type"], p["reference_type"]),
             "discount_percent": p["discount_percent"],
-            "price_basis": "零售商官方商品目录接口（本次读取）" if ucp else ("零售商官网（本次直接读取）" if live else "官网快照（非实时）"),
+            "price_basis": "零售商前端商品目录（本次直接读取）" if constructor else ("零售商官方商品目录接口（本次读取）" if ucp else ("零售商官网（本次直接读取）" if live else "官网快照（非实时）")),
             "who": "所有顾客", "ends_on": None, "status": o["status"], "can_list": o["distribution"]["can_list"],
             "store": o["provider_name"], "source_site": o["provider_name"], "price_source": "retailer",
             "checked_at": v.get("observed_at"), "condition_code": None,
             "reference_kind": {"retailer_was_price": "was_price", "manufacturer_rrp": "rrp", "observed_price_drop": "price_drop"}.get(p["reference_type"]),
             "reference_seen_on": (p.get("reference_period") or {}).get("ends_on") if p["reference_type"] == "observed_price_drop" else None,
-            "fresh_until": v.get("fresh_until"), "buy_url": official(o["links"]["landing_url"], hosts),
+            "fresh_until": v.get("fresh_until"), "buy_url": official(o["links"]["landing_url"], ["very.ie"] if constructor else hosts),
             "terms_url": None, "link_type": "官网链接（无联盟）", "notes": "；".join(notes)})
     return rows
 
@@ -283,8 +285,11 @@ def auto_publish(r, raw, now):
         return (True, "运营商官网及条款核对通过") if r["can_list"] else (False, "条款或资格不完整")
     if r["module"] == "retailer":
         v = (raw or {}).get("verification", {})
-        if v.get("method") not in ("direct_official_html", "official_ucp_catalog"):
+        constructor = (raw or {}).get("provider_id") == "very" and v.get("method") == "direct_storefront_constructor_json"
+        if v.get("method") not in ("direct_official_html", "official_ucp_catalog") and not constructor:
             return False, "非本次官网直接读取（快照）"
+        if constructor and not (raw or {}).get("distribution", {}).get("can_list"):
+            return False, "Very 商品本次不可收录"
         if any("was_price_claim_needs_review" in i for i in v.get("issues", [])):
             r.update(reference_minor=None, discount_percent=None, reference_label="已隐藏：前 30 天观测到更低价")
         return True, "零售商官网本次直接读取"
@@ -326,7 +331,7 @@ def build_rows():
     rows = mobile123_rows() + operator_rows() + retailer_rows() + amazon_rows()
     raw = {}
     for key in ("prepay-offers-service/data/offers.json", "retailer-offers-service/data/offers.json", "amazon-offers-service/web-data/offers.json",
-                "mobile123-offers-service/data/offers.json", "harvey-norman"):
+                "mobile123-offers-service/data/offers.json", "harvey-norman", "very"):
         for o in load(key).get("offers", []):
             raw[o["id"]] = o
     now = datetime.now(timezone.utc)
