@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>What I follow | Deal Radar Ireland</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#3565E0;--blue-dark:#1E48B5;--tag:#FFD43B;
+  --ink:#16213A;--muted:#5B6578;--strike:#8A93A3;--shelf:#EEF1F5;--paper:#FFFFFF;--line:#DCE1EA;
+  --ok:#2F6B12;--ok-bg:#EAF3DE;--err:#A32D2D;--err-bg:#FCEBEB;
+  --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--num:"Barlow Condensed","Arial Narrow",sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--shelf);color:var(--ink);font:16px/1.5 var(--sans)}
+a{color:inherit}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+.hidden{display:none!important}
+
+.top{background:var(--paper);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:76px}
+.brand img{display:block;height:54px;width:auto}
+.who{display:flex;align-items:center;gap:14px;font-size:14px;color:var(--muted);min-width:0}
+.acct{font-weight:700;font-size:15px;color:var(--blue);text-decoration:none;border:1px solid var(--line);border-radius:4px;padding:8px 14px;white-space:nowrap;background:var(--paper)}
+.acct:hover{border-color:var(--blue)}
+button.acct{cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.caret{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-top:-4px}
+.acctmenu{position:relative}
+.menulist{position:absolute;right:0;top:calc(100% + 6px);background:var(--paper);border:1px solid var(--line);border-radius:6px;
+  box-shadow:0 8px 24px rgba(22,33,58,.12);min-width:210px;padding:6px;z-index:50;display:flex;flex-direction:column}
+.menulist[hidden]{display:none}
+.menulist .mail{font-size:13px;color:var(--muted);padding:8px 12px 10px;border-bottom:1px solid var(--line);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px}
+.menulist a,.menulist button{display:block;text-align:left;padding:9px 12px;border-radius:4px;text-decoration:none;color:var(--ink);background:none;border:0;font:500 15px/1.3 var(--sans);cursor:pointer}
+.menulist a:hover,.menulist button:hover{background:var(--shelf)}
+.menulist a[aria-current=page]{color:var(--blue);font-weight:700}
+.menulist button{border-top:1px solid var(--line);border-radius:0 0 4px 4px;margin-top:4px;color:var(--muted)}
+.link{background:none;border:0;padding:0;color:var(--blue);font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+.btn{text-decoration:none;display:inline-block;border:0;background:var(--blue);color:#fff;font-weight:700;padding:10px 18px;border-radius:4px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--blue-dark)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:var(--paper);color:var(--ink);border:1px solid var(--line);font-weight:500}
+.btn.ghost:hover{border-color:var(--ink)}
+.btn.small{padding:5px 10px;font-size:13px}
+input[type=text],input[type=email],input[type=url]{border:1px solid var(--line);border-radius:4px;padding:10px 12px;background:var(--paper);width:100%}
+.msg{font-size:14px;padding:8px 12px;border-radius:4px;margin:12px 0 0}
+.msg.ok{background:var(--ok-bg);color:var(--ok)}
+.msg.err{background:var(--err-bg);color:var(--err)}
+.note{font-size:13px;color:var(--muted)}
+
+/* Sign in */
+.signin{max-width:440px;margin:56px auto;background:var(--paper);border-radius:6px;padding:28px}
+.signin h1{font-size:28px;line-height:1.15;letter-spacing:-.02em;margin:0 0 8px}
+.signin p{color:var(--muted);margin:0 0 20px}
+.google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px;border:1px solid var(--line);border-radius:4px;background:var(--paper);font-weight:500;cursor:pointer}
+.google:hover{border-color:var(--ink)}
+.or{display:flex;align-items:center;gap:12px;color:var(--strike);font-size:13px;margin:18px 0}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.emailrow{display:flex;gap:8px}
+.emailrow input{flex:1;min-width:0}
+
+/* Page head and tabs */
+.head{background:var(--paper)}
+.head .wrap{padding-top:28px;padding-bottom:0}
+.head h1{font-size:clamp(28px,3.4vw,40px);line-height:1.1;letter-spacing:-.025em;margin:0 0 6px}
+.head p{color:var(--muted);margin:0 0 20px;max-width:62ch}
+.tabs{display:flex;gap:4px}
+.tabs button{border:0;background:none;padding:10px 4px;margin-right:18px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--blue)}
+main .wrap{padding-top:24px;padding-bottom:56px}
+
+/* Deals */
+.count{font-size:14px;color:var(--muted);margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.deal{background:var(--paper);border-radius:4px;display:flex;flex-direction:column;overflow:hidden}
+.shot{height:190px;display:flex;align-items:center;justify-content:center;padding:14px;border-bottom:1px solid var(--shelf)}
+.shot img{display:block;width:100%;height:100%;object-fit:contain}
+.shot .none{font:700 28px/1 var(--sans);color:var(--line)}
+.body{padding:14px 16px 16px;display:flex;flex-direction:column;flex:1}
+.store{font-size:13px;font-weight:700;color:var(--blue);margin:0 0 4px}
+.title{font-size:15px;font-weight:500;line-height:1.35;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.7em}
+.priceline{display:flex;align-items:center;flex-wrap:wrap;row-gap:4px}
+.tag{position:relative;display:inline-flex;align-items:center;background:var(--tag);color:var(--ink);
+  font:700 30px/1 var(--num);letter-spacing:.01em;padding:7px 14px 6px 26px;
+  clip-path:polygon(14px 0,100% 0,100% 100%,14px 100%,0 50%);font-variant-numeric:tabular-nums}
+.tag::before{content:"";position:absolute;left:11px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--paper)}
+.tag .c{font-size:.62em;margin-right:1px;align-self:flex-start;margin-top:3px}
+.was{font-size:15px;color:var(--strike);text-decoration:line-through;margin-left:10px;white-space:nowrap}
+.save{font-size:14px;font-weight:700;margin:6px 0 0}
+.why{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.why span{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--shelf);color:var(--muted)}
+.why span.w{background:var(--tag);color:var(--ink);font-weight:500}
+.src{font-size:12.5px;color:var(--muted);margin:8px 0 14px}
+.go{margin-top:auto;display:block;text-align:center;text-decoration:none;background:var(--blue);color:#fff;font-weight:700;font-size:15px;padding:10px 12px;border-radius:4px}
+.go:hover{background:var(--blue-dark)}
+.aff{font-size:11.5px;line-height:16px;min-height:16px;color:var(--strike);text-align:center;margin:6px 0 0}
+.empty{background:var(--paper);border-radius:4px;padding:36px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:18px;margin-bottom:6px}
+
+/* Follow settings */
+.headrow{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.head .headrow{padding-bottom:24px}
+.head p a{color:var(--blue);font-weight:500}
+.sub{color:var(--muted);margin:0 0 16px;font-size:15px;max-width:70ch}
+.fold summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary h2{display:inline;margin-right:10px}
+.fold[open] summary{margin-bottom:12px}
+.chev{width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s;flex:none;margin-right:4px}
+.fold[open] .chev{transform:rotate(-135deg)}
+.kw{border-bottom:1px solid var(--line)}
+.kw:last-child{border-bottom:0}
+.kw summary{list-style:none;display:grid;grid-template-columns:54px 14px minmax(0,1fr) 38px 170px 104px 112px 76px 150px;align-items:center;gap:12px;padding:10px 0;cursor:pointer}
+.rcell{width:38px;height:38px;display:block}
+.scell,.mcell{display:block}
+.acts{display:flex;gap:8px;justify-content:flex-end}
+.kw summary .n{text-align:right}
+.kw summary::-webkit-details-marker{display:none}
+.kw summary .q{font-weight:500;flex:1 1 140px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kw summary .n{font-size:14px;color:var(--muted);white-space:nowrap}
+select{border:1px solid var(--line);border-radius:4px;padding:9px 10px;background:var(--paper);cursor:pointer}
+.kw summary select{padding:5px 8px;font-size:13px}
+.kw summary .n b{color:var(--ink)}
+.kw .chev{transform:rotate(-45deg)}
+.kw[open] .chev{transform:rotate(45deg)}
+.kw .info{font-size:13px;color:var(--muted);margin:0 0 10px}
+.plan{font-size:14px;background:var(--shelf);border-radius:4px;padding:10px 12px;margin:0 0 8px}
+.witem{display:grid;grid-template-columns:54px 48px minmax(0,1fr) 38px 170px 104px 150px;
+  grid-template-areas:"mv im nm r lf st ac" "mv im cd cd ck ck ck";align-items:center;column-gap:12px;row-gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
+.witem .move{grid-area:mv} .witem img,.witem .ph{grid-area:im} .witem .wname{grid-area:nm} .witem .rcell{grid-area:r}
+.witem .life{grid-area:lf} .witem .scell{grid-area:st} .witem .cond{grid-area:cd} .witem .wchk{grid-area:ck} .witem .acts{grid-area:ac}
+.witem .wchk{flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:10px}
+.witem:last-child{border-bottom:0}
+.witem img,.witem .ph{width:48px;height:48px;object-fit:contain;background:var(--shelf);border-radius:3px;display:block}
+.wname{min-width:0}
+.wname b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wname a{font-size:13px;color:var(--muted)}
+.witem.expired .wname b{color:var(--strike)}
+.witem.met{background:linear-gradient(90deg,#FFF6CC,transparent 60%)}
+.cond{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+.cond select{padding:5px 8px;font-size:13px}
+.cval{display:inline-flex;align-items:center;gap:3px;font-size:13px}
+.cval input{width:70px;padding:5px 6px;border:1px solid var(--line);border-radius:4px;font-size:13px}
+.wchk{font-size:13px;display:flex;flex-direction:column;gap:2px}
+.wchk b{font-size:15px}
+.wchk s{color:var(--strike);margin-left:6px}
+.wchk em{font-style:normal;font-weight:700;margin-left:6px}
+.wchk .st{color:var(--muted);font-size:12.5px}
+.wchk.muted{color:var(--muted)}
+.badge.hit{background:var(--tag);color:var(--ink);font-weight:500;align-self:flex-start}
+.collect{margin:0 0 6px}
+/* Time left on a word: a dial for words being searched, a bar for the others */
+.life{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.dial{width:38px;height:38px;flex:none;display:block}
+.dial .track{stroke:var(--line)}
+.dial .arc{stroke:var(--blue);transition:stroke-dashoffset .3s}
+.dial text{font:700 10px var(--sans);fill:var(--ink)}
+.life.low .arc{stroke:#C77700}
+.bar{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--blue);border-radius:3px}
+.life.low .bar i{background:#C77700}
+.life .left{font-size:12.5px;color:var(--muted)}
+.life.low .left{color:#8A5300}
+
+.badge.off{background:#F1EFE8;color:#888780}
+.kw.expired summary .q{color:var(--strike)}
+.kw.expired summary{opacity:.85}
+.move{display:inline-flex;gap:2px}
+.arrow{border:1px solid var(--line);background:var(--paper);border-radius:3px;width:24px;height:24px;line-height:1;cursor:pointer;color:var(--muted);padding:0}
+.arrow:disabled{opacity:.35;cursor:default}
+.items{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
+.item{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;background:var(--shelf);border-radius:4px;padding:8px 10px}
+.item img,.item .ph{width:64px;height:64px;object-fit:contain;background:var(--paper);border-radius:3px;display:block}
+.item .t{font-size:14px;font-weight:500;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item .m{font-size:13px;color:var(--muted);margin-top:2px}
+.item .m b{color:var(--ink);font-size:15px}
+.item .m s{color:var(--strike);margin-left:6px}
+.item .m em{font-style:normal;font-weight:700;color:var(--ink);margin-left:6px}
+.item .go2{font-size:14px;font-weight:700;color:var(--blue);text-decoration:none;white-space:nowrap}
+.panel{background:var(--paper);border-radius:6px;padding:22px;margin-bottom:16px}
+.panel h2{font-size:19px;margin:0 0 4px}
+.panel > p{color:var(--muted);margin:0 0 16px;font-size:15px;max-width:70ch}
+@media (max-width:640px){.item{grid-template-columns:48px 1fr}.item img,.item .ph{width:48px;height:48px}.item .go2{grid-column:2}}
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+.groups h3{font-size:13px;color:var(--muted);font-weight:500;margin:0 0 8px}
+.check{display:flex;align-items:center;gap:10px;padding:7px 0;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--blue)}
+.addrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.addrow input{flex:1 1 260px}
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.list li:last-child{border-bottom:0}
+.list .main{flex:1;min-width:0}
+.list .main b{font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list .main a{font-size:13px;color:var(--muted);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--shelf);color:var(--muted);white-space:nowrap}
+.badge.on{background:var(--ok-bg);color:var(--ok)}
+.savebar{display:flex;align-items:center;gap:12px;margin-top:16px}
+
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .top .wrap{height:66px}
+  .brand img{height:44px}
+  .who{gap:8px}
+  .acct{padding:7px 10px;font-size:14px}
+  .kw summary{flex-wrap:wrap;row-gap:6px}
+  /* Phone: three rows, every word laid out the same way */
+  .witem{grid-template-columns:auto 48px minmax(0,1fr) auto;grid-template-areas:"mv im nm r" "lf lf lf st" "cd cd cd cd" "ck ck ck ac";row-gap:8px;column-gap:10px}
+  .witem .move{grid-area:mv} .witem img,.witem .ph{grid-area:im} .witem .wname{grid-area:nm} .witem .rcell{grid-area:r}
+  .witem .life{grid-area:lf} .witem .scell{grid-area:st;justify-self:end} .witem .cond{grid-area:cd} .witem .wchk{grid-area:ck} .witem .acts{grid-area:ac}
+  .kw summary{grid-template-columns:auto minmax(0,1fr) auto auto;grid-template-areas:"mv q q r" "lf lf lf st" "mn mn ct ac";row-gap:8px;column-gap:10px}
+  .kw summary .chev{display:none}
+  .kw summary .move{grid-area:mv}
+  .kw summary .q{grid-area:q;justify-self:start;text-align:left;width:100%}
+  .kw summary .rcell{grid-area:r}
+  .kw summary .life{grid-area:lf}
+  .kw summary .scell{grid-area:st;justify-self:end}
+  .kw summary .mcell{grid-area:mn}
+  .kw summary .n{grid-area:ct;text-align:left}
+  .kw summary .acts{grid-area:ac}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .shot{height:140px}
+  .tag{font-size:24px;padding:6px 10px 5px 22px}
+  .body{padding:12px}
+  .emailrow{flex-direction:column}
+}
+@media (max-width:380px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="/" aria-label="Deal Radar Ireland home"><img src="/static/dealradar-logo.png" alt="Deal Radar Ireland" width="190" height="54"></a>
+  <div class="who" id="who"><a class="acct" href="/">All deals</a></div>
+</div></header>
+
+<section class="signin hidden" id="signin">
+  <h1>Your own deal list</h1>
+  <p>Sign in to follow the shops and networks you use, add your own search words, and watch the products you want.</p>
+  <button class="google" id="google" type="button">
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+    Continue with Google
+  </button>
+  <div class="or">or</div>
+  <form class="emailrow" id="emailForm">
+    <input type="email" id="email" required autocomplete="email" placeholder="you@example.com" aria-label="Email address">
+    <button class="btn" type="submit">Email me a sign-in link</button>
+  </form>
+  <p class="msg hidden" id="signinMsg" role="status"></p>
+</section>
+
+<div id="app" class="hidden">
+  <section class="head"><div class="wrap">
+    <div class="headrow">
+      <div>
+        <h1>What I follow</h1>
+        <p>Choose the shops and networks, search words and products that make up your <a href="/my-deals">My deals</a> list.</p>
+      </div>
+      <a class="btn" href="/my-deals">See my deals</a>
+    </div>
+  </div></section>
+
+  <main><div class="wrap">
+    <details class="panel fold" id="chanFold">
+      <summary><span><h2>Shops and networks</h2><span class="note" id="chanSummary"></span></span><span class="chev" aria-hidden="true"></span></summary>
+      <p>All discounted deals from the ones you tick show in My deals.</p>
+      <div class="groups" id="channels"></div>
+      <div class="savebar">
+        <button class="btn" id="saveChannels" type="button">Save</button>
+        <button class="link" id="allChannels" type="button">Tick all</button>
+        <button class="link" id="noChannels" type="button">Untick all</button>
+        <span class="msg hidden" id="channelsMsg" role="status"></span>
+      </div>
+    </details>
+
+    <section class="panel">
+      <div class="headrow">
+        <div>
+          <h2>Search words</h2>
+          <p class="sub">Deals whose name contains your words, from any shop, at the discount you choose for each word.</p>
+        </div>
+        <button class="btn ghost" id="loadKw" type="button">Load deals</button>
+      </div>
+      <p class="plan" id="planNote"></p>
+      <p class="note collect" id="collectNote"></p>
+      <div id="keywords"></div>
+      <form class="addrow" id="kwForm">
+        <input type="text" id="kwInput" maxlength="60" placeholder="e.g. Pixel 9, noise cancelling, Garmin" aria-label="Search word">
+        <select id="kwMin" aria-label="Minimum discount for this word"></select>
+        <button class="btn" type="submit">Add word</button>
+      </form>
+      <p class="msg hidden" id="kwMsg" role="status"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Products I'm watching</h2>
+      <p class="sub">Paste a product link from Amazon.ie, Harvey Norman, Expert, Powercity or Mobile123. We check its price at every collection; when it meets your condition it shows at the top of My deals.</p>
+      <p class="plan" id="watchPlan"></p>
+      <div id="watch"></div>
+      <form class="addrow" id="watchForm">
+        <input type="url" id="watchUrl" placeholder="https://www.amazon.ie/dp/…" aria-label="Product link">
+        <input type="text" id="watchLabel" maxlength="80" placeholder="Name (optional)" aria-label="Name for this product" style="flex:0 1 200px">
+        <span class="cond" id="newCond"></span>
+        <button class="btn" type="submit">Watch</button>
+      </form>
+      <p class="msg hidden" id="watchMsg" role="status"></p>
+    </section>
+  </div></main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink,
+         onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const show = (el, on) => el.classList.toggle("hidden", !on);
+const say = (el, text, ok) => { el.textContent = text; el.className = "msg " + (ok ? "ok" : "err"); };
+const eur = m => m==null ? "" : "€" + (m/100).toLocaleString("en-IE",{minimumFractionDigits:m%100?2:0,maximumFractionDigits:2});
+const dub = new Intl.DateTimeFormat("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit",hour12:false});
+const day = new Intl.DateTimeFormat("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"});
+const when = iso => { if(!iso) return ""; const d=new Date(iso), n=new Date(); return day.format(d)===day.format(n) ? dub.format(d)+" today" : day.format(d); };
+const store = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (_) {} };
+const read = k => { try { return localStorage.getItem(k); } catch (_) { return null; } };
+
+const cfg = await (await fetch("/api/auth-config")).json();
+const auth = getAuth(initializeApp(cfg));
+let token = null, me = null, channels = [];
+
+async function api(path, opts = {}) {
+  token = await auth.currentUser.getIdToken();
+  const r = await fetch(path, {...opts, headers: {"Authorization": "Bearer " + token, "Content-Type": "application/json"}});
+  const body = await r.json().catch(() => ({}));
+  if (r.status === 401) throw new Error("Your sign-in has expired. Sign in again.");
+  if (!r.ok) throw new Error(body.error || "Something went wrong (" + r.status + "). Try again.");
+  return body;
+}
+
+// Sign in
+$("google").onclick = async () => {
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch (err) {
+    const msg = err.code === "auth/operation-not-allowed" ? "Google sign-in isn't switched on yet. Use the email link for now."
+      : err.code === "auth/popup-closed-by-user" ? "The Google window was closed before signing in." : "Google sign-in didn't work (" + err.code + ").";
+    say($("signinMsg"), msg, false);
+  }
+};
+$("emailForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const email = $("email").value.trim();
+  try {
+    await sendSignInLinkToEmail(auth, email, {url: location.origin + "/account", handleCodeInApp: true});
+    store("dr-member-email", email);
+    say($("signinMsg"), "We sent a sign-in link to " + email + ". Open it on this device. If you can't see it, check your spam folder.", true);
+  } catch (err) { say($("signinMsg"), "We couldn't send the link (" + err.code + "). Check the address and try again.", false); }
+});
+if (isSignInWithEmailLink(auth, location.href)) {
+  let email = read("dr-member-email");
+  if (!email) email = prompt("Confirm your email address to finish signing in");
+  try { await signInWithEmailLink(auth, email, location.href); history.replaceState(null, "", "/account"); }
+  catch (err) { say($("signinMsg"), "That sign-in link didn't work (" + err.code + "). Ask for a new one.", false); }
+}
+
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    store("dr-member", null);
+    show($("signin"), true); show($("app"), false);
+    $("who").innerHTML = `<a class="acct" href="/">All deals</a>`;
+    return;
+  }
+  try {
+    const r = await api("/api/me");
+    me = r.member; channels = r.channels; coll = r.collection;
+    store("dr-member", "1");
+    $("who").innerHTML = `<a class="acct" href="/my-deals">My deals</a>
+      <div class="acctmenu"><button class="acct" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="menuList">Account<span class="caret" aria-hidden="true"></span></button>
+        <div class="menulist" id="menuList" role="menu" hidden><div class="mail">${esc(me.email)}</div>
+          <a role="menuitem" href="/">All deals</a><a role="menuitem" href="/my-deals">My deals</a>
+          <a role="menuitem" href="/account" aria-current="page">What I follow</a>
+          <button role="menuitem" type="button" id="out">Sign out</button></div></div>`;
+    $("out").onclick = async () => { store("dr-member", null); await signOut(auth); location.href = "/"; };
+    $("menuBtn").onclick = e => { e.stopPropagation(); const l = $("menuList"); l.hidden = !l.hidden; $("menuBtn").setAttribute("aria-expanded", String(!l.hidden)); };
+    show($("signin"), false); show($("app"), true);
+    renderFollow();
+    loadKeywords(); loadWatch();
+  } catch (err) {
+    show($("signin"), true); show($("app"), false);
+    say($("signinMsg"), err.message, false);
+  }
+});
+
+// Products I'm watching: same layout as search words, plus the last check and the member's condition
+let watchResults = null;
+const STATUS_TEXT = {checking: "Checking", not_checked: "Not checked", expired: "Expired"};
+function condHtml(c, attrs){
+  const t = (c && c.type) || "any", v = c && c.value != null ? c.value : "";
+  return `<select ${attrs} data-ctype aria-label="Condition">
+      <option value="any" ${t==="any"?"selected":""}>Any discount</option>
+      <option value="pct" ${t==="pct"?"selected":""}>Discount of at least</option>
+      <option value="price" ${t==="price"?"selected":""}>Price below</option></select>
+    <span class="cval${t==="any"?" hidden":""}">${t==="price"?"€":""}<input type="number" ${attrs} data-cval min="1" step="${t==="price"?"0.01":"1"}" value="${esc(v)}" aria-label="Condition value">${t==="pct"?"%":""}</span>`;
+}
+function checkHtml(w){
+  const r = watchResults && watchResults[w.id], ch = r && r.check;
+  if (w.status === "expired") return `<span class="wchk muted">Not checked while expired</span>`;
+  if (!ch) return `<span class="wchk muted">${w.status === "checking" ? "Waiting for the first check" : "Move it up to have it checked"}</span>`;
+  if (ch.status === "pending" || ch.status === "not_checked" || ch.status === "error") {
+    const nextAt = coll && coll.next ? ` (${at(coll.next)})` : "";
+    const why = ch.status === "error" ? "We couldn't read the price this time" : (ch.note || ch.error || "No price yet").replace(/\.$/, "");
+    return `<span class="wchk muted">${esc(why)}${why.includes("next collection") ? esc(nextAt) : ". We'll try again at the next collection" + esc(nextAt)}.</span>`;
+  }
+  const was = ch.reference_minor ? `<s>${eur(ch.reference_minor)}</s>` : "";
+  const off = ch.discount_percent ? `<em>${Math.round(ch.discount_percent)}% off</em>` : "";
+  const state = ch.status === "unavailable" ? "Unavailable" : ch.status === "not_found" ? "No longer listed"
+    : ch.status === "checked" ? (ch.discount_percent ? "On offer" : "No discount") : "Couldn't check";
+  const met = r.met ? `<span class="badge hit">Target reached</span>` : "";
+  return `<span class="wchk">${ch.price_minor != null ? `<b>${eur(ch.price_minor)}</b>${was}${off}` : ""}<span class="st">${state}${ch.checked_at ? " · checked " + esc(at(ch.checked_at)) : ""}</span>${met}</span>`;
+}
+function renderWatch(){
+  const t = me.tier;
+  $("watchPlan").innerHTML = `<b>${esc(t.name)} plan:</b> your first ${t.watch_items} product${t.watch_items===1?"":"s"} that haven't expired are checked at every collection. Each product lasts ${t.watch_days} day${t.watch_days===1?"":"s"}; renew it when it expires. A product you add is checked straight away (up to ${t.instant_checks} an hour).`;
+  $("watch").innerHTML = me.watch.length ? me.watch.map((w, i) => {
+    const r = watchResults && watchResults[w.id], ch = r && r.check, expired = w.status === "expired";
+    const img = ch && ch.image_url ? `<img src="${esc(ch.image_url)}" alt="" referrerpolicy="no-referrer">` : `<span class="ph"></span>`;
+    const name = (ch && ch.title) || w.label || w.key;
+    const k = {id: w.id, status: w.status === "checking" ? "searching" : w.status, expires_at: w.expires_at};
+    return `<div class="witem${expired ? " expired" : ""}${r && r.met ? " met" : ""}" data-wid="${esc(w.id)}">
+      <span class="move"><button type="button" class="arrow" data-wmove="${i}" data-dir="-1" aria-label="Move up" ${i===0?"disabled":""}>↑</button><button type="button" class="arrow" data-wmove="${i}" data-dir="1" aria-label="Move down" ${i===me.watch.length-1?"disabled":""}>↓</button></span>
+      ${img}
+      <span class="wname"><b>${esc(name)}</b><a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.site)}</a></span>
+      ${refreshHtml(k)}${lifeHtml(k, t.watch_days)}
+      <span class="scell"><span class="badge${w.status==="checking"?" on":w.status==="expired"?" off":""}">${STATUS_TEXT[w.status]}</span></span>
+      <span class="cond">${expired ? "" : condHtml(w.condition, `data-wcond="${esc(w.id)}"`)}</span>
+      ${checkHtml(w)}
+      <span class="acts">${expired ? `<button class="btn small" type="button" data-wrenew="${esc(w.id)}">Renew</button>` : ""}<button class="btn ghost small" type="button" data-delwatch="${esc(w.id)}">Remove</button></span></div>`;
+  }).join("") : `<p class="note">No products yet. Paste a link below.</p>`;
+}
+async function loadWatch(){
+  if (!me.watch.length) return;
+  try { const res = await api("/api/me/watch/results"); coll = res.collection || coll;
+    watchResults = Object.fromEntries(res.watch.map(w => [w.id, w])); renderWatch(); } catch (err) { say($("watchMsg"), err.message, false); }
+}
+document.addEventListener("change", async e => {
+  const sel = e.target.closest("[data-wcond]"); if (!sel) return;
+  const box = sel.closest(".cond"), type = box.querySelector("[data-ctype]").value, val = box.querySelector("[data-cval]");
+  box.querySelector(".cval").classList.toggle("hidden", type === "any");
+  if (type !== "any" && !val.value) { val.focus(); return; }
+  try { me = (await api("/api/me/watch/" + encodeURIComponent(sel.dataset.wcond), {method: "PUT",
+      body: JSON.stringify({condition: {type, value: type === "any" ? null : +val.value}})})).member; await loadWatch(); }
+  catch (err) { say($("watchMsg"), err.message, false); }
+});
+document.addEventListener("click", async e => {
+  const m = e.target.closest("[data-wmove]"), rn = e.target.closest("[data-wrenew]");
+  try {
+    if (m && !m.disabled) {
+      const ids = me.watch.map(w => w.id), i = +m.dataset.wmove, j = i + +m.dataset.dir;
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+      me = (await api("/api/me/watch/order", {method: "PUT", body: JSON.stringify({ids})})).member; renderWatch();
+    }
+    if (rn) { me = (await api("/api/me/watch/" + encodeURIComponent(rn.dataset.wrenew) + "/renew", {method: "POST"})).member; renderWatch(); loadWatch(); }
+  } catch (err) { say($("watchMsg"), err.message, false); }
+});
+
+// Time left on each word, and when deals are next collected
+let coll = null;
+function at(iso){
+  // "today at 07:20", "tomorrow at 19:00" or "26 Nov at 07:00", Irish time
+  const d = new Date(iso), n = new Date(), t = new Date(Date.now() + 864e5);
+  const dayPart = day.format(d) === day.format(n) ? "today" : day.format(d) === day.format(t) ? "tomorrow" : day.format(d);
+  return `${dayPart} at ${dub.format(d)}`;
+}
+function leftText(ms, long){
+  if (ms <= 0) return "Expired";
+  const m = Math.floor(ms/60000), d = Math.floor(m/1440), h = Math.floor((m%1440)/60), mm = m%60;
+  if (long) return (d ? `${d} day${d===1?"":"s"} ${h} h` : h ? `${h} h ${mm} min` : `${mm} min`) + " left";
+  return d ? `${d}d ${h}h` : h ? `${h}h ${mm}m` : `${mm}m`;
+}
+function shortLeft(ms){
+  const m = Math.max(0, Math.floor(ms/60000));
+  return m >= 1440 ? Math.floor(m/1440) + "d" : m >= 60 ? Math.floor(m/60) + "h" : m + "m";
+}
+function lifeHtml(k, days){
+  // Time left: a bar for every word or product, emptier as it runs out; orange in the last third.
+  const total = (days || me.tier.word_days) * 864e5, left = Date.parse(k.expires_at) - Date.now();
+  const frac = k.status === "expired" ? 0 : Math.max(0, Math.min(1, left / total)), low = frac > 0 && frac < 1/3 ? " low" : "";
+  return `<span class="life${low}" data-life="${esc(k.id)}"><span class="bar"><i style="width:${(frac * 100).toFixed(1)}%"></i></span><span class="left">${esc(leftText(left, true))}</span></span>`;
+}
+function refreshHtml(k){
+  // Countdown to the next collection, as a dial, for words being searched. The full dial is the gap between
+  // the last collection and the next one; it empties as the next collection gets closer.
+  if (k.status !== "searching" || !coll || !coll.next) return `<span class="rcell"></span>`;
+  const next = Date.parse(coll.next), last = coll.last ? Date.parse(coll.last) : next - 12 * 36e5;
+  const left = next - Date.now(), frac = Math.max(0, Math.min(1, left / Math.max(1, next - last)));
+  const c = 2 * Math.PI * 14, label = left > 0 ? `Next refresh in ${leftText(left)}` : "Refreshing now";
+  return `<span class="rcell" data-refresh title="${esc(label)}"><svg class="dial" viewBox="0 0 34 34" role="img" aria-label="${esc(label)}">
+    <circle class="track" cx="17" cy="17" r="14" fill="none" stroke-width="4"/>
+    <circle class="arc" cx="17" cy="17" r="14" fill="none" stroke-width="4" stroke-linecap="round" transform="rotate(-90 17 17)"
+      stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${(c * (1 - frac)).toFixed(2)}"/>
+    <text x="17" y="20.5" text-anchor="middle">${esc(left > 0 ? shortLeft(left) : "now")}</text></svg></span>`;
+}
+function tick(){
+  // Refresh the time-left bars, the refresh dials and the collection line once a minute without redrawing the list.
+  if (!me) return;
+  me.keywords.forEach(k => {
+    const row = document.querySelector(`.kw[data-id="${CSS.escape(k.id)}"]`); if (!row) return;
+    const life = row.querySelector("[data-life]"); if (life) life.outerHTML = lifeHtml(k);
+    const r = row.querySelector(".rcell"); if (r) r.outerHTML = refreshHtml(k);
+  });
+  me.watch.forEach(w => {
+    const row = document.querySelector(`.witem[data-wid="${CSS.escape(w.id)}"]`); if (!row) return;
+    const k = {id: w.id, status: w.status === "checking" ? "searching" : w.status, expires_at: w.expires_at};
+    const life = row.querySelector("[data-life]"); if (life) life.outerHTML = lifeHtml(k, me.tier.watch_days);
+    const r = row.querySelector(".rcell"); if (r) r.outerHTML = refreshHtml(k);
+  });
+  const next = coll && coll.next ? Date.parse(coll.next) - Date.now() : null;
+  $("collectNote").textContent = (coll && coll.last ? `Deals last collected ${at(coll.last)}. ` : "")
+    + (next != null && next > 0 ? `Next collection ${at(coll.next)} (in ${leftText(next)}).`
+       : coll && !coll.automatic ? "Automatic collection is paused." : "");
+}
+setInterval(tick, 60000);
+
+// Keyword results: what each search word finds right now (public deals + private Amazon results)
+let kwResults = null;
+function itemRow(x){
+  const img = x.image_url ? `<img src="${esc(x.image_url)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="ph"></span>`;
+  return `<li class="item">${img}<div><div class="t">${esc(x.title)}</div>
+    <div class="m">${esc(x.store)} · <b>${eur(x.price_minor)}</b>${x.reference_minor!=null ? `<s>${eur(x.reference_minor)}</s>` : ""}${x.discount_percent!=null ? `<em>${Math.round(x.discount_percent)}% off</em>` : ""}${x.private ? " · only you" : ""}</div></div>
+    <a class="go2" data-deal="${esc(x.id)}" href="${esc(x.buy_url)}" target="_blank" rel="noopener${x.affiliate?" sponsored":""}">Go to ${esc(String(x.store).replace(".ie",""))}</a></li>`;
+}
+async function loadKeywords(){
+  if (!me.keywords.length) return;
+  $("loadKw").disabled = true; $("loadKw").textContent = "Loading…";
+  try { const res = await api("/api/me/keywords/results"); coll = res.collection || coll;
+    kwResults = Object.fromEntries(res.keywords.map(k => [k.id, k])); renderFollow(); }
+  catch (err) { say($("kwMsg"), err.message, false); }
+  finally { $("loadKw").disabled = false; $("loadKw").textContent = "Load deals"; }
+}
+$("loadKw").onclick = loadKeywords;
+const MINS = [0,10,20,30,40,50,60,70];
+const minOptions = v => MINS.map(m => `<option value="${m}" ${m===v?"selected":""}>${m ? m + "%+ off" : "Any discount"}</option>`).join("");
+$("kwMin").innerHTML = minOptions(20);
+$("newCond").innerHTML = condHtml({type: "any"}, "");
+$("newCond").addEventListener("change", () => $("newCond").querySelector(".cval").classList.toggle("hidden", $("newCond").querySelector("[data-ctype]").value === "any"));
+// Controls inside a word's summary row must not open or close the row.
+document.addEventListener("click", e => { if (e.target.closest(".kw summary select, .kw summary .arrow, .kw summary [data-renew]")) e.preventDefault(); }, true);
+document.addEventListener("click", async e => {
+  const m = e.target.closest("[data-move]"), rn = e.target.closest("[data-renew]");
+  try {
+    if (m && !m.disabled) {
+      const ids = me.keywords.map(k => k.id), i = +m.dataset.move, j = i + +m.dataset.dir;
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+      me = (await api("/api/me/keywords/order", {method: "PUT", body: JSON.stringify({ids})})).member; renderFollow();
+      if (kwResults) loadKeywords();
+    }
+    if (rn) { me = (await api("/api/me/keywords/" + encodeURIComponent(rn.dataset.renew) + "/renew", {method: "POST"})).member; renderFollow(); loadKeywords(); }
+  } catch (err) { say($("kwMsg"), err.message, false); }
+});
+document.addEventListener("change", async e => {
+  const sel = e.target.closest("[data-kwmin]"); if (!sel) return;
+  try { me = (await api("/api/me/keywords/" + encodeURIComponent(sel.dataset.kwmin), {method: "PUT", body: JSON.stringify({min_discount: +sel.value})})).member;
+    await loadKeywords(); } catch (err) { say($("kwMsg"), err.message, false); }
+});
+const closeMenu = () => { const l = $("menuList"); if (l) { l.hidden = true; $("menuBtn").setAttribute("aria-expanded", "false"); } };
+document.addEventListener("click", e => { if (!e.target.closest(".acctmenu")) closeMenu(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeMenu(); });
+document.addEventListener("click", e => {
+  const a = e.target.closest("a[data-deal]");
+  if (a && navigator.sendBeacon) {
+    try { navigator.sendBeacon("/api/click", new Blob([JSON.stringify({id: a.dataset.deal, token})], {type: "application/json"})); } catch (_) {}
+  }
+});
+
+// What I follow
+function renderFollow() {
+  const groups = {};
+  channels.forEach(c => (groups[c.group] = groups[c.group] || []).push(c));
+  $("chanSummary").textContent = `${me.channels.length} of ${channels.length} followed`;
+  $("channels").innerHTML = Object.entries(groups).map(([g, list]) => `<div><h3>${esc(g)}</h3>${list.map(c =>
+    `<label class="check"><input type="checkbox" value="${esc(c.id)}" ${me.channels.includes(c.id)?"checked":""}>${esc(c.name)}</label>`).join("")}</div>`).join("");
+  const open = new Set([...document.querySelectorAll(".kw[open]")].map(d => d.dataset.id));
+  const t = me.tier;
+  $("planNote").innerHTML = `<b>${esc(t.name)} plan:</b> your first ${t.search_words} word${t.search_words===1?"":"s"} that haven't expired are searched for you. Each word lasts ${t.word_days} day${t.word_days===1?"":"s"}; renew it when it expires. Use the arrows to choose which words come first.`;
+  const ids = me.keywords.map(k => k.id);
+  $("keywords").innerHTML = me.keywords.length ? me.keywords.map((k, i) => {
+    const r = kwResults && kwResults[k.id];
+    const expired = k.status === "expired";
+    const n = expired ? "" : r ? `<span class="n"><b>${r.count}</b> deal${r.count===1?"":"s"}</span>` : `<span class="n">Not loaded</span>`;
+    const minSel = expired ? "" : `<select data-kwmin="${esc(k.id)}" aria-label="Minimum discount for ${esc(k.query)}">${minOptions(k.min_discount)}</select>`;
+    const status = k.status === "searching" ? `<span class="badge on">Searching</span>`
+      : k.status === "matching" ? `<span class="badge">Not searched</span>` : `<span class="badge off">Expired</span>`;
+    const until = new Date(k.expires_at);
+    const when2 = `${esc(day.format(until))} at ${esc(dub.format(until))}`;
+    const hidden = r && r.found > r.count ? ` ${r.found - r.count} more ${r.found - r.count === 1 ? "has" : "have"} a smaller discount; lower the minimum to see ${r.found - r.count === 1 ? "it" : "them"}.` : "";
+    const info = expired ? `Expired on ${when2}. It isn't searched or used for My deals until you renew it.`
+      : (k.status === "searching"
+          ? (!k.private ? "Searched for you at Harvey Norman; Deal Radar already searches Amazon for it."
+             : r && r.searched_at ? `Searched for you at Amazon and Harvey Norman. Last Amazon search: ${esc(day.format(new Date(r.searched_at)))} at ${esc(dub.format(new Date(r.searched_at)))}.`
+             : "Searched for you at Amazon and Harvey Norman in the next collections.")
+          : `Not searched: only your first ${t.search_words} words are. It still matches deals collected from every shop.`)
+        + ` Active until ${when2}.`;
+    const list = expired ? "" : r ? (r.deals.length ? `<ul class="items">${r.deals.map(itemRow).join("")}</ul>` : `<p class="info">No discounted products found for this word right now.</p>`)
+      : `<p class="info">Press Load deals to see what this word finds.</p>`;
+    const life = lifeHtml(k);
+    const move = `<span class="move"><button type="button" class="arrow" data-move="${i}" data-dir="-1" aria-label="Move ${esc(k.query)} up" ${i===0?"disabled":""}>↑</button><button type="button" class="arrow" data-move="${i}" data-dir="1" aria-label="Move ${esc(k.query)} down" ${i===ids.length-1?"disabled":""}>↓</button></span>`;
+    const action = expired ? `<button class="btn small" type="button" data-renew="${esc(k.id)}">Renew</button>` : "";
+    return `<details class="kw${expired ? " expired" : ""}" data-id="${esc(k.id)}" ${open.has(k.id) ? "open" : ""}><summary>${move}<span class="chev" aria-hidden="true"></span>
+      <span class="q">${esc(k.query)}</span>${refreshHtml(k)}${life}<span class="scell">${status}</span><span class="mcell">${minSel}</span>${n || `<span class="n"></span>`}
+      <span class="acts">${action}<button class="btn ghost small" type="button" data-delkw="${esc(k.id)}">Remove</button></span></summary>
+      <p class="info">${info}${hidden}</p>${list}</details>`;
+  }).join("") : `<p class="note">No search words yet. Add one below.</p>`;
+  setTimeout(tick, 0);
+  renderWatch();
+}
+$("saveChannels").onclick = async () => {
+  const chosen = [...$("channels").querySelectorAll("input:checked")].map(i => i.value);
+  try { const r = await api("/api/me/channels", {method: "PUT", body: JSON.stringify({channels: chosen})}); me.channels = r.channels;
+    $("chanSummary").textContent = `${me.channels.length} of ${channels.length} followed`;
+    say($("channelsMsg"), "Saved.", true); } catch (err) { say($("channelsMsg"), err.message, false); }
+};
+$("allChannels").onclick = () => $("channels").querySelectorAll("input").forEach(i => i.checked = true);
+$("noChannels").onclick = () => $("channels").querySelectorAll("input").forEach(i => i.checked = false);
+$("kwForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const q = $("kwInput").value.trim(); if (!q) return;
+  try { const r = await api("/api/me/keywords", {method: "POST", body: JSON.stringify({query: q, min_discount: +$("kwMin").value})}); me = r.member; $("kwInput").value = "";
+    const k = me.keywords.find(x => x.query === q);
+    say($("kwMsg"), !k ? `Added “${q}”.` : k.status === "searching" ? `Added “${q}”. It's searched for you from the next collection and lasts until ${day.format(new Date(k.expires_at))}.`
+      : `Added “${q}”. Only your first ${me.tier.search_words} words are searched; move it up to search it.`, true);
+    renderFollow(); if (kwResults) loadKeywords(); } catch (err) { say($("kwMsg"), err.message, false); }
+});
+$("watchForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  say($("watchMsg"), "Checking now…", true);
+  const btn = $("watchForm").querySelector("button[type=submit]"); btn.disabled = true;
+  setTimeout(() => btn.disabled = false, 1500);
+  const type = $("newCond").querySelector("[data-ctype]").value, val = $("newCond").querySelector("[data-cval]").value;
+  try { const r = await api("/api/me/watch", {method: "POST", body: JSON.stringify({url: $("watchUrl").value, label: $("watchLabel").value,
+      condition: {type, value: type === "any" ? null : +val}})});
+    me = r.member; $("watchUrl").value = ""; $("watchLabel").value = "";
+    const w = me.watch[me.watch.length - 1], ck = r.check || {};
+    const later = w.status === "checking" ? "It's checked again at every collection." : `Only your first ${me.tier.watch_items} products are checked at each collection; move it up to keep it checked.`;
+    say($("watchMsg"), (ck.done ? (ck.met ? "Added and checked: it meets your condition. " : "Added and checked. ") : "Added. " + (ck.reason ? ck.reason + " " : "")) + later, true);
+    renderFollow(); await loadWatch();
+  } catch (err) { say($("watchMsg"), err.message, false); }
+});
+document.addEventListener("click", async e => {
+  const k = e.target.closest("[data-delkw]"), w = e.target.closest("[data-delwatch]");
+  if (k) e.preventDefault();
+  try {
+    if (k) { me = (await api("/api/me/keywords/" + encodeURIComponent(k.dataset.delkw), {method: "DELETE"})).member; renderFollow(); }
+    if (w) { me = (await api("/api/me/watch/" + encodeURIComponent(w.dataset.delwatch), {method: "DELETE"})).member; renderFollow(); }
+  } catch (err) { say(k ? $("kwMsg") : $("watchMsg"), err.message, false); }
+});
+</script>
+</body>
+</html>

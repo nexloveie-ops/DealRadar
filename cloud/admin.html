@@ -33,7 +33,7 @@ main .wrap{padding-top:24px;padding-bottom:60px}
 .btn:disabled{opacity:.5;cursor:default}
 .btn.ghost{background:none;color:var(--ink);border:1px solid var(--line);font-weight:500}
 .btn.small{padding:5px 10px;font-size:13px}
-input[type=text],input[type=email],input[type=url],select{border:1px solid var(--line);border-radius:4px;padding:8px 10px;background:var(--paper);width:100%}
+input[type=text],input[type=email],input[type=url],input[type=number],select{border:1px solid var(--line);border-radius:4px;padding:8px 10px;background:var(--paper);width:100%}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;color:var(--muted);font-weight:500;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -101,6 +101,7 @@ tr.off td{color:var(--faint)}
       <button role="tab" data-tab="sources" aria-selected="true">Sources</button>
       <button role="tab" data-tab="keywords" aria-selected="false">Amazon keywords</button>
       <button role="tab" data-tab="clicks" aria-selected="false">Clicks</button>
+      <button role="tab" data-tab="members" aria-selected="false">Members</button>
       <button role="tab" data-tab="admins" aria-selected="false">Admins</button>
     </div>
 
@@ -138,11 +139,11 @@ tr.off td{color:var(--faint)}
       </div>
       <div class="card">
         <h2>Retail chains</h2>
-        <p class="lead">Turn a shop off to stop listing its deals. Only items at or above the minimum discount are listed.</p>
+        <p class="lead">Turn a shop off to stop listing its deals. The public page lists items at or above the minimum discount.</p>
         <table><tbody id="shops"></tbody></table>
         <div class="row" style="margin-top:14px;align-items:flex-end">
-          <label style="flex:0 0 220px">Minimum discount (%)<input type="number" id="minDisc" min="0" max="90" step="1" inputmode="numeric"></label>
-          <span class="note" style="flex:1">Applies to Powercity, Expert and Harvey Norman. Currently set to <b id="minDiscNow">30</b>%.</span>
+          <label style="flex:0 0 260px">Minimum discount on the public page (%)<input type="number" id="minDisc" min="0" max="90" step="1" inputmode="numeric"></label>
+          <span class="note" style="flex:1">Applies to Powercity, Expert, Harvey Norman and Amazon. Currently <b id="minDiscNow">30</b>%. Discounts from 20% are still collected and shown to members who ask for them.</span>
         </div>
       </div>
       <div class="card">
@@ -204,6 +205,32 @@ tr.off td{color:var(--faint)}
       </div>
       <div class="card"><h2>By shop</h2><table><thead><tr><th>Shop</th><th class="num">Clicks</th></tr></thead><tbody id="byStore"></tbody></table></div>
       <div class="card"><h2>Most clicked deals</h2><table><thead><tr><th>Deal</th><th>Shop</th><th class="num">Clicks</th><th class="num">All time</th></tr></thead><tbody id="topDeals"></tbody></table></div>
+    </div>
+
+    <div data-panel="members" class="hidden">
+      <div class="card">
+        <h2>Member levels</h2>
+        <p class="lead">Each level sets how many of a member's search words are searched and how many watched products are checked (their first ones that haven't expired), how many days each lasts before the member renews it, and how many products a member can have checked straight away each hour when adding them. New members start on Free. Paid levels can be added later.</p>
+        <table><thead><tr><th>Level</th><th class="num">Words searched</th><th class="num">Days a word lasts</th><th class="num">Products checked</th><th class="num">Days a product lasts</th><th class="num">Instant checks per hour</th></tr></thead><tbody id="tierRows"></tbody></table>
+        <div class="row" style="margin-top:12px;align-items:flex-end">
+          <label style="flex:0 0 300px">Amazon searches for instant checks, whole site, per hour<input type="number" id="amzInstant" min="0" max="200" step="1"></label>
+          <span class="note" style="flex:1">When Amazon hides a product's price from our server, the instant check searches Amazon for it. This caps those searches for all members together, to keep Amazon's tolerance for the collection runs.</span>
+        </div>
+        <div class="savebar" style="display:flex;gap:12px;align-items:center;margin-top:12px"><button class="btn" id="saveTiers" type="button">Save levels</button><span class="msg hidden" id="tierMsg" role="status"></span></div>
+      </div>
+      <div class="card">
+        <h2>Members</h2>
+        <p class="lead">People who signed in on the My deals page. Select a member to see what they follow and the deals they clicked.</p>
+        <div class="stats" id="memberStats"></div>
+        <table><thead><tr><th>Member</th><th>Level</th><th>Joined</th><th>Last seen</th><th class="num">Clicks</th><th class="num">Follows</th><th class="num">Words searched</th><th class="num">Products checked</th></tr></thead>
+          <tbody id="memberRows"></tbody></table>
+      </div>
+      <div class="card hidden" id="memberDetail"></div>
+      <div class="card">
+        <h2>Members' search words</h2>
+        <p class="lead">Words being searched join the Amazon and Harvey Norman searches. Amazon results found only through a member's word are shown only to members with that word. Add a popular word to your Amazon keywords to make it public.</p>
+        <table><thead><tr><th>Word</th><th class="num">Members</th><th class="num">Searching for</th><th>Amazon list</th></tr></thead><tbody id="memberWords"></tbody></table>
+      </div>
     </div>
 
     <div data-panel="admins" class="hidden">
@@ -288,6 +315,7 @@ document.querySelector(".tabs").addEventListener("click", e => {
   show($("saveBar"), ["sources","keywords"].includes(b.dataset.tab));
   if (b.dataset.tab === "clicks") loadClicks();
   if (b.dataset.tab === "admins") loadAdmins();
+  if (b.dataset.tab === "members") loadMembers();
 });
 
 // Sources and keywords
@@ -437,6 +465,83 @@ async function loadAdmins() {
   $("admins").innerHTML = admins.fixed.map(e => `<tr><td>${esc(e)}</td><td class="note">Set on the server</td><td></td></tr>`).join("") +
     admins.emails.map((e,i) => `<tr><td>${esc(e)}</td><td></td><td><button class="btn ghost small" data-deladmin="${i}" type="button">Remove</button></td></tr>`).join("");
 }
+// Members
+let memberData = null;
+function timeLeft(k, tierId, field) {
+  const t = memberData.tiers.find(t => t.id === tierId) || memberData.tiers[0];
+  const left = Date.parse(k.expires_at) - Date.now(), frac = Math.max(0, Math.min(1, left / (t[field || "word_days"] * 864e5)));
+  const m = Math.max(0, Math.floor(left / 60000)), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60);
+  const label = left <= 0 ? "Expired" : (d ? `${d} d ${h} h` : h ? `${h} h ${m % 60} min` : `${m} min`) + " left";
+  const color = left <= 0 ? "var(--faint)" : frac < 1/3 ? "#C77700" : "var(--blue)";
+  return `<span style="display:inline-flex;align-items:center;gap:8px" title="Until ${esc(fmtWhen(k.expires_at))}">
+    <span style="display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--line);overflow:hidden"><i style="display:block;height:100%;width:${(frac*100).toFixed(1)}%;background:${color}"></i></span>${label}</span>`;
+}
+function renderTiers(tiers) {
+  $("tierRows").innerHTML = tiers.map((t, i) => `<tr><td>${esc(t.name)}<div class="note">${esc(t.id)}</div></td>
+    <td class="num"><input type="number" min="0" max="50" step="1" value="${t.search_words}" data-tier="${i}" data-f="search_words" style="width:90px;text-align:right" aria-label="Words searched for ${esc(t.name)}"></td>
+    <td class="num"><input type="number" min="1" max="365" step="1" value="${t.word_days}" data-tier="${i}" data-f="word_days" style="width:90px;text-align:right" aria-label="Days a word lasts for ${esc(t.name)}"></td>
+    <td class="num"><input type="number" min="0" max="100" step="1" value="${t.watch_items}" data-tier="${i}" data-f="watch_items" style="width:90px;text-align:right" aria-label="Products checked for ${esc(t.name)}"></td>
+    <td class="num"><input type="number" min="1" max="365" step="1" value="${t.watch_days}" data-tier="${i}" data-f="watch_days" style="width:90px;text-align:right" aria-label="Days a product lasts for ${esc(t.name)}"></td>
+    <td class="num"><input type="number" min="0" max="100" step="1" value="${t.instant_checks}" data-tier="${i}" data-f="instant_checks" style="width:90px;text-align:right" aria-label="Instant checks per hour for ${esc(t.name)}"></td></tr>`).join("");
+}
+document.addEventListener("change", async e => {
+  const inp = e.target.closest("[data-tier]");
+  if (inp && memberData) memberData.tiers[+inp.dataset.tier][inp.dataset.f] = +inp.value;
+  const sel = e.target.closest("#memberTier");
+  if (sel) { try { await api("/api/admin/members/" + encodeURIComponent(sel.dataset.uid) + "/tier", {method: "PUT", body: JSON.stringify({tier: sel.value})}); loadMembers(); }
+    catch (err) { alert(err.message); } }
+});
+$("saveTiers").onclick = async () => {
+  try { const r = await api("/api/admin/member-tiers", {method: "PUT", body: JSON.stringify({tiers: memberData.tiers, amazon_instant_searches: +$("amzInstant").value})}); memberData.tiers = r.tiers; renderTiers(r.tiers);
+    say($("tierMsg"), "Saved. Members' words follow the new numbers straight away.", true); } catch (err) { say($("tierMsg"), err.message, false); }
+};
+const fmtDate = iso => iso ? new Date(iso).toLocaleDateString("en-IE", {day: "numeric", month: "short", year: "numeric"}) : "";
+const fmtWhen = iso => iso ? new Date(iso).toLocaleString("en-IE", {day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"}) : "";
+async function loadMembers() {
+  $("memberRows").innerHTML = `<tr><td colspan="7" class="note">Loading…</td></tr>`;
+  try { memberData = await api("/api/admin/members"); } catch (err) { $("memberRows").innerHTML = `<tr><td colspan="7">${esc(err.message)}</td></tr>`; return; }
+  const m = memberData.members, week = Date.now() - 7*864e5;
+  $("memberStats").innerHTML = [["Members", m.length], ["Active in the last 7 days", m.filter(x => Date.parse(x.last_seen_at) > week).length],
+    ["Clicks by members", m.reduce((a, x) => a + (x.clicks_total||0), 0)]].map(([k, v]) => `<div class="stat"><span>${k}</span><b>${v}</b></div>`).join("");
+  renderTiers(memberData.tiers); $("amzInstant").value = memberData.amazon_instant_searches ?? 20;
+  $("memberRows").innerHTML = m.length ? m.map((x, i) => `<tr><td><button class="btn ghost small" type="button" data-member="${i}">${esc(x.email)}</button>
+      <div class="note">${x.sign_in === "google.com" ? "Google" : "Email link"}</div></td><td>${esc(x.tier_name)}</td>
+    <td>${fmtDate(x.created_at)}</td><td>${fmtWhen(x.last_seen_at)}</td><td class="num">${x.clicks_total||0}</td>
+    <td class="num">${x.channels.length}</td><td class="num">${x.keywords.filter(k => k.status === "searching").length} of ${x.keywords.length}</td><td class="num">${x.watch.filter(w => w.status === "checking").length} of ${x.watch.length}</td></tr>`).join("")
+    : `<tr><td colspan="8" class="note">No members yet. People sign in at /account.</td></tr>`;
+  $("memberWords").innerHTML = memberData.keywords.length ? memberData.keywords.map(k => `<tr><td>${esc(k.query)}</td><td class="num">${k.members}</td>
+    <td class="num">${k.searching}</td><td><span class="pill">${k.private ? "Not on it" : "On it"}</span></td></tr>`).join("")
+    : `<tr><td colspan="4" class="note">No member search words yet.</td></tr>`;
+  show($("memberDetail"), false);
+}
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-member]"); if (!b || !memberData) return;
+  const x = memberData.members[+b.dataset.member], names = memberData.channels;
+  const box = $("memberDetail"); show(box, true);
+  box.innerHTML = `<h2>${esc(x.email)}</h2><p class="lead">Joined ${fmtDate(x.created_at)} · last seen ${fmtWhen(x.last_seen_at)}</p>
+    <div class="stats">
+      <div class="stat"><span>Follows</span><b style="font-size:15px">${x.channels.map(c => esc(names[c]||c)).join(", ") || "Nothing"}</b></div>
+      <div class="stat"><span>Level</span><b style="font-size:15px"><select id="memberTier" data-uid="${esc(x.uid)}">${memberData.tiers.map(t => `<option value="${esc(t.id)}" ${t.id===x.tier?"selected":""}>${esc(t.name)}</option>`).join("")}</select></b></div>
+    </div>
+    <h2 style="margin-top:8px">Search words</h2>
+    <table><thead><tr><th>Word</th><th>Status</th><th>Min discount</th><th>Time left</th></tr></thead><tbody>${x.keywords.map(k => `<tr${k.status==="expired"?' class="off"':""}><td>${esc(k.query)}</td>
+      <td>${{searching: "Searching", matching: "Not searched", expired: "Expired"}[k.status]}</td><td>${k.min_discount ? k.min_discount + "%+" : "Any"}</td><td>${timeLeft(k, x.tier)}</td></tr>`).join("")
+      || `<tr><td class="note">None</td></tr>`}</tbody></table>
+    <h2 style="margin-top:8px">Watched products</h2>
+    <table><thead><tr><th>Product</th><th>Shop</th><th>Status</th><th>Condition</th><th>Time left</th></tr></thead><tbody>${x.watch.map(w => `<tr${w.status==="expired"?' class="off"':""}>
+      <td class="url"><a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.label || w.key)}</a></td><td>${esc(w.site)}</td>
+      <td>${{checking: "Checking", not_checked: "Not checked", expired: "Expired"}[w.status] || ""}</td>
+      <td>${w.condition && w.condition.type === "pct" ? w.condition.value + "%+ off" : w.condition && w.condition.type === "price" ? "Below €" + w.condition.value : "Any discount"}</td>
+      <td>${timeLeft(w, x.tier, "watch_days")}</td></tr>`).join("") || `<tr><td class="note">None</td></tr>`}</tbody></table>
+    <h2 style="margin-top:16px">Deals clicked</h2><table><thead><tr><th>Deal</th><th>Shop</th><th class="num">Clicks</th><th>Last click</th></tr></thead><tbody id="memberClicks"><tr><td colspan="4" class="note">Loading…</td></tr></tbody></table>`;
+  box.scrollIntoView({behavior: "smooth", block: "start"});
+  try {
+    const r = await api("/api/admin/members/" + encodeURIComponent(x.uid) + "/clicks");
+    $("memberClicks").innerHTML = r.clicks.length ? r.clicks.map(c => `<tr><td>${c.buy_url ? `<a href="${esc(c.buy_url)}" target="_blank" rel="noopener">${esc(c.title)}</a>` : esc(c.title)}</td>
+      <td>${esc(c.store)}</td><td class="num">${c.total||0}</td><td>${fmtWhen(c.last_click_at)}</td></tr>`).join("") : `<tr><td colspan="4" class="note">No clicks yet.</td></tr>`;
+  } catch (err) { $("memberClicks").innerHTML = `<tr><td colspan="4">${esc(err.message)}</td></tr>`; }
+});
+
 async function saveAdmins(list) {
   try { const r = await api("/api/admin/admins", {method: "PUT", body: JSON.stringify({emails: list})}); say($("adminMsg"), "Admin list saved.", true); await loadAdmins(); }
   catch (err) { say($("adminMsg"), err.message, false); }

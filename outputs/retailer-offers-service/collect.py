@@ -22,7 +22,7 @@ HOSTS = {"powercity.ie", "www.powercity.ie", "www.currys.ie", "www.harveynorman.
 ROBOTS_DISALLOWED = {"www.expert.ie": ("/account.php", "/cart.php", "/checkout.php", "/search.php", "/blackfriday/",
     "/summer-sale/", "/autumn-sale/", "/remote.php", "/wishlist.php", "/admin/")}
 NOT_NEW = re.compile(r"ex[ -]?display|displays? only|refurb|renewed|pre[ -]?owned|open[ -]?box|used condition|zexdisplay|grade [abc]\b", re.I)
-HISTORY_DAYS = 90
+HISTORY_DAYS = 30  # the price-drop and fake-discount rules look back 30 days; older prices are not kept
 
 
 def money(text):

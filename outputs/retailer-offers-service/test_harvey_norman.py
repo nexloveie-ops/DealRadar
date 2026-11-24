@@ -49,5 +49,29 @@ class HarveyNorman(unittest.TestCase):
         self.assertIsNone(hn.NOT_TECH.search("Pure Woodland Portable Bluetooth Speaker"))
 
 
+class MemberWords(unittest.TestCase):
+    def test_member_words_are_searched_and_marked_member_only(self):
+        import json, sys, tempfile
+        from unittest import mock
+        def fake_search(query, profile, pages, size, gap):
+            if query == "headphones":
+                return [product("JBL Tune 680NC Headphones", [variant(1, 4995, 9900)], "jbl-680")], True
+            return [product("Garmin Forerunner 265 Smartwatch", [variant(2, 7500, 10000)], "garmin-265"),
+                    product("JBL Tune 680NC Headphones", [variant(1, 4995, 9900)], "jbl-680")], True
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(hn, "search", fake_search), mock.patch("time.sleep"):
+            cfg = {"minimum_discount_percent": 20, "searches": [{"id": "hn-headphones", "query": "headphones", "category": "headphones"}]}
+            open(d + "/cfg.json", "w").write(json.dumps(cfg))
+            open(d + "/mk.json", "w").write(json.dumps([{"id": "garmin", "query": "Garmin", "members": 1},
+                                                        {"id": "headphones", "query": "Headphones", "members": 2}]))
+            with mock.patch.object(sys, "argv", ["x", "--out", d + "/o", "--config", d + "/cfg.json", "--member-keywords", d + "/mk.json"]):
+                hn.main()
+            out = {o["links"]["landing_url"].rsplit("/", 1)[-1]: o for o in json.loads(open(d + "/o/offers.json").read())["offers"]}
+            rep = json.loads(open(d + "/o/run-report.json").read())
+        self.assertEqual([x["id"] for x in rep["searches"]], ["hn-headphones", "m:garmin"])  # "Headphones" is already an admin search
+        self.assertTrue(out["garmin-265"].get("member_only"))      # 25% off, found only through a member's word
+        self.assertEqual(out["garmin-265"]["product"]["category"], "wearables")
+        self.assertFalse(out["jbl-680"].get("member_only"))        # also found by the admin's search
+
+
 if __name__ == "__main__":
     unittest.main()

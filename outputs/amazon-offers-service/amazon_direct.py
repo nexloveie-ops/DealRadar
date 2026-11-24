@@ -152,6 +152,10 @@ def main():
     ap.add_argument("--cache", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--leads", help="Optional third-party candidates (web_collect offers.json) to confirm as well")
+    ap.add_argument("--member-keywords", help="Members' own keywords not on the admin list (JSON [{id, query, members}]). "
+                    "Searched in a small separate slot; their results go to member-offers.json, never to the public offers.")
+    ap.add_argument("--watch", help="ASINs members watch (JSON [{key, url}], oldest-checked first). Checked after the searches: "
+                    "product page first, then a search for the ASIN if the page hides the price and searches are left.")
     ap.add_argument("--previous", help="Previous amazon_direct offers.json: re-checked first, and kept until expiry if not reached")
     args = ap.parse_args()
     started, now = time.monotonic(), datetime.now(timezone.utc)
@@ -161,6 +165,13 @@ def main():
     search_gap, page_gap = float(d.get("search_interval_seconds", 10)), float(d.get("request_interval_seconds", 3))
     max_checks, threshold, tag = int(d.get("max_product_checks", 150)), float(c["minimum_discount_percent"]), c["associate_tag"]
     valid_hours = float(d.get("price_valid_hours", 36))
+    # Amazon's own "discount X% and up" filter (refinement p_8) on keyword searches, so each of the few searches
+    # Amazon allows us returns discounted products only. 0 turns it off.
+    pct_filter = int(d.get("search_discount_filter_percent", 20))
+    discount_filter = f"&rh=p_8%3A{pct_filter}-" if pct_filter > 0 else ""
+    # Every search word, the admin's and members' own, collects at the same minimum (config: above 20%).
+    def bar(keywords):
+        return threshold
     previous = []
     if args.previous and Path(args.previous).exists():
         previous = [o for o in json.loads(Path(args.previous).read_text()).get("offers", [])
@@ -170,7 +181,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     cursor_file = out / "search-cursor.json"
     stats = (json.loads(cursor_file.read_text()).get("stats") or {}) if cursor_file.exists() else {}
-    report = {"generated_at": now.isoformat(), "mode": "amazon_direct", "searches": [], "blocked": None,
+    report = {"generated_at": now.isoformat(), "mode": "amazon_direct", "searches": [], "watch_searches": [], "blocked": None,
               "search_blocked": None, "errors": []}
     offers, rejected, checked, hidden = [], [], set(), set()
 
@@ -198,7 +209,7 @@ def main():
         reason = None
         if p["price_minor"] is None:
             reason = "price_hidden_in_basket" if p["price_hidden"] else "no_price_on_product_page"
-        elif pct is None or pct <= threshold:
+        elif pct is None or pct <= bar(h["keywords"]):
             reason = "discount_not_above_threshold_on_product_page"
         elif NOT_TECH.search(title or ""):
             reason = "not_a_tech_product"
@@ -241,7 +252,7 @@ def main():
         if h.get("origin") != "amazon_search" or h["asin"] in listed:
             return False
         saving, pct = exact_discount(h.get("price_minor"), h.get("strike_minor"))
-        if pct is None or pct <= threshold or pct > MAX_LISTING_DISCOUNT or NOT_NEW.search(h.get("title") or "") \
+        if pct is None or pct <= bar(h["keywords"]) or pct > MAX_LISTING_DISCOUNT or NOT_NEW.search(h.get("title") or "") \
                 or NOT_TECH.search(h.get("title") or ""):
             return False
         listed.add(h["asin"])
@@ -265,7 +276,60 @@ def main():
             "distribution": {"can_list": True, "notification_ready": False}})
         return True
 
+    watch_items = json.loads(Path(args.watch).read_text()) if args.watch and Path(args.watch).exists() else []
+    watch_search_budget = int(d.get("max_watch_searches_per_run", 3))  # after the keyword searches; oldest-checked products first
+    watch_results = {}
+
+    def check_watched(w):
+        """One watched ASIN: the product page, or (when the page hides the price) Amazon's search for that ASIN."""
+        asin = w["key"]
+        if not re.fullmatch(r"[A-Z0-9]{10}", asin) or asin in watch_results:
+            return
+        observed = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        base = {"site": "Amazon.ie", "key": asin, "buy_url": affiliate_link(asin, tag), "checked_at": observed}
+        try:
+            raw, _ = fetch.get(f"{HOST}/dp/{asin}", "watch-dp-" + asin)
+        except RuntimeError as exc:
+            watch_results[asin] = {**base, "status": "error", "error": str(exc)[:150]}
+            return
+        p = parse_product(raw)
+        if p["price_minor"] is not None:
+            unavailable = bool(p["availability"] and re.search(r"unavailable|out of stock", p["availability"], re.I))
+            watch_results[asin] = {**base, "status": "unavailable" if unavailable else "checked", "title": p["title"],
+                                   "image_url": p.get("image_url"), "price_minor": p["price_minor"],
+                                   "reference_minor": p["reference_minor"], "available": not unavailable}
+            return
+        if len(report["watch_searches"]) >= watch_search_budget or report["search_blocked"]:
+            watch_results[asin] = {**base, "status": "not_checked", "error": "Amazon hid the price; no search left this run"}
+            return
+        fetch.interval = search_gap
+        try:
+            sraw, _ = fetch.get(f"{HOST}/s?k={asin}", "watch-search-" + asin)
+        except Blocked as exc:
+            report["search_blocked"] = str(exc)
+            watch_results[asin] = {**base, "status": "not_checked", "error": "Amazon search refused this run"}
+            return
+        finally:
+            fetch.interval = page_gap
+        report["watch_searches"].append(asin)
+        rows, _ = parse_search(sraw)
+        r = next((x for x in rows if x["asin"] == asin), None)
+        if not r or r["price_minor"] is None:
+            watch_results[asin] = {**base, "status": "not_found" if not r else "unavailable", "title": (r or {}).get("title") or p["title"],
+                                   "image_url": (r or {}).get("image_url") or p.get("image_url")}
+            return
+        watch_results[asin] = {**base, "status": "checked", "title": r["title"], "image_url": r.get("image_url") or p.get("image_url"),
+                               "price_minor": r["price_minor"], "reference_minor": r["strike_minor"], "available": True,
+                               "price_basis": "amazon_search_listing"}
+
     keywords = [k for k in c["keywords"] if k.get("enabled", True)]
+    member_kws = []
+    if args.member_keywords and Path(args.member_keywords).exists():
+        member_kws = [{"id": "m:" + k["id"], "query": k["query"]} for k in json.loads(Path(args.member_keywords).read_text())
+                      if k.get("id") and k.get("query")]
+    # One pool: the admin's keywords and members' searching words (most-searched first). Words that found the most
+    # last time go first, then the ones searched longest ago (never searched first), so every word gets its turn.
+    search_order = plan_searches(keywords + member_kws, stats, max_searches)
     hits = {}
     try:
         # 0. Re-check every Amazon deal confirmed before, so earlier finds stay current.
@@ -278,11 +342,12 @@ def main():
                 confirm({"asin": o["product"]["asin"], "title": o["product"]["name"],
                          "keywords": set(o.get("matched_keyword_ids") or []), "origin": "third_party_lead"})
         # 2. A few Amazon searches per run, rotating through the keywords; then confirm their hits.
-        for kw in plan_searches(keywords, stats, max_searches):
+        #    Members' words are in the same pool; results found only through them are kept apart below.
+        for kw in search_order:
             fetch.interval = search_gap
             try:
                 # Electronics department only: a bare "echo" or "jbl" search otherwise returns books, pet food, health products.
-                raw, _ = fetch.get(f"{HOST}/s?k={quote_plus(kw['query'])}&i=electronics", "search-" + kw["id"])
+                raw, _ = fetch.get(f"{HOST}/s?k={quote_plus(kw['query'])}&i=electronics{discount_filter}", "search-" + kw["id"])
             except Blocked as exc:
                 report["search_blocked"] = str(exc)
                 break
@@ -295,13 +360,16 @@ def main():
             qualifying = 0
             for r in rows:
                 _, pct = exact_discount(r["price_minor"], r["strike_minor"])
-                if pct is not None and pct > threshold and not NOT_NEW.search(r["title"]):
+                if pct is not None and pct > bar([kw["id"]]) and not NOT_NEW.search(r["title"]):
                     qualifying += 1
                     hits.setdefault(r["asin"], {**r, "keywords": set(), "origin": "amazon_search"})["keywords"].add(kw["id"])
             report["searches"].append({"keyword_id": kw["id"], "results": len(rows), "qualifying": qualifying})
             stats[kw["id"]] = {"searched_at": datetime.now(timezone.utc).isoformat(), "qualifying": qualifying}
         for h in hits.values():
             confirm(h)
+        # 3. Products members watch.
+        for w in watch_items:
+            check_watched(w)
     except Blocked as exc:
         report["blocked"] = str(exc)
     # Search hits whose product page was not reached (blocked or check limit): the search listing price still stands.
@@ -310,7 +378,7 @@ def main():
         if h["asin"] not in checked:
             listing_offer(h, observed)
     report["from_search_listing"] = len(listed)
-    ids = {k["id"] for k in keywords}
+    ids = {k["id"] for k in keywords} | {k["id"] for k in member_kws}
     write_json(cursor_file, {"keywords": len(keywords), "stats": {k: v for k, v in stats.items() if k in ids}})
     # Deals not reached this run (cut short) stay until their own expiry, with their original check time.
     carried = 0
@@ -320,12 +388,26 @@ def main():
             offers.append(o)
             carried += 1
     report["carried_over"] = carried
+    # Found only through a member's private keyword: kept out of the public offers.
+    private = [o for o in offers if o.get("matched_keyword_ids") and all(k.startswith("m:") for k in o["matched_keyword_ids"])]
+    offers = [o for o in offers if o not in private]
+    searched_private = [x["keyword_id"][2:] for x in report["searches"] if x["keyword_id"].startswith("m:")]
+    write_json(out / "member-offers.json", {"generated_at": now.isoformat(), "searched_keyword_ids": searched_private,
+                                            "offers": private})
+    report["member_searches"], report["member_offers"] = len(searched_private), len(private)
     offers.sort(key=lambda o: -o["pricing"]["discount_percent"])
     report.update(duration_seconds=round(time.monotonic() - started, 1), requests=fetch.count, candidates=len(checked),
                   confirmed=len(offers) - carried, rejected=len(rejected))
     write_json(out / "offers.json", {"schema_version": "1.0.0", "module_id": "amazon_promotions", "generated_at": now.isoformat(),
                                      "source": "amazon_direct", "offers": offers})
     write_json(out / "rejected.json", {"records": rejected})
+    for w in watch_items:  # watched products this run could not reach (blocked earlier)
+        if re.fullmatch(r"[A-Z0-9]{10}", w.get("key", "")) and w["key"] not in watch_results:
+            watch_results[w["key"]] = {"site": "Amazon.ie", "key": w["key"], "status": "not_checked", "buy_url": affiliate_link(w["key"], tag),
+                                       "checked_at": None, "error": "Amazon refused requests before this product was reached"}
+    for r in watch_results.values():
+        _, r["discount_percent"] = exact_discount(r.get("price_minor"), r.get("reference_minor"))
+    write_json(out / "watch-status.json", {"generated_at": now.isoformat(), "items": list(watch_results.values())})
     write_json(out / "run-report.json", report)
     print(json.dumps({k: report[k] for k in ("duration_seconds", "requests", "candidates", "confirmed", "carried_over", "rejected", "blocked", "search_blocked")}))
     return 2 if report["blocked"] or report["search_blocked"] or report["errors"] else 0

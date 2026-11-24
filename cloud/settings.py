@@ -146,7 +146,7 @@ def apply(settings):
     apath.write_text(json.dumps(amazon, ensure_ascii=False, indent=2))
     hpath = OUTPUTS / "retailer-offers-service/harvey-norman.json"
     hn = json.loads(hpath.read_text())
-    hn["minimum_discount_percent"] = settings["retail_min_discount"]
+    hn["minimum_discount_percent"] = min(20.0, settings["retail_min_discount"])  # collect from 20%; the public page shows the admin minimum
     hn["searches"] = [dict(x, enabled=x["enabled"] and "harvey_norman" not in off) for x in settings["harvey_norman_searches"]]
     hpath.write_text(json.dumps(hn, ensure_ascii=False, indent=1))
     return {"disabled_operators": [o["id"] for o in settings["operators"] if not o["enabled"]],

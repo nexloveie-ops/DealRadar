@@ -17,7 +17,7 @@ import sys
 import tarfile
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from google.cloud import firestore, storage
@@ -28,8 +28,10 @@ sys.path.insert(0, str(OUTPUTS))
 import combine_deals  # noqa: E402
 sys.path.insert(0, str(APP / "cloud"))
 import settings as admin_settings  # noqa: E402
+import members  # noqa: E402
 
 BATCH = 400
+RUN_RECORD_DAYS = 7  # run records in Firestore; the bucket keeps runs/ and evidence/ for 7 days too
 
 
 def amazon_mode():
@@ -46,6 +48,8 @@ def modules(mode):
         "retailer": {"dir": "retailer-offers-service", "script": "collect.py", "args": [], "state": ["offers.json", "price-history.json"], "archive": True},
         "harvey_norman": {"dir": "retailer-offers-service", "script": "harvey_norman.py", "args": [], "state": ["offers.json"],
                           "archive": True, "no_cache": True},
+        # Products members watch (Harvey Norman, Expert, Powercity, Mobile123); Amazon ones go to the Amazon step.
+        "watch": {"dir": "watch-service", "script": "check.py", "args": [], "state": [], "archive": True, "no_cache": True},
         "mobile123": {"dir": "mobile123-offers-service", "script": "collect.py", "args": [], "state": ["offers.json"], "archive": True},
     }
     if mode == "local":
@@ -145,10 +149,74 @@ def write_firestore(db, rows, raw_by_id, history, run_doc, generated):
         batch.set(hist.document(doc_id(oid)), {"offer_id": oid, "points": points, "updated_at": generated})
         n += 1
         flush()
+    # Old data is not kept: price histories of items no longer tracked, and run records older than RUN_RECORD_DAYS.
+    keep = {doc_id(oid) for oid in history}
+    for snap in hist.select([]).stream():
+        if snap.id not in keep:
+            batch.delete(snap.reference)
+            n += 1
+            flush()
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=RUN_RECORD_DAYS)).strftime("%Y%m%dT%H%M%SZ")
+    for snap in db.collection("runs").select([]).stream():
+        if snap.id < cutoff:
+            batch.delete(snap.reference)
+            n += 1
+            flush()
     flush(force=True)
     db.collection("runs").document(run_doc["run_id"]).set(run_doc)
     db.collection("meta").document("latest").set({k: run_doc[k] for k in ("run_id", "finished_at", "counts", "amazon_mode", "modules_ok")})
     return written, removed
+
+
+def member_view(o):
+    """The public fields the member page needs, for an Amazon offer found through a member's private keyword."""
+    p, v = o["pricing"], o["verification"]
+    return {"id": o["id"], "module": "amazon", "store": "Amazon.ie", "title": o["product"]["name"], "asin": o["product"]["asin"],
+            "price_minor": p["device_price_minor"], "reference_minor": p["reference_price_minor"], "discount_percent": p["discount_percent"],
+            "image_url": (o.get("media") or {}).get("image_url"), "buy_url": o["links"]["affiliate_url"], "affiliate": True,
+            "price_source": "amazon_page", "checked_at": v.get("verified_at"), "category": "", "reference_kind": "reference"}
+
+
+def write_member_finds(db, path, member_kws, generated):
+    """member_finds/{keyword}: replaced for each private keyword searched this run; others keep their last results."""
+    if not path.exists():
+        return 0
+    data = json.loads(path.read_text())
+    queries = {k["id"]: k["query"] for k in member_kws}
+    n = 0
+    for kid in data.get("searched_keyword_ids", []):
+        deals = sorted((member_view(o) for o in data.get("offers", []) if "m:" + kid in (o.get("matched_keyword_ids") or [])),
+                       key=lambda d: -(d["discount_percent"] or 0))
+        db.collection("member_finds").document(kid).set({"keyword_id": kid, "query": queries.get(kid, kid), "searched_at": generated,
+                                                         "deals": deals[:60]})
+        n += len(deals)
+    return n
+
+
+def write_watch_status(db, paths, keep):
+    """watch_status/{site}:{key}: the last check of each watched product (see members.merge_watch_result).
+    Results for products nobody watches any more are removed."""
+    coll = db.collection(members.WATCH_DOC)
+    now = datetime.now(timezone.utc)
+    n = 0
+    for path in paths:
+        if not path.exists():
+            continue
+        for r in json.loads(path.read_text()).get("items", []):
+            doc = members.watch_doc_id(r["site"], r["key"])
+            prev_snap = coll.document(doc).get()
+            prev = prev_snap.to_dict() if prev_snap.exists else {}
+            rec = members.merge_watch_result(prev, r, now)
+            if rec is None:  # keep the last good check; just note this run didn't reach it
+                coll.document(doc).update({"last_attempt_at": now.isoformat(timespec="seconds"), "last_error": r.get("error")})
+                continue
+            coll.document(doc).set(rec)
+            n += 1
+    if keep is not None:
+        for snap in coll.select([]).stream():
+            if snap.id not in keep:
+                snap.reference.delete()
+    return n
 
 
 def main():
@@ -167,8 +235,35 @@ def main():
     applied = admin_settings.apply(current)
     combine_deals.DISABLED_OPERATORS = set(applied["disabled_operators"])
     combine_deals.DISABLED_SHOPS = set(applied["disabled_shops"])
-    combine_deals.RETAIL_MIN_DISCOUNT = float(applied["retail_min_discount"])
+    combine_deals.PUBLIC_MIN_DISCOUNT = float(applied["retail_min_discount"])
     work = Path(tempfile.mkdtemp(prefix="dealradar-"))
+    # Members' searching words (each member's first N words that have not expired) join the search pools:
+    # Amazon gets the ones not already on the admin keyword list; Harvey Norman gets all of them.
+    member_kws, searching = [], []
+    if not args.load_only:
+        try:
+            searching = members.searching_words_for_collector(db, lambda: current)
+        except Exception as exc:
+            print("member search words not loaded:", exc, flush=True)
+        member_kws = [w for w in searching if not w["on_whitelist"]]
+        if specs.get("amazon", {}).get("script") == "amazon_direct.py":
+            (work / "member-keywords.json").write_text(json.dumps(member_kws))
+            specs["amazon"]["args"] = specs["amazon"]["args"] + ["--member-keywords", str(work / "member-keywords.json")]
+        if "harvey_norman" in specs:
+            (work / "member-words-hn.json").write_text(json.dumps(searching))
+            specs["harvey_norman"]["args"] = specs["harvey_norman"]["args"] + ["--member-keywords", str(work / "member-words-hn.json")]
+    watch_items, watch_keep = [], None  # None: not loaded, so existing check results are left alone
+    if not args.load_only:
+        try:
+            watch_items, watch_keep = members.watched_items_for_collector(db)
+        except Exception as exc:
+            print("watched products not loaded:", exc, flush=True)
+        (work / "watch-items.json").write_text(json.dumps(watch_items))
+        specs["watch"]["args"] = ["--items", str(work / "watch-items.json")]
+        if specs.get("amazon", {}).get("script") == "amazon_direct.py":
+            specs["amazon"]["args"] = specs["amazon"]["args"] + ["--watch", str(work / "watch-items.json")]
+    elif "watch" in specs:
+        specs["watch"]["skip"] = True
     results = {}
     for key, spec in specs.items():
         files = spec["state"] + (["offers.json", "run-report.json"] if args.load_only else [])
@@ -216,6 +311,10 @@ def main():
                "modules_ok": all(r["ok"] for r in results.values()), "counts": counts, "module_reports": reports}
 
     written, removed = write_firestore(db, rows, raw_by_id, history, run_doc, generated)
+    if member_kws:
+        run_doc["member_finds"] = write_member_finds(db, out["amazon"] / "member-offers.json", member_kws, generated)
+    if not args.load_only:
+        run_doc["watch_checked"] = write_watch_status(db, [out["watch"] / "status.json", out["amazon"] / "watch-status.json"], watch_keep)
     print(json.dumps({"firestore_written": written, "firestore_removed": removed, **counts}), flush=True)
 
     # Cloud Storage: state for the next run, archive of this run, raw evidence, merged page.

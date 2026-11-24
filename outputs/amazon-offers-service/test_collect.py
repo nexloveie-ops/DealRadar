@@ -26,13 +26,13 @@ class AmazonRules(unittest.TestCase):
     def listing(self,r):
         return r['searchResult']['items'][0]['offersV2']['listings'][0]
 
-    def test_exact_40_percent_is_excluded(self):
-        r=self.response();self.listing(r)['price']['money']['amount']=60
+    def test_exact_threshold_percent_is_excluded(self):
+        r=self.response();self.listing(r)['price']['money']['amount']=80  # exactly 20% off (config threshold)
         rows,_ = self.parse(r)
         self.assertEqual(rows,[])
 
-    def test_rounded_up_below_40_is_not_included(self):
-        r=self.response();self.listing(r)['price']['money']['amount']=60.01
+    def test_rounded_up_below_threshold_is_not_included(self):
+        r=self.response();self.listing(r)['price']['money']['amount']=80.01
         rows,_=self.parse(r);self.assertEqual(rows,[])
 
     def test_new_condition_cannot_borrow_used_price(self):

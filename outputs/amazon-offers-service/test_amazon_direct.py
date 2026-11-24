@@ -104,5 +104,75 @@ class ListingSanity(unittest.TestCase):
             self.assertIsNone(ad.NOT_TECH.search(t), t)
 
 
+class MemberKeywords(unittest.TestCase):
+    def test_private_keyword_results_stay_out_of_public_offers(self):
+        import json, sys, tempfile
+        from unittest import mock
+        card = lambda a: (f'<div data-component-type="s-search-result" data-asin="{a}"><h2>Item {a}</h2>'
+                          f'<span class="a-price"><span class="a-offscreen">€30.00</span></span>'
+                          f'<span class="a-price a-text-price" data-a-strike="true"><span class="a-offscreen">€100.00</span></span></div>')
+        searched = []
+        small = lambda a: (f'<div data-component-type="s-search-result" data-asin="{a}"><h2>Item {a}</h2>'
+                           f'<span class="a-price"><span class="a-offscreen">€80.00</span></span>'
+                           f'<span class="a-price a-text-price" data-a-strike="true"><span class="a-offscreen">€100.00</span></span></div>')
+
+        def get(self, url, key):
+            if "/s?" in url:
+                searched.append(url)
+                return ((card("B0000MEMBR") + small("B0000SMALL")) if "k=garmin" in url else (card("B0000PUBLC") + small("B0000PUBSM"))), "s"
+            return "<div>add this item to your basket</div>", "h"
+
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(ad.Fetcher, "get", get), mock.patch("time.sleep"):
+            cfg = json.loads((ad.ROOT / "config.json").read_text())
+            cfg["direct"]["max_searches_per_run"] = 2
+            mk = d + "/mk.json"
+            open(mk, "w").write(json.dumps([{"id": "garmin-fenix", "query": "garmin fenix", "members": 2}]))
+            import os
+            os.makedirs(d + "/o", exist_ok=True)  # admin words were searched before; the member's word never was
+            open(d + "/o/search-cursor.json", "w").write(json.dumps({"stats": {k["id"]: {"searched_at": "2026-11-20T07:00:00+00:00", "qualifying": 0}
+                                                                     for k in cfg["keywords"]}}))
+            with mock.patch.object(ad.Path, "read_text", lambda self, *a, **k: json.dumps(cfg) if self.name == "config.json" else open(self).read()):
+                with mock.patch.object(sys, "argv", ["x", "--cache", d + "/c", "--out", d + "/o", "--member-keywords", mk]):
+                    ad.main()
+            public = [o["product"]["asin"] for o in json.loads(open(d + "/o/offers.json").read())["offers"]]
+            member = json.loads(open(d + "/o/member-offers.json").read())
+        self.assertEqual(len(searched), 2)
+        self.assertTrue(any("k=garmin+fenix" in u for u in searched))  # members' words share the search pool
+        self.assertTrue(all("&i=electronics&rh=p_8%3A20-" in u for u in searched))  # Amazon's own 20%-and-up filter
+        self.assertEqual(public, ["B0000PUBLC"])
+        # Every word collects above 20%: the 70%-off item is kept, the exactly-20% one is not.
+        self.assertEqual(sorted(o["product"]["asin"] for o in member["offers"]), ["B0000MEMBR"])
+        self.assertEqual(member["searched_keyword_ids"], ["garmin-fenix"])
+
+
+class WatchedProducts(unittest.TestCase):
+    def test_page_price_then_asin_search_then_out_of_budget(self):
+        import json, sys, tempfile
+        from unittest import mock
+        def get(self, url, key):
+            if url.endswith("/dp/B000000AAA"):
+                return ('<span id="productTitle">Echo Dot</span><div id="corePriceDisplay_desktop_feature_div"><span class="priceToPay">'
+                        '<span class="a-offscreen">€30.00</span></span><span class="basisPrice">RRP: <span class="a-offscreen">€60.00</span></span></div>'
+                        '<div id="availability">In stock</div>' + " " * 6000), "p"
+            if "/dp/" in url:
+                return "<div>add this item to your basket</div>" + " " * 6000, "h"
+            if "k=B000000BBB" in url:
+                return ('<div data-component-type="s-search-result" data-asin="B000000BBB"><h2>Garmin Venu 3</h2>'
+                        '<span class="a-price"><span class="a-offscreen">€288.92</span></span>'
+                        '<span class="a-price a-text-price" data-a-strike="true"><span class="a-offscreen">€499.99</span></span></div>'), "s"
+            return "", "s"
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(ad.Fetcher, "get", get), mock.patch("time.sleep"):
+            cfg = json.loads((ad.ROOT / "config.json").read_text())
+            cfg["direct"].update(max_searches_per_run=0, max_watch_searches_per_run=1)
+            open(d + "/w.json", "w").write(json.dumps([{"key": k} for k in ("B000000AAA", "B000000BBB", "B000000CCC")]))
+            with mock.patch.object(ad.Path, "read_text", lambda self, *a, **k: json.dumps(cfg) if self.name == "config.json" else open(self).read()):
+                with mock.patch.object(sys, "argv", ["x", "--cache", d + "/c", "--out", d + "/o", "--watch", d + "/w.json"]):
+                    ad.main()
+            res = {r["key"]: r for r in json.loads(open(d + "/o/watch-status.json").read())["items"]}
+        self.assertEqual((res["B000000AAA"]["status"], res["B000000AAA"]["price_minor"], res["B000000AAA"]["discount_percent"]), ("checked", 3000, 50.0))
+        self.assertEqual((res["B000000BBB"]["status"], res["B000000BBB"]["price_minor"], res["B000000BBB"]["reference_minor"]), ("checked", 28892, 49999))
+        self.assertEqual(res["B000000CCC"]["status"], "not_checked")   # page hid the price and the one watch search was used
+
+
 if __name__ == "__main__":
     unittest.main()

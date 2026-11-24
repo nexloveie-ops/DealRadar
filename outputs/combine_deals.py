@@ -27,7 +27,10 @@ INPUTS = {
     "harvey-norman": ROOT / "retailer-offers-service/hn-data/offers.json",
 }
 DISABLED_OPERATORS = set()  # operator ids switched off in the admin settings
-RETAIL_MIN_DISCOUNT = 30.0  # retail-chain items below this discount are not listed (admin setting)
+# Collected: every retail-chain and Amazon discount of at least COLLECT_MIN_DISCOUNT %.
+# Public page: only those at PUBLIC_MIN_DISCOUNT % or more (admin setting); the rest are for members only.
+COLLECT_MIN_DISCOUNT = 20.0
+PUBLIC_MIN_DISCOUNT = 30.0
 DISABLED_SHOPS = set()  # retail chains switched off in the admin settings
 AMAZON_SOURCE = "direct"  # "direct" = confirmed on Amazon product pages; "api" = Creators API; "web" = third-party leads only
 
@@ -110,8 +113,8 @@ def retailer_rows():
         p, v = o["pricing"], o["verification"]
         if o["provider_id"] in DISABLED_SHOPS:
             continue
-        # Only real discounts of at least RETAIL_MIN_DISCOUNT %: smaller ones are not worth listing.
-        if p.get("discount_percent") is None or p["discount_percent"] < RETAIL_MIN_DISCOUNT:
+        # Only real discounts of at least COLLECT_MIN_DISCOUNT %: smaller ones are not worth listing.
+        if p.get("discount_percent") is None or p["discount_percent"] < COLLECT_MIN_DISCOUNT:
             continue
         ucp = v["method"] == "official_ucp_catalog"
         live = v["method"] == "direct_official_html" or ucp
@@ -334,17 +337,26 @@ def build_rows():
         shadow = dict(r)
         r["publish"], r["publish_reason"] = auto_publish(shadow, raw.get(r["id"]), now)
         r["public_view"] = {k: shadow.get(k) for k in PUBLIC_FIELDS} if r["publish"] else None
+        # Below the public minimum, or found only through members' own search words: members only.
+        found_by_member = (raw.get(r["id"]) or {}).get("member_only")
+        below = r["module"] in ("retailer", "amazon") and shadow.get("discount_percent") is not None \
+            and shadow["discount_percent"] < PUBLIC_MIN_DISCOUNT
+        if r["publish"] and (found_by_member or below):
+            r["member_view"], r["public_view"], r["publish"] = r["public_view"], None, False
+            r["publish_reason"] = "members only: " + ("found through members' search words" if found_by_member
+                                                      else f"below the public minimum of {PUBLIC_MIN_DISCOUNT:g}%")
     assert len({r["id"] for r in rows}) == len(rows)
     return rows
 
 
-def render_page(rows, generated, public=False, schedule=("twice a day", "7am and 7pm")):
+def render_page(rows, generated, public=False, schedule=("twice a day", "7am and 7pm"), mode="public"):
     if public:
         rows = [r["public_view"] for r in rows if r.get("publish")]
         data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
         words, times = schedule
         return ((ROOT / "public_page.html").read_text().replace("__DATA__", data).replace("__GENERATED_ISO__", html.escape(generated or ""))
-                .replace("__RUNS__", html.escape(words)).replace("__TIMES__", html.escape(times)))
+                .replace("__RUNS__", html.escape(words)).replace("__TIMES__", html.escape(times))
+                .replace("__MODE__", "mine" if mode == "mine" else "public"))
     data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
     title = "Deal Radar Ireland" if public else "Deal Radar 优惠汇总（内部视图）"
     foot = ("对比价不是统一的“原价”：运营商是同运营商非转网价或非会员价；零售店是零售商标示的 Was 价或制造商 RRP；"

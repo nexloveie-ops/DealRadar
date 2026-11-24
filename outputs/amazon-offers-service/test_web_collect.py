@@ -20,14 +20,15 @@ class PublicWebRules(unittest.TestCase):
     def normalise(self,row=None):
         return wc.normalise(row or self.row,self.c,self.settings,self.now)
 
-    def test_strict_40_excluded_and_above_40_included(self):
-        self.row['price']=60
+    def test_strict_threshold_excluded_and_above_included(self):
+        # config threshold: strictly above 20%
+        self.row['price']=80
         with self.assertRaisesRegex(ValueError,'threshold'):self.normalise()
-        self.row['price']=59.99
-        self.assertEqual(self.normalise()['pricing']['discount_minor'],4001)
+        self.row['price']=79.99
+        self.assertEqual(self.normalise()['pricing']['discount_minor'],2001)
 
-    def test_rounded_40_is_not_automatically_accepted(self):
-        self.row['price']=60.01
+    def test_rounded_threshold_is_not_automatically_accepted(self):
+        self.row['price']=80.01
         with self.assertRaisesRegex(ValueError,'threshold'):self.normalise()
 
     def test_energy_saving_40_percent_has_no_price_pair(self):

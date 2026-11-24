@@ -178,17 +178,26 @@ def main():
     ap.add_argument("--out", default=str(ROOT / "hn-data"))
     ap.add_argument("--config", default=str(ROOT / "harvey-norman.json"))
     ap.add_argument("--profile", default=os.environ.get("UCP_PROFILE_URL", PROFILE))
+    ap.add_argument("--member-keywords", help="Members' searching words (JSON [{id, query, members}]). Searched after the admin's "
+                    "searches; items found only through them are marked member_only (shown to members, not on the public page).")
     args = ap.parse_args()
     started = time.monotonic()
     cfg = json.loads(Path(args.config).read_text())
-    threshold = float(cfg.get("minimum_discount_percent", 30))
+    threshold = float(cfg.get("minimum_discount_percent", 20))
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     by_id, skipped, report = {}, [], {"searches": [], "errors": []}
-    for s in [s for s in cfg["searches"] if s.get("enabled", True)]:
+    searches = [dict(s, max_pages=int(cfg.get("max_pages", 4))) for s in cfg["searches"] if s.get("enabled", True)]
+    if args.member_keywords and Path(args.member_keywords).exists():
+        admin_queries = {s["query"].strip().lower() for s in searches}
+        words = [w for w in json.loads(Path(args.member_keywords).read_text()) if w.get("query", "").strip().lower() not in admin_queries]
+        # Most-searched words first; a cap keeps the run short however many members there are.
+        searches += [{"id": "m:" + w["id"], "query": w["query"], "category": "other", "max_pages": int(cfg.get("member_max_pages", 2))}
+                     for w in words[:int(cfg.get("member_searches_per_run", 30))]]
+    for s in searches:
         fetched_at = datetime.now(timezone.utc).isoformat()
         try:
-            products, complete = search(s["query"], args.profile, int(cfg.get("max_pages", 4)), int(cfg.get("page_size", 30)),
+            products, complete = search(s["query"], args.profile, s["max_pages"], int(cfg.get("page_size", 30)),
                                         float(cfg.get("request_interval_seconds", 1.5)))
         except (UcpError, OSError, ValueError, KeyError) as exc:
             report["errors"].append(f"{s['id']}: {str(exc)[:200]}")
@@ -204,6 +213,9 @@ def main():
                 by_id[r["id"]]["source_ids"].append(s["id"])
         report["searches"].append({"id": s["id"], "products": len(products), "complete": complete, "kept": len(rows), "new": new})
         time.sleep(float(cfg.get("request_interval_seconds", 1.5)))
+    for o in by_id.values():
+        if all(sid.startswith("m:") for sid in o["source_ids"]):
+            o["member_only"] = True  # found only through members' words: for members, not the public page
     offers = sorted(by_id.values(), key=lambda o: -o["pricing"]["discount_percent"])
     now = datetime.now(timezone.utc).isoformat()
     if report["errors"] and not report["searches"] and (out / "offers.json").exists():

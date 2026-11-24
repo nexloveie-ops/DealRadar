@@ -5,7 +5,11 @@
   GET /api/deals             published deals (public fields). ?module=operator|retailer|amazon ?discount=1
   GET /api/deals/<id>        one published deal
   GET /api/runs/latest       latest collection run summary
-  POST /api/click            count a click on a deal's shop button (no IP or cookie stored)
+  POST /api/click            count a click on a deal's shop button (no IP or cookie stored; a signed-in member's
+                             Firebase token, if sent, also counts it for that member)
+  GET /my-deals              a signed-in member's deals, with the home page's filters
+  GET /account               member page: sign in, follow channels, keywords and products, "My deals"
+  /api/me/*                  member settings and matching deals (Firebase ID token required)
   GET /admin                 admin panel (Firebase sign-in; admins only)
   /api/admin/*               settings, clicks and admin list (Firebase ID token required)
   GET /health
@@ -142,6 +146,10 @@ def click():
                "buy_url": view.get("buy_url"), "total": inc, "days": {day: inc}, "last_click_at": firestore.SERVER_TIMESTAMP}, merge=True)
     batch.set(db.collection("click_days").document(day), {"day": day, "total": inc, "stores": {store: inc}}, merge=True)
     batch.commit()
+    try:
+        members.record_member_click(str(payload.get("token") or "")[:4096], deal_id, view)
+    except Exception as exc:  # a member counter must never break the public click count
+        print("member click not recorded:", exc, flush=True)
     return ("", 204)
 
 
@@ -167,12 +175,26 @@ def admin_emails():
     return FIXED_ADMINS | extra
 
 
+_settings_cache = {"at": 0.0, "value": None}
+
+
+def cached_settings():
+    """Admin source settings, re-read at most once a minute (members' channel list and keyword whitelist use them)."""
+    if _settings_cache["value"] is None or time.monotonic() - _settings_cache["at"] > 60:
+        _settings_cache.update(at=time.monotonic(), value=admin_settings.load(db)[0])
+    return _settings_cache["value"]
+
+
+def verify_token(token):
+    return id_token.verify_firebase_token(token, _greq, audience=PROJECT)
+
+
 def current_admin():
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
         abort(401)
     try:
-        claims = id_token.verify_firebase_token(auth[7:], _greq, audience=PROJECT)
+        claims = verify_token(auth[7:])
     except Exception:
         abort(401)
     email = (claims.get("email") or "").lower()
@@ -181,9 +203,32 @@ def current_admin():
     return email
 
 
+import members  # noqa: E402
+
+members.init(db, verify_token, snapshot, cached_settings)
+members._ctx["collection_info"] = lambda: collection_info()
+members.admin_members(current_admin)
+app.register_blueprint(members.bp)
+
+
 @app.get("/admin")
 def admin_page():
     return Response((Path(__file__).resolve().parent / "admin.html").read_text(), mimetype="text/html",
+                    headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"})
+
+
+@app.get("/my-deals")
+def my_deals_page():
+    """The home page and its filters over a signed-in member's own deals (loaded by the page with the member's token)."""
+    _, latest = snapshot()
+    words, times = public_schedule()
+    page = combine_deals.render_page([], generated(latest), public=True, schedule=(words, times), mode="mine")
+    return Response(page, mimetype="text/html", headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"})
+
+
+@app.get("/account")
+def account_page():
+    return Response((Path(__file__).resolve().parent / "account.html").read_text(), mimetype="text/html",
                     headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"})
 
 
@@ -216,6 +261,7 @@ def admin_put_settings():
         clean = admin_settings.save(db, request.get_json(force=True), email)
     except (ValueError, TypeError, KeyError) as exc:
         return jsonify({"error": str(exc)}), 400
+    _settings_cache["value"] = None
     return jsonify({"settings": clean, "saved": True})
 
 
@@ -385,6 +431,29 @@ def admin_put_schedule():
     s = read_schedule()
     s["words"], s["times"] = schedule_words(s["hours"])
     return jsonify({**s, "saved": True})
+
+
+def collection_info():
+    """When deals were last collected and when the next scheduled collection starts (Irish time), for members."""
+    from datetime import datetime, timedelta
+    from zoneinfo import ZoneInfo
+    snap = db.collection("settings").document("schedule").get()
+    cfg = (snap.to_dict() or {}) if snap.exists else {}
+    hours, enabled = sorted(cfg.get("hours") or [7, 19]), cfg.get("enabled", True)
+    now = datetime.now(ZoneInfo("Europe/Dublin"))
+    nxt = None
+    if enabled:
+        for add in range(0, 3):
+            day = (now + timedelta(days=add)).date()
+            for h in hours:
+                t = datetime(day.year, day.month, day.day, h, tzinfo=ZoneInfo("Europe/Dublin"))
+                if t > now:
+                    nxt = t
+                    break
+            if nxt:
+                break
+    _, latest = snapshot()
+    return {"last": generated(latest) or None, "next": nxt.isoformat() if nxt else None, "automatic": bool(enabled)}
 
 
 def public_schedule():
