@@ -29,6 +29,7 @@ import combine_deals  # noqa: E402
 sys.path.insert(0, str(APP / "cloud"))
 import settings as admin_settings  # noqa: E402
 import members  # noqa: E402
+import push  # noqa: E402
 
 BATCH = 400
 RUN_RECORD_DAYS = 7  # run records in Firestore; the bucket keeps runs/ and evidence/ for 7 days too
@@ -319,6 +320,8 @@ def main():
         run_doc["member_finds"] = write_member_finds(db, out["amazon"] / "member-offers.json", member_kws, generated)
     if not args.load_only:
         run_doc["watch_checked"] = write_watch_status(db, [out["watch"] / "status.json", out["amazon"] / "watch-status.json"], watch_keep)
+        # Push notifications to the app: watched products at their target, and in the evening new deals.
+        run_doc["push"] = push.after_collection(db, rows)
     print(json.dumps({"firestore_written": written, "firestore_removed": removed, **counts}), flush=True)
 
     # Cloud Storage: state for the next run, archive of this run, raw evidence, merged page.

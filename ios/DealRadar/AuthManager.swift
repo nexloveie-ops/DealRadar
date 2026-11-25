@@ -103,46 +103,52 @@ final class AuthManager: ObservableObject {
 }
 
 struct SignInView: View {
-    @EnvironmentObject var auth: AuthManager
     var title = "Your own deal list"
     var message = "Sign in to follow the shops and networks you use, add your own search words, and watch the products you want."
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text(title).font(.title.weight(.bold)).foregroundStyle(Color.drInk)
-                Text(message).foregroundStyle(Color.drMuted)
+        ScrollView { SignInCard(title: title, message: message).padding(16) }
+            .background(Color.drShelf)
+    }
+}
 
-                SignInWithAppleButton(.continue) { auth.prepare($0) } onCompletion: { r in Task { await auth.finish(r) } }
-                    .signInWithAppleButtonStyle(.black)
-                    .frame(height: 50)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+struct SignInCard: View {
+    @EnvironmentObject var auth: AuthManager
+    var title = "Your own deal list"
+    var message = ""
 
-                Button { Task { await auth.signInWithGoogle() } } label: {
-                    HStack(spacing: 10) {
-                        Text("G").font(.title3.weight(.bold)).foregroundStyle(Color.drBlue)
-                        Text("Continue with Google").font(.headline)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.drLine))
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(title).font(.title.weight(.bold)).foregroundStyle(Color.drInk)
+            Text(message).foregroundStyle(Color.drMuted)
+
+            SignInWithAppleButton(.continue) { auth.prepare($0) } onCompletion: { r in Task { await auth.finish(r) } }
+                .signInWithAppleButtonStyle(.black)
+                .frame(height: 50)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            Button { Task { await auth.signInWithGoogle() } } label: {
+                HStack(spacing: 10) {
+                    Text("G").font(.title3.weight(.bold)).foregroundStyle(Color.drBlue)
+                    Text("Continue with Google").font(.headline)
                 }
-                .foregroundStyle(Color.drInk)
-
-                Text("Signed up on dealradar.ie with an email link? Use Continue with Google with the same Gmail address, or sign in on the website for now.")
-                    .font(.footnote).foregroundStyle(Color.drMuted)
-
-                if auth.busy { ProgressView().frame(maxWidth: .infinity) }
-                if let e = auth.error {
-                    Text(e).font(.footnote).foregroundStyle(Color(hex: 0xA32D2D))
-                        .padding(10).frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(hex: 0xFCEBEB), in: RoundedRectangle(cornerRadius: 6))
-                }
+                .frame(maxWidth: .infinity, minHeight: 50)
+                .background(Color.white, in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.drLine))
             }
-            .padding(24)
-            .background(Color.white, in: RoundedRectangle(cornerRadius: 10))
-            .padding(16)
+            .foregroundStyle(Color.drInk)
+
+            Text("Signed up on dealradar.ie with an email link? Use Continue with Google with the same Gmail address, or sign in on the website for now.")
+                .font(.footnote).foregroundStyle(Color.drMuted)
+
+            if auth.busy { ProgressView().frame(maxWidth: .infinity) }
+            if let e = auth.error {
+                Text(e).font(.footnote).foregroundStyle(Color(hex: 0xA32D2D))
+                    .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(hex: 0xFCEBEB), in: RoundedRectangle(cornerRadius: 6))
+            }
         }
-        .background(Color.drShelf)
+        .padding(24)
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 10))
     }
 }

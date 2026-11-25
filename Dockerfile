@@ -18,7 +18,7 @@ RUN cd outputs/prepay-offers-service && python -m unittest -q \
  && cd ../amazon-offers-service && python -m unittest discover -p 'test_*.py' -q \
  && cd ../mobile123-offers-service && python -m unittest -q \
  && cd ../watch-service && python -m unittest -q \
- && cd ../../cloud && python -m unittest test_settings -q
+ && cd ../../cloud && python -m unittest test_settings test_push -q
 ENV PYTHONUNBUFFERED=1
 # Web service by default; the Cloud Run Job overrides the command with cloud/run_collect.py.
 CMD exec gunicorn --chdir cloud --bind :$PORT --workers 1 --threads 8 --timeout 60 web:app

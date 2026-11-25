@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		D1A000000000000000000B01 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000D01 /* FirebaseAuth */; };
 		D1A000000000000000000B02 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000D02 /* GoogleSignIn */; };
+		D1A000000000000000000B03 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000D03 /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +45,7 @@
 			files = (
 				D1A000000000000000000B01 /* FirebaseAuth in Frameworks */,
 				D1A000000000000000000B02 /* GoogleSignIn in Frameworks */,
+				D1A000000000000000000B03 /* FirebaseMessaging in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -89,6 +91,7 @@
 			packageProductDependencies = (
 				D1A000000000000000000D01 /* FirebaseAuth */,
 				D1A000000000000000000D02 /* GoogleSignIn */,
+				D1A000000000000000000D03 /* FirebaseMessaging */,
 			);
 			productName = DealRadar;
 			productReference = D1A000000000000000000F01 /* Deal Radar.app */;
@@ -330,6 +333,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D1A000000000000000000072 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;
+		};
+		D1A000000000000000000D03 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A000000000000000000071 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

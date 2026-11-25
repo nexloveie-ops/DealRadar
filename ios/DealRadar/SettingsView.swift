@@ -9,13 +9,20 @@ struct SettingsView: View {
         NavigationStack {
             Group {
                 if !auth.signedIn {
-                    SignInView(title: "Sign in", message: "Sign in to choose shops and networks, add search words and watch products. Everything that matches lands in My deals.")
+                    List {
+                        Section {
+                            SignInCard(title: "Sign in", message: "Sign in to choose shops and networks, add search words and watch products. Everything that matches lands in My deals.")
+                                .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                        }
+                        NotificationsSection(signedIn: false)
+                    }
                 } else if let m = member.member {
                     List {
                         nextCheckSection
                         shopsSection(m)
                         WordsSection(m: m)
                         WatchSection(m: m)
+                        NotificationsSection(signedIn: true)
                         Section {
                             if let e = m.email { LabeledContent("Signed in as", value: e) }
                             LabeledContent("Plan", value: m.tier.name)

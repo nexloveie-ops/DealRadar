@@ -209,6 +209,8 @@ members.init(db, verify_token, snapshot, cached_settings)
 members._ctx["collection_info"] = lambda: collection_info()
 members.admin_members(current_admin)
 app.register_blueprint(members.bp)
+import push  # noqa: E402
+app.register_blueprint(push.bp)  # the app registers phones for push notifications
 
 
 @app.get("/admin")
