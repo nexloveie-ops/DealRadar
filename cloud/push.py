@@ -145,7 +145,9 @@ def plan(now, devices, member_docs, tiers, watch_status, rows, baseline, setting
     today = local.date().isoformat()
     evening = local.hour >= EVENING_FROM and not quiet and (baseline or {}).get("day") != today
     seen, public = visible_deals(rows)
-    new_baseline = {"ids": sorted(d["id"] for d in seen), "day": today} if evening or baseline is None else None
+    # The first run only sets the baseline; its day stays empty so that evening still sends.
+    new_baseline = ({"ids": sorted(d["id"] for d in seen), "day": today if evening else (baseline or {}).get("day", "")}
+                    if evening or baseline is None else None)
     old = set((baseline or {}).get("ids") or [])
     have_baseline = baseline is not None
     new_seen = [d for d in seen if d["id"] not in old] if have_baseline else []

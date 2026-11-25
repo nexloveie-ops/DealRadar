@@ -54,6 +54,14 @@ class Plan(unittest.TestCase):
         self.assertEqual(msgs, [])
         self.assertEqual(len(base["ids"]), 4)
 
+    def test_morning_first_run_sets_baseline_without_using_up_the_evening(self):
+        _, _, base = self.run_plan(MORNING, [dev("p1")], {}, baseline=None)
+        self.assertEqual(base["day"], "")
+        msgs, _, _ = self.run_plan(EVENING + timedelta(days=1), [dev("p1")], {}, baseline=base)
+        self.assertEqual(msgs, [])           # nothing new since the morning in this test data, but the evening still ran
+        _, _, base2 = self.run_plan(EVENING + timedelta(days=1), [dev("p1")], {}, baseline=base)
+        self.assertEqual(base2["day"], "2026-11-26")
+
     def test_member_words_new_matches_including_members_only_deals(self):
         msgs, _, _ = self.run_plan(EVENING, [dev("p1", "u1")], {"u1": member(words=["jbl"])})
         self.assertEqual(msgs[0]["title"], "2 new deals for “jbl”")
