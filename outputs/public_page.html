@@ -110,6 +110,16 @@ h1{font-size:clamp(28px,4vw,44px);line-height:1.08;letter-spacing:-.025em;margin
 .seg{display:inline-flex;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:3px}
 .seg button{border:0;background:none;padding:7px 14px;border-radius:4px;cursor:pointer;font-weight:500;font-size:15px;color:var(--muted);white-space:nowrap}
 .seg button[aria-pressed=true]{background:var(--blue);color:#fff}
+.seg .sh{display:none}
+.seg .nm{display:inline-block;max-width:140px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+.seg .dd{display:inline-block;width:6px;height:6px;border-right:1.8px solid currentColor;border-bottom:1.8px solid currentColor;transform:rotate(45deg);margin:0 2px 3px 8px}
+.kmenu{position:fixed;z-index:60;background:var(--paper);border:1px solid var(--line);border-radius:6px;box-shadow:0 8px 24px rgba(22,33,58,.14);padding:6px;min-width:220px;max-width:calc(100vw - 24px)}
+.kmenu[hidden]{display:none}
+.kmenu button{display:flex;justify-content:space-between;gap:16px;width:100%;text-align:left;border:0;background:none;padding:10px 12px;border-radius:4px;cursor:pointer;font-size:15px;color:var(--ink)}
+.kmenu button:hover{background:var(--shelf)}
+.kmenu button[aria-checked=true]{font-weight:700;color:var(--blue)}
+.kmenu small{color:var(--strike);font-size:13px}
+.kmenu .all{border-bottom:1px solid var(--line);border-radius:4px 4px 0 0;margin-bottom:4px}
 .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;border:1px solid var(--line);background:var(--paper);padding:6px 12px;border-radius:999px;font-size:14px;cursor:pointer;white-space:nowrap}
@@ -205,8 +215,14 @@ footer p{margin:0;max-width:62ch}
 
   .seg button{padding:7px 10px;font-size:14px}
   .pricebar{width:100%;margin:0 0 4px}
-  #kinds{max-width:100%;overflow-x:auto;scrollbar-width:none}
+  /* Phones: all five tabs on one row, with shorter labels */
+  #kinds{display:flex;width:100%;padding:2px;overflow-x:auto;scrollbar-width:none}
   #kinds::-webkit-scrollbar{display:none}
+  #kinds button{flex:1 1 auto;padding:7px 4px;font-size:13.5px}
+  #kinds .lg{display:none}
+  #kinds .sh{display:inline}
+  #kinds .nm{max-width:58px}
+  #kinds .dd{margin:0 1px 3px 4px;width:5px;height:5px}
   .filter.disc{width:100%;flex-direction:column;align-items:stretch;gap:6px}
   .filter.disc .seg{display:flex;width:100%}
   .filter.disc .seg button{flex:1;padding:7px 0;font-size:14px}
@@ -246,6 +262,7 @@ footer p{margin:0;max-width:62ch}
 <div class="controls"><div class="wrap">
   <div class="row">
     <div class="seg" role="group" aria-label="Where to buy" id="kinds"></div>
+    <div class="kmenu" id="kmenu" role="menu" hidden></div>
     <span class="spacer"></span>
     <button type="button" class="fbtn" id="fbtn" aria-expanded="false" aria-controls="fpanel"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Filters<b id="fcount" hidden></b></button>
     <label class="filter">Sort by
@@ -296,7 +313,9 @@ let D = __DATA__;
 // "public" = the home page; "mine" = /my-deals, the same page and filters over a signed-in member's own deals.
 const MODE = "__MODE__";
 const GENERATED = "__GENERATED_ISO__";
-const KINDS = [["all","All deals"],["amazon","Amazon"],["operator","Switch & save"],["retailer","In-store"],["mobile123","Mobile123"]];
+// Network Provider and In-store open a menu to show all of them or one network / shop.
+// The fourth item is the shorter label used on phones, so all tabs fit on one row.
+const KINDS = [["all","All deals","","All"],["amazon","Amazon","","Amazon"],["operator","Network Provider","All network providers","Networks"],["retailer","In-store","All shops","Shops"],["mobile123","Mobile123","","Mobile123"]];
 const STEPS = [10,20,30,40,50,60,75,100,125,150,200,250,300,400,500,750,1000,1500,2000,null];
 const TICKS = [50,100,250,500,1000];
 const CAT = {
@@ -357,10 +376,11 @@ const NEW = new Set();
   } catch (_) {}
 })();
 
-const state = {kind:"all", cat:"All", max:null, min:0, full:false, sort:"pct", shown:48};
+const state = {kind:"all", shop:null, cat:"All", max:null, min:0, full:false, sort:"pct", shown:48};
 (function readHash(){
   const h = new URLSearchParams(location.hash.slice(1));
   if (h.get("kind")) state.kind = h.get("kind");
+  if (h.get("shop") && ["operator","retailer"].includes(state.kind)) state.shop = h.get("shop");
   if (h.get("cat")) state.cat = h.get("cat");
   if (h.get("max") && STEPS.includes(+h.get("max"))) state.max = +h.get("max");
   if (h.get("min")) state.min = +h.get("min");
@@ -370,6 +390,7 @@ const state = {kind:"all", cat:"All", max:null, min:0, full:false, sort:"pct", s
 function writeHash(){
   const h = new URLSearchParams();
   if (state.kind!=="all") h.set("kind",state.kind);
+  if (state.shop) h.set("shop",state.shop);
   if (state.cat!=="All") h.set("cat",state.cat);
   if (state.max!=null) h.set("max",state.max);
   if (state.min) h.set("min",state.min);
@@ -416,6 +437,7 @@ function matches(x, ignoreCat, ignoreMax){
   // Mobile123's own products only appear in the Mobile123 tab, never mixed into All deals.
   // On My deals the member chose what to follow, so Mobile123 is part of All deals there.
   if (state.kind==="all" ? (MODE!=="mine" && x.module==="mobile123") : x.module!==state.kind) return false;
+  if (state.shop && x.store!==state.shop) return false;
   if (!ignoreCat && state.cat!=="All" && x.cat!==state.cat) return false;
   if (!ignoreMax && state.max!=null && (x.price_minor==null || x.price_minor>state.max*100)) return false;
   if (x.discount_percent==null) return state.full && state.min===0;
@@ -469,7 +491,10 @@ function renderPrice(){
     return `<span style="left:calc(${f*100}% + ${9-18*f}px)">${v==null ? (hi ? "€"+Math.ceil(hi).toLocaleString("en-IE") : "Any") : "€"+(v>=1000? v/1000+"k" : v)}</span>`; }).join("");
 }
 function renderControls(){
-  document.getElementById("kinds").innerHTML = KINDS.map(([k,l]) => `<button type="button" data-k="${k}" aria-pressed="${state.kind===k}">${l}</button>`).join("");
+  const lab = (l, s) => l===s ? esc(l) : `<span class="lg">${esc(l)}</span><span class="sh" aria-hidden="true">${esc(s)}</span>`;
+  document.getElementById("kinds").innerHTML = KINDS.map(([k,l,all,short]) => all
+    ? `<button type="button" data-k="${k}" data-menu aria-haspopup="menu" aria-expanded="false" aria-pressed="${state.kind===k}">${state.kind===k && state.shop ? `<span class="nm">${esc(state.shop)}</span>` : lab(l, short)}<span class="dd" aria-hidden="true"></span></button>`
+    : `<button type="button" data-k="${k}" aria-pressed="${state.kind===k}">${lab(l, short)}</button>`).join("");
   const pool = D.filter(x => matches(x,true));
   const counts = {}; pool.forEach(x => counts[x.cat]=(counts[x.cat]||0)+1);
   const cats = ["All", ...CAT_ORDER.filter(c => counts[c])];
@@ -525,7 +550,39 @@ function feature(){
   document.getElementById("bestWrap").hidden = false;
 }
 
-document.getElementById("kinds").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.kind=b.dataset.k; state.shown=48; render(); });
+const kmenu = document.getElementById("kmenu");
+function closeKmenu(){ if (kmenu.hidden) return; kmenu.hidden = true; document.querySelectorAll("#kinds [data-menu]").forEach(b => b.setAttribute("aria-expanded","false")); }
+function openKmenu(b){
+  // Every network or shop that has deals here, with how many; "All" first.
+  const k = b.dataset.k, [, label, all] = KINDS.find(x => x[0]===k);
+  const counts = {}; D.filter(x => x.module===k && (x.discount_percent!=null || state.full)).forEach(x => counts[x.store]=(counts[x.store]||0)+1);
+  const total = Object.values(counts).reduce((a,n) => a+n, 0);
+  const item = (v, text, n, cls) => `<button type="button" role="menuitemradio" data-shop="${esc(v)}" aria-checked="${state.kind===k && (state.shop||"")===v}"${cls ? ` class="${cls}"` : ""}><span>${esc(text)}</span><small>${n}</small></button>`;
+  kmenu.innerHTML = item("", all, total, "all") + Object.keys(counts).sort((a,c) => a.localeCompare(c)).map(s => item(s, s, counts[s])).join("");
+  kmenu.dataset.k = k; kmenu.setAttribute("aria-label", label);
+  kmenu.hidden = false; b.setAttribute("aria-expanded","true");
+  placeKmenu();
+}
+function placeKmenu(){
+  // Keep the menu under its tab while the page scrolls.
+  if (kmenu.hidden) return;
+  const b = document.querySelector(`#kinds [data-k="${kmenu.dataset.k}"]`); if (!b) return closeKmenu();
+  const r = b.getBoundingClientRect(), w = kmenu.offsetWidth;
+  kmenu.style.top = (r.bottom + 6) + "px";
+  kmenu.style.left = Math.max(12, Math.min(r.left, innerWidth - w - 12)) + "px";
+}
+document.getElementById("kinds").addEventListener("click", e => {
+  const b=e.target.closest("button"); if(!b) return;
+  if (b.hasAttribute("data-menu")) { e.stopPropagation(); const open = !kmenu.hidden && kmenu.dataset.k===b.dataset.k; closeKmenu(); if (!open) openKmenu(b); return; }
+  closeKmenu(); state.kind=b.dataset.k; state.shop=null; state.shown=48; render();
+});
+kmenu.addEventListener("click", e => {
+  const b=e.target.closest("button"); if(!b) return;
+  state.kind=kmenu.dataset.k; state.shop=b.dataset.shop || null; state.shown=48; closeKmenu(); render();
+});
+document.addEventListener("click", e => { if (!e.target.closest("#kmenu")) closeKmenu(); });
+document.addEventListener("keydown", e => { if (e.key==="Escape") closeKmenu(); });
+addEventListener("scroll", placeKmenu, {passive:true}); addEventListener("resize", placeKmenu);
 document.getElementById("cats").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.cat=b.dataset.c; state.shown=48; render(); });
 document.getElementById("max").addEventListener("input", e => { state.max=steps[+e.target.value]; state.shown=48; render(); });
 document.getElementById("min").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.min=+b.dataset.v; state.shown=48; render(); });
