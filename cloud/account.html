@@ -12,9 +12,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --blue:#3565E0;--blue-dark:#1E48B5;--tag:#FFD43B;
+  --blue:#3565E0;--blue-dark:#1E48B5;--blue-bg:#EAF0FD;--tag:#FFD43B;
   --ink:#16213A;--muted:#5B6578;--strike:#8A93A3;--shelf:#EEF1F5;--paper:#FFFFFF;--line:#DCE1EA;
-  --ok:#2F6B12;--ok-bg:#EAF3DE;--err:#A32D2D;--err-bg:#FCEBEB;
+  /* From the logo: Irish green for "working for you", orange for "running out" */
+  --green:#16794A;--green-bg:#E5F3EB;--orange:#B25A07;--orange-bg:#FDF0E2;
+  --err:#A32D2D;--err-bg:#FCEBEB;
   --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--num:"Barlow Condensed","Arial Narrow",sans-serif;
 }
 *{box-sizing:border-box}
@@ -23,11 +25,12 @@ body{margin:0;background:var(--shelf);color:var(--ink);font:16px/1.5 var(--sans)
 a{color:inherit}
 button,select,input{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--blue);outline-offset:2px}
-.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
 .hidden{display:none!important}
 
+/* Header (same as the other pages) */
 .top{background:var(--paper);border-bottom:1px solid var(--line)}
-.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:76px}
+.top .wrap{max-width:1240px;display:flex;align-items:center;justify-content:space-between;gap:16px;height:76px}
 .brand img{display:block;height:54px;width:auto}
 .who{display:flex;align-items:center;gap:14px;font-size:14px;color:var(--muted);min-width:0}
 .acct{font-weight:700;font-size:15px;color:var(--blue);text-decoration:none;border:1px solid var(--line);border-radius:4px;padding:8px 14px;white-space:nowrap;background:var(--paper)}
@@ -43,19 +46,19 @@ button.acct{cursor:pointer;display:inline-flex;align-items:center;gap:8px}
 .menulist a:hover,.menulist button:hover{background:var(--shelf)}
 .menulist a[aria-current=page]{color:var(--blue);font-weight:700}
 .menulist button{border-top:1px solid var(--line);border-radius:0 0 4px 4px;margin-top:4px;color:var(--muted)}
-.link{background:none;border:0;padding:0;color:var(--blue);font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 
-.btn{text-decoration:none;display:inline-block;border:0;background:var(--blue);color:#fff;font-weight:700;padding:10px 18px;border-radius:4px;cursor:pointer;white-space:nowrap}
+.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;min-height:40px;border:0;background:var(--blue);color:#fff;font-weight:700;padding:8px 18px;border-radius:4px;cursor:pointer;white-space:nowrap}
 .btn:hover{background:var(--blue-dark)}
 .btn:disabled{opacity:.5;cursor:default}
-.btn.ghost{background:var(--paper);color:var(--ink);border:1px solid var(--line);font-weight:500}
-.btn.ghost:hover{border-color:var(--ink)}
-.btn.small{padding:5px 10px;font-size:13px}
-input[type=text],input[type=email],input[type=url]{border:1px solid var(--line);border-radius:4px;padding:10px 12px;background:var(--paper);width:100%}
+.btn.quiet{background:var(--paper);color:var(--blue);border:1px solid var(--blue)}
+.btn.quiet:hover{background:var(--blue-bg)}
+.btn.small{min-height:34px;padding:5px 12px;font-size:14px}
+input[type=text],input[type=email],input[type=url],input[type=number]{border:1px solid var(--line);border-radius:4px;padding:9px 12px;background:var(--paper);min-height:42px}
+select{border:1px solid var(--line);border-radius:4px;padding:8px 10px;background:var(--paper);cursor:pointer;min-height:42px}
 .msg{font-size:14px;padding:8px 12px;border-radius:4px;margin:12px 0 0}
-.msg.ok{background:var(--ok-bg);color:var(--ok)}
+.msg.ok{background:var(--green-bg);color:var(--green)}
 .msg.err{background:var(--err-bg);color:var(--err)}
-.note{font-size:13px;color:var(--muted)}
+.note{font-size:14px;color:var(--muted)}
 
 /* Sign in */
 .signin{max-width:440px;margin:56px auto;background:var(--paper);border-radius:6px;padding:28px}
@@ -68,172 +71,171 @@ input[type=text],input[type=email],input[type=url]{border:1px solid var(--line);
 .emailrow{display:flex;gap:8px}
 .emailrow input{flex:1;min-width:0}
 
-/* Page head and tabs */
-.head{background:var(--paper)}
-.head .wrap{padding-top:28px;padding-bottom:0}
-.head h1{font-size:clamp(28px,3.4vw,40px);line-height:1.1;letter-spacing:-.025em;margin:0 0 6px}
-.head p{color:var(--muted);margin:0 0 20px;max-width:62ch}
-.tabs{display:flex;gap:4px}
-.tabs button{border:0;background:none;padding:10px 4px;margin-right:18px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
-.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--blue)}
-main .wrap{padding-top:24px;padding-bottom:56px}
+/* Page head: what this page does, as the three steps it really is */
+.head{background:var(--paper);border-bottom:1px solid var(--line)}
+.head .wrap{padding-top:28px;padding-bottom:26px}
+.head h1{font-size:clamp(30px,3.6vw,42px);line-height:1.05;letter-spacing:-.025em;margin:0 0 6px}
+.head .lede{color:var(--muted);margin:0 0 22px;max-width:60ch}
+.head .lede a{color:var(--blue);font-weight:500}
+.how{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:12px;counter-reset:step}
+.how li{counter-increment:step;position:relative;background:var(--shelf);border-radius:6px;padding:14px 16px 14px 52px;font-size:14.5px;line-height:1.4;color:var(--muted)}
+.how li::before{content:counter(step);position:absolute;left:14px;top:13px;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;
+  font:700 15px/26px var(--num);text-align:center}
+.how b{display:block;color:var(--ink);font-size:15.5px;margin-bottom:2px}
+.how li.next{display:flex;align-items:center;gap:12px;background:var(--green-bg);color:var(--green)}
+.how li.next::before{background:var(--green)}
+.how li.next b{color:var(--ink)}
+.how a{color:var(--blue);font-weight:500}
+.dial{width:52px;height:52px;flex:none;display:block}
+.dial .track{stroke:#C8E2D3}
+.dial .arc{stroke:var(--green);transition:stroke-dashoffset .3s}
+.dial text{font:700 13px var(--num);fill:var(--ink)}
 
-/* Deals */
-.count{font-size:14px;color:var(--muted);margin:0 0 14px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-.deal{background:var(--paper);border-radius:4px;display:flex;flex-direction:column;overflow:hidden}
-.shot{height:190px;display:flex;align-items:center;justify-content:center;padding:14px;border-bottom:1px solid var(--shelf)}
-.shot img{display:block;width:100%;height:100%;object-fit:contain}
-.shot .none{font:700 28px/1 var(--sans);color:var(--line)}
-.body{padding:14px 16px 16px;display:flex;flex-direction:column;flex:1}
-.store{font-size:13px;font-weight:700;color:var(--blue);margin:0 0 4px}
-.title{font-size:15px;font-weight:500;line-height:1.35;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.7em}
-.priceline{display:flex;align-items:center;flex-wrap:wrap;row-gap:4px}
-.tag{position:relative;display:inline-flex;align-items:center;background:var(--tag);color:var(--ink);
-  font:700 30px/1 var(--num);letter-spacing:.01em;padding:7px 14px 6px 26px;
-  clip-path:polygon(14px 0,100% 0,100% 100%,14px 100%,0 50%);font-variant-numeric:tabular-nums}
-.tag::before{content:"";position:absolute;left:11px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--paper)}
-.tag .c{font-size:.62em;margin-right:1px;align-self:flex-start;margin-top:3px}
-.was{font-size:15px;color:var(--strike);text-decoration:line-through;margin-left:10px;white-space:nowrap}
-.save{font-size:14px;font-weight:700;margin:6px 0 0}
-.why{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
-.why span{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--shelf);color:var(--muted)}
-.why span.w{background:var(--tag);color:var(--ink);font-weight:500}
-.src{font-size:12.5px;color:var(--muted);margin:8px 0 14px}
-.go{margin-top:auto;display:block;text-align:center;text-decoration:none;background:var(--blue);color:#fff;font-weight:700;font-size:15px;padding:10px 12px;border-radius:4px}
-.go:hover{background:var(--blue-dark)}
-.aff{font-size:11.5px;line-height:16px;min-height:16px;color:var(--strike);text-align:center;margin:6px 0 0}
-.empty{background:var(--paper);border-radius:4px;padding:36px;text-align:center;color:var(--muted)}
-.empty b{display:block;color:var(--ink);font-size:18px;margin-bottom:6px}
+main .wrap{padding-top:22px;padding-bottom:56px}
 
-/* Follow settings */
-.headrow{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
-.head .headrow{padding-bottom:24px}
-.head p a{color:var(--blue);font-weight:500}
-.sub{color:var(--muted);margin:0 0 16px;font-size:15px;max-width:70ch}
-.fold summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.fold summary::-webkit-details-marker{display:none}
-.fold summary h2{display:inline;margin-right:10px}
-.fold[open] summary{margin-bottom:12px}
-.chev{width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s;flex:none;margin-right:4px}
-.fold[open] .chev{transform:rotate(-135deg)}
-.kw{border-bottom:1px solid var(--line)}
-.kw:last-child{border-bottom:0}
-.kw summary{list-style:none;display:grid;grid-template-columns:54px 14px minmax(0,1fr) 38px 170px 104px 112px 76px 150px;align-items:center;gap:12px;padding:10px 0;cursor:pointer}
-.rcell{width:38px;height:38px;display:block}
-.scell,.mcell{display:block}
-.acts{display:flex;gap:8px;justify-content:flex-end}
-.kw summary .n{text-align:right}
-.kw summary::-webkit-details-marker{display:none}
-.kw summary .q{font-weight:500;flex:1 1 140px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kw summary .n{font-size:14px;color:var(--muted);white-space:nowrap}
-select{border:1px solid var(--line);border-radius:4px;padding:9px 10px;background:var(--paper);cursor:pointer}
-.kw summary select{padding:5px 8px;font-size:13px}
-.kw summary .n b{color:var(--ink)}
-.kw .chev{transform:rotate(-45deg)}
-.kw[open] .chev{transform:rotate(45deg)}
-.kw .info{font-size:13px;color:var(--muted);margin:0 0 10px}
-.plan{font-size:14px;background:var(--shelf);border-radius:4px;padding:10px 12px;margin:0 0 8px}
-.witem{display:grid;grid-template-columns:54px 48px minmax(0,1fr) 38px 170px 104px 150px;
-  grid-template-areas:"mv im nm r lf st ac" "mv im cd cd ck ck ck";align-items:center;column-gap:12px;row-gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
-.witem .move{grid-area:mv} .witem img,.witem .ph{grid-area:im} .witem .wname{grid-area:nm} .witem .rcell{grid-area:r}
-.witem .life{grid-area:lf} .witem .scell{grid-area:st} .witem .cond{grid-area:cd} .witem .wchk{grid-area:ck} .witem .acts{grid-area:ac}
-.witem .wchk{flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:10px}
-.witem:last-child{border-bottom:0}
-.witem img,.witem .ph{width:48px;height:48px;object-fit:contain;background:var(--shelf);border-radius:3px;display:block}
-.wname{min-width:0}
-.wname b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wname a{font-size:13px;color:var(--muted)}
-.witem.expired .wname b{color:var(--strike)}
-.witem.met{background:linear-gradient(90deg,#FFF6CC,transparent 60%)}
-.cond{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
-.cond select{padding:5px 8px;font-size:13px}
-.cval{display:inline-flex;align-items:center;gap:3px;font-size:13px}
-.cval input{width:70px;padding:5px 6px;border:1px solid var(--line);border-radius:4px;font-size:13px}
-.wchk{font-size:13px;display:flex;flex-direction:column;gap:2px}
-.wchk b{font-size:15px}
-.wchk s{color:var(--strike);margin-left:6px}
-.wchk em{font-style:normal;font-weight:700;margin-left:6px}
-.wchk .st{color:var(--muted);font-size:12.5px}
-.wchk.muted{color:var(--muted)}
-.badge.hit{background:var(--tag);color:var(--ink);font-weight:500;align-self:flex-start}
-.collect{margin:0 0 6px}
-/* Time left on a word: a dial for words being searched, a bar for the others */
-.life{display:flex;align-items:center;gap:8px;white-space:nowrap}
-.dial{width:38px;height:38px;flex:none;display:block}
-.dial .track{stroke:var(--line)}
-.dial .arc{stroke:var(--blue);transition:stroke-dashoffset .3s}
-.dial text{font:700 10px var(--sans);fill:var(--ink)}
-.life.low .arc{stroke:#C77700}
-.bar{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
-.bar i{display:block;height:100%;background:var(--blue);border-radius:3px}
-.life.low .bar i{background:#C77700}
-.life .left{font-size:12.5px;color:var(--muted)}
-.life.low .left{color:#8A5300}
+/* Sections */
+.panel{background:var(--paper);border-radius:8px;padding:22px 24px 18px;margin-bottom:18px}
+.phead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.phead h2{font-size:21px;line-height:1.2;letter-spacing:-.01em;margin:0 0 4px}
+.phead p{color:var(--muted);margin:0;font-size:15px;max-width:58ch}
+/* Plan slots: how many of the member's places are in use, as places rather than a paragraph */
+.slots{display:flex;align-items:center;gap:10px;background:var(--shelf);border-radius:999px;padding:6px 14px 6px 10px;font-size:13.5px;color:var(--muted);white-space:nowrap}
+.slots .dots{display:flex;gap:5px}
+.slots .dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--green);display:block}
+.slots .dots i.on{background:var(--green)}
+.slots b{color:var(--ink);font:700 17px/1 var(--num);letter-spacing:.02em}
+.rule{font-size:13.5px;color:var(--muted);margin:-4px 0 14px}
 
-.badge.off{background:#F1EFE8;color:#888780}
-.kw.expired summary .q{color:var(--strike)}
-.kw.expired summary{opacity:.85}
-.move{display:inline-flex;gap:2px}
-.arrow{border:1px solid var(--line);background:var(--paper);border-radius:3px;width:24px;height:24px;line-height:1;cursor:pointer;color:var(--muted);padding:0}
-.arrow:disabled{opacity:.35;cursor:default}
-.items{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
-.item{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;background:var(--shelf);border-radius:4px;padding:8px 10px}
-.item img,.item .ph{width:64px;height:64px;object-fit:contain;background:var(--paper);border-radius:3px;display:block}
+/* Add forms sit at the top of their list */
+.add{display:flex;gap:8px;flex-wrap:wrap;padding:14px;background:var(--blue-bg);border-radius:6px;margin-bottom:6px}
+.add input[type=text],.add input[type=url]{flex:1 1 240px;min-width:0}
+.add .opt{flex:0 1 190px}
+.cond{display:inline-flex;align-items:center;gap:6px}
+.cval{display:inline-flex;align-items:center;gap:4px}
+.cval input{width:84px}
+
+/* Shops and networks: tap to follow */
+.chgroups{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px 28px}
+.chgroup h3{font-size:13px;color:var(--muted);font-weight:500;margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--paper);cursor:pointer;font-weight:500;font-size:15px}
+.chip::before{content:"";width:16px;height:16px;border-radius:50%;border:2px solid var(--line);box-sizing:border-box;flex:none}
+.chip[aria-pressed=true]{border-color:var(--green);background:var(--green-bg);color:var(--ink)}
+.chip[aria-pressed=true]::before{border-color:var(--green);background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.6l4.6-5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/11px no-repeat}
+.chip:hover{border-color:var(--green)}
+.chfoot{display:flex;align-items:center;gap:14px;margin-top:14px;font-size:14px;color:var(--muted)}
+.linkbtn{background:none;border:0;padding:6px 0;color:var(--blue);font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* Lists of words and products */
+.group{margin-top:18px}
+.group > h3{display:flex;align-items:baseline;gap:8px;font-size:14px;font-weight:700;margin:0 0 2px;color:var(--ink)}
+.group > h3 span{font-weight:400;color:var(--muted)}
+.group > p{font-size:13.5px;color:var(--muted);margin:0 0 4px}
+.rows{list-style:none;margin:0;padding:0}
+.row{display:grid;align-items:center;column-gap:16px;row-gap:6px;padding:14px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.word{grid-template-columns:minmax(0,1fr) 300px 250px;grid-template-areas:"main ctrl side" "detail detail detail"}
+.r-main{grid-area:main;min-width:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.r-name{font-weight:700;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.r-ctrl{grid-area:ctrl;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.r-side{grid-area:side;display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.r-detail{grid-area:detail;padding-top:6px}
+.r-detail[hidden]{display:none}
+.r-detail .info{font-size:13.5px;color:var(--muted);margin:0 0 10px}
+.pill{font-size:12.5px;font-weight:500;padding:3px 10px;border-radius:999px;white-space:nowrap;background:var(--shelf);color:var(--muted)}
+.pill.on{background:var(--green-bg);color:var(--green)}
+.pill.wait{background:var(--orange-bg);color:var(--orange)}
+.pill.hit{background:var(--tag);color:var(--ink)}
+.minsel{min-height:36px;padding:5px 8px;font-size:14px;font-weight:500;width:124px}
+/* Time left: short text with a thin bar; orange in the last third */
+.left{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);white-space:nowrap;min-width:160px}
+.left .bar{width:56px;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.left .bar i{display:block;height:100%;background:var(--green)}
+.left.low{color:var(--orange)}
+.left.low .bar i{background:var(--orange)}
+.found{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border-radius:4px;border:1px solid var(--line);background:var(--paper);cursor:pointer;white-space:nowrap;font-size:14px;color:var(--muted)}
+.found b{font:700 22px/1 var(--num);color:var(--ink)}
+.found.has{border-color:var(--green)}
+.found.has b{color:var(--green)}
+.found .chev{width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin:-4px 2px 0 2px;transition:transform .15s}
+.found[aria-expanded=true] .chev{transform:rotate(-135deg);margin-top:4px}
+.found:disabled{cursor:default;opacity:.7}
+/* More actions */
+.more{position:relative}
+.more > button{width:40px;height:40px;border-radius:4px;border:1px solid transparent;background:none;cursor:pointer;font-size:22px;line-height:1;color:var(--muted);letter-spacing:1px}
+.more > button:hover,.more > button[aria-expanded=true]{border-color:var(--line);background:var(--shelf)}
+.more .menu{position:absolute;right:0;top:calc(100% + 4px);background:var(--paper);border:1px solid var(--line);border-radius:6px;box-shadow:0 8px 24px rgba(22,33,58,.12);padding:6px;z-index:40;min-width:190px}
+.more .menu[hidden]{display:none}
+.more .menu button{display:block;width:100%;text-align:left;padding:9px 12px;border:0;background:none;border-radius:4px;cursor:pointer;font-size:15px}
+.more .menu button:hover{background:var(--shelf)}
+.more .menu button.danger{color:var(--err)}
+.row.off .r-name{color:var(--strike)}
+.act-m{display:none}
+.empty{padding:18px 0 6px;color:var(--muted);font-size:15px}
+.empty b{color:var(--ink)}
+
+/* Deals a word finds */
+.items{list-style:none;margin:0 0 4px;padding:0;display:grid;gap:8px}
+.item{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;background:var(--shelf);border-radius:6px;padding:8px 12px 8px 8px}
+.item img,.item .ph{width:64px;height:64px;object-fit:contain;background:var(--paper);border-radius:4px;display:block}
 .item .t{font-size:14px;font-weight:500;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .item .m{font-size:13px;color:var(--muted);margin-top:2px}
 .item .m b{color:var(--ink);font-size:15px}
 .item .m s{color:var(--strike);margin-left:6px}
 .item .m em{font-style:normal;font-weight:700;color:var(--ink);margin-left:6px}
 .item .go2{font-size:14px;font-weight:700;color:var(--blue);text-decoration:none;white-space:nowrap}
-.panel{background:var(--paper);border-radius:6px;padding:22px;margin-bottom:16px}
-.panel h2{font-size:19px;margin:0 0 4px}
-.panel > p{color:var(--muted);margin:0 0 16px;font-size:15px;max-width:70ch}
-@media (max-width:640px){.item{grid-template-columns:48px 1fr}.item img,.item .ph{width:48px;height:48px}.item .go2{grid-column:2}}
-.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
-.groups h3{font-size:13px;color:var(--muted);font-weight:500;margin:0 0 8px}
-.check{display:flex;align-items:center;gap:10px;padding:7px 0;cursor:pointer}
-.check input{width:18px;height:18px;accent-color:var(--blue)}
-.addrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.addrow input{flex:1 1 260px}
-.list{list-style:none;margin:0;padding:0}
-.list li{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
-.list li:last-child{border-bottom:0}
-.list .main{flex:1;min-width:0}
-.list .main b{font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.list .main a{font-size:13px;color:var(--muted);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.badge{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--shelf);color:var(--muted);white-space:nowrap}
-.badge.on{background:var(--ok-bg);color:var(--ok)}
-.savebar{display:flex;align-items:center;gap:12px;margin-top:16px}
 
+/* Watched products */
+.prod{grid-template-columns:56px minmax(0,1fr) auto auto;grid-template-areas:"img main price side" "img ctrl ctrl ctrl"}
+.prod .thumb{grid-area:img;width:56px;height:56px;border-radius:6px;background:var(--shelf);object-fit:contain;display:block;align-self:start}
+.prod .r-main{flex-direction:column;align-items:flex-start;gap:2px}
+.prod .r-name{font-size:16px}
+.prod .site{font-size:13.5px;color:var(--muted)}
+.prod .site a{color:var(--blue)}
+.price{grid-area:price;text-align:right;white-space:nowrap}
+.price b{font:700 26px/1 var(--num);letter-spacing:.01em}
+.price s{color:var(--strike);font-size:14px;margin-left:6px}
+.price em{display:block;font-style:normal;font-weight:700;font-size:14px;margin-top:3px}
+.price .pill{margin-left:6px}
+.price .off{white-space:nowrap}
+.prod.met{background:linear-gradient(90deg,#FFF7D1,transparent 70%);border-radius:6px}
+.prod .r-ctrl{font-size:13.5px;color:var(--muted)}
+.prod .cond select{min-height:36px;padding:5px 8px;font-size:14px}
+.prod .cond input{min-height:36px;padding:5px 8px;font-size:14px}
+.cond .lbl{white-space:nowrap}
+
+@media (max-width:860px){
+  .how{grid-template-columns:1fr}
+}
 @media (max-width:640px){
   .wrap{padding:0 16px}
   .top .wrap{height:66px}
   .brand img{height:44px}
   .who{gap:8px}
   .acct{padding:7px 10px;font-size:14px}
-  .kw summary{flex-wrap:wrap;row-gap:6px}
-  /* Phone: three rows, every word laid out the same way */
-  .witem{grid-template-columns:auto 48px minmax(0,1fr) auto;grid-template-areas:"mv im nm r" "lf lf lf st" "cd cd cd cd" "ck ck ck ac";row-gap:8px;column-gap:10px}
-  .witem .move{grid-area:mv} .witem img,.witem .ph{grid-area:im} .witem .wname{grid-area:nm} .witem .rcell{grid-area:r}
-  .witem .life{grid-area:lf} .witem .scell{grid-area:st;justify-self:end} .witem .cond{grid-area:cd} .witem .wchk{grid-area:ck} .witem .acts{grid-area:ac}
-  .kw summary{grid-template-columns:auto minmax(0,1fr) auto auto;grid-template-areas:"mv q q r" "lf lf lf st" "mn mn ct ac";row-gap:8px;column-gap:10px}
-  .kw summary .chev{display:none}
-  .kw summary .move{grid-area:mv}
-  .kw summary .q{grid-area:q;justify-self:start;text-align:left;width:100%}
-  .kw summary .rcell{grid-area:r}
-  .kw summary .life{grid-area:lf}
-  .kw summary .scell{grid-area:st;justify-self:end}
-  .kw summary .mcell{grid-area:mn}
-  .kw summary .n{grid-area:ct;text-align:left}
-  .kw summary .acts{grid-area:ac}
-  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .shot{height:140px}
-  .tag{font-size:24px;padding:6px 10px 5px 22px}
-  .body{padding:12px}
   .emailrow{flex-direction:column}
+  .panel{padding:18px 16px 12px;border-radius:6px}
+  .phead{flex-direction:column;gap:10px}
+  .left{min-width:0}
+  .word{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"main side" "ctrl ctrl" "detail detail"}
+  .prod{grid-template-columns:48px minmax(0,1fr) auto;grid-template-areas:"img main side" "img price price" "ctrl ctrl ctrl"}
+  .prod .thumb{width:48px;height:48px}
+  .price{text-align:left;white-space:normal}
+  .act-d{display:none}
+  .act-m{display:inline-flex}
+  .cond{flex-wrap:wrap}
+  .prod .cond select{max-width:150px}
+  .prod .r-name{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .price{min-width:0}
+  .price em{display:block;margin:4px 0 0}
+  .prod .cond .lbl{flex-basis:100%}
+  .add .opt{flex:1 1 100%}
+  .add .btn{flex:1 1 auto}
+  .item{grid-template-columns:48px 1fr}
+  .item img,.item .ph{width:48px;height:48px}
+  .item .go2{grid-column:2}
 }
-@media (max-width:380px){.grid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
@@ -259,59 +261,53 @@ select{border:1px solid var(--line);border-radius:4px;padding:9px 10px;backgroun
 
 <div id="app" class="hidden">
   <section class="head"><div class="wrap">
-    <div class="headrow">
-      <div>
-        <h1>Settings</h1>
-        <p>Choose the shops and networks, search words and products that make up your <a href="/my-deals">My deals</a> list.</p>
-      </div>
-      <a class="btn" href="/my-deals">See my deals</a>
-    </div>
+    <h1>Settings</h1>
+    <p class="lede">Tell us what to look out for. Everything that matches lands in <a href="/my-deals">My deals</a>.</p>
+    <ol class="how">
+      <li><b>You choose</b>Shops to follow, words to search for, and products to keep an eye on.</li>
+      <li class="next" id="nextStep"><span><b>We check prices</b><span id="nextText">At every collection, twice a day.</span></span></li>
+      <li><b>Matches land in <a href="/my-deals">My deals</a></b>Watched products that hit your target go to the top.</li>
+    </ol>
   </div></section>
 
   <main><div class="wrap">
-    <details class="panel fold" id="chanFold">
-      <summary><span><h2>Shops and networks</h2><span class="note" id="chanSummary"></span></span><span class="chev" aria-hidden="true"></span></summary>
-      <p>All discounted deals from the ones you tick show in My deals.</p>
-      <div class="groups" id="channels"></div>
-      <div class="savebar">
-        <button class="btn" id="saveChannels" type="button">Save</button>
-        <button class="link" id="allChannels" type="button">Tick all</button>
-        <button class="link" id="noChannels" type="button">Untick all</button>
-        <span class="msg hidden" id="channelsMsg" role="status"></span>
+    <section class="panel" aria-labelledby="chH">
+      <div class="phead">
+        <div><h2 id="chH">Shops and networks</h2><p>Deals from the ones you follow show in My deals. Tap to follow or unfollow; it saves straight away.</p></div>
       </div>
-    </details>
+      <div class="chgroups" id="channels"></div>
+      <div class="chfoot"><span id="chanSummary"></span><button class="linkbtn" id="allChannels" type="button">Follow all</button><span class="msg hidden" id="channelsMsg" role="status"></span></div>
+    </section>
 
-    <section class="panel">
-      <div class="headrow">
-        <div>
-          <h2>Search words</h2>
-          <p class="sub">Deals whose name contains your words, from any shop, at the discount you choose for each word.</p>
-        </div>
-        <button class="btn ghost" id="loadKw" type="button">Load deals</button>
+    <section class="panel" aria-labelledby="kwH">
+      <div class="phead">
+        <div><h2 id="kwH">Search words</h2><p>We look for deals whose name contains your word, in every shop, at the discount you pick.</p></div>
+        <span class="slots" id="kwSlots"></span>
       </div>
-      <p class="plan" id="planNote"></p>
-      <p class="note collect" id="collectNote"></p>
-      <div id="keywords"></div>
-      <form class="addrow" id="kwForm">
-        <input type="text" id="kwInput" maxlength="60" placeholder="e.g. Pixel 9, noise cancelling, Garmin" aria-label="Search word">
+      <p class="rule" id="kwRule"></p>
+      <form class="add" id="kwForm">
+        <input type="text" id="kwInput" maxlength="60" placeholder="Add a word, e.g. PS5, Pixel 9, Garmin" aria-label="Search word">
         <select id="kwMin" aria-label="Minimum discount for this word"></select>
         <button class="btn" type="submit">Add word</button>
       </form>
       <p class="msg hidden" id="kwMsg" role="status"></p>
+      <div id="keywords"></div>
     </section>
 
-    <section class="panel">
-      <h2>Products I'm watching</h2>
-      <p class="sub">Paste a product link from Amazon.ie, Harvey Norman, Expert, Powercity or Mobile123. We check its price at every collection; when it meets your condition it shows at the top of My deals.</p>
-      <p class="plan" id="watchPlan"></p>
-      <div id="watch"></div>
-      <form class="addrow" id="watchForm">
-        <input type="url" id="watchUrl" placeholder="https://www.amazon.ie/dp/…" aria-label="Product link">
-        <input type="text" id="watchLabel" maxlength="80" placeholder="Name (optional)" aria-label="Name for this product" style="flex:0 1 200px">
+    <section class="panel" aria-labelledby="wH">
+      <div class="phead">
+        <div><h2 id="wH">Products I'm watching</h2><p>Paste a link from Amazon.ie, Harvey Norman, Expert, Powercity or Mobile123. We check its price and tell you in My deals when it hits your target.</p></div>
+        <span class="slots" id="watchSlots"></span>
+      </div>
+      <p class="rule" id="watchRule"></p>
+      <form class="add" id="watchForm">
+        <input type="url" id="watchUrl" required placeholder="Paste a product link" aria-label="Product link">
         <span class="cond" id="newCond"></span>
+        <input type="text" class="opt" id="watchLabel" maxlength="80" placeholder="Name (optional)" aria-label="Name for this product">
         <button class="btn" type="submit">Watch</button>
       </form>
       <p class="msg hidden" id="watchMsg" role="status"></p>
+      <div id="watch"></div>
     </section>
   </div></main>
 </div>
@@ -328,13 +324,14 @@ const say = (el, text, ok) => { el.textContent = text; el.className = "msg " + (
 const eur = m => m==null ? "" : "€" + (m/100).toLocaleString("en-IE",{minimumFractionDigits:m%100?2:0,maximumFractionDigits:2});
 const dub = new Intl.DateTimeFormat("en-IE",{timeZone:"Europe/Dublin",hour:"2-digit",minute:"2-digit",hour12:false});
 const day = new Intl.DateTimeFormat("en-IE",{timeZone:"Europe/Dublin",day:"numeric",month:"short"});
-const when = iso => { if(!iso) return ""; const d=new Date(iso), n=new Date(); return day.format(d)===day.format(n) ? dub.format(d)+" today" : day.format(d); };
 const store = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (_) {} };
 const read = k => { try { return localStorage.getItem(k); } catch (_) { return null; } };
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
 const cfg = await (await fetch("/api/auth-config")).json();
 const auth = getAuth(initializeApp(cfg));
-let token = null, me = null, channels = [];
+let token = null, me = null, channels = [], coll = null, kwResults = null, watchResults = null;
+const openWords = new Set();
 
 async function api(path, opts = {}) {
   token = await auth.currentUser.getIdToken();
@@ -390,7 +387,7 @@ onAuthStateChanged(auth, async user => {
     $("out").onclick = async () => { store("dr-member", null); await signOut(auth); location.href = "/"; };
     $("menuBtn").onclick = e => { e.stopPropagation(); const l = $("menuList"); l.hidden = !l.hidden; $("menuBtn").setAttribute("aria-expanded", String(!l.hidden)); };
     show($("signin"), false); show($("app"), true);
-    renderFollow();
+    renderAll();
     loadKeywords(); loadWatch();
   } catch (err) {
     show($("signin"), true); show($("app"), false);
@@ -398,56 +395,258 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
-// Products I'm watching: same layout as search words, plus the last check and the member's condition
-let watchResults = null;
-const STATUS_TEXT = {checking: "Checking", not_checked: "Not checked", expired: "Expired"};
+// ---- Time ----
+function at(iso){
+  // "today at 07:20", "tomorrow at 19:00" or "26 Nov at 07:00", Irish time
+  const d = new Date(iso), n = new Date(), t = new Date(Date.now() + 864e5);
+  const dayPart = day.format(d) === day.format(n) ? "today" : day.format(d) === day.format(t) ? "tomorrow" : day.format(d);
+  return `${dayPart} at ${dub.format(d)}`;
+}
+function span(ms){
+  const m = Math.max(0, Math.floor(ms/60000)), d = Math.floor(m/1440), h = Math.floor((m%1440)/60), mm = m%60;
+  return d ? `${plural(d, "day")}${h ? " " + h + " h" : ""}` : h ? `${h} h ${mm} min` : `${mm} min`;
+}
+function leftHtml(item, days){
+  // Time left before a word or product expires: plain words and a thin bar that empties; orange in the last third.
+  const total = days * 864e5, left = Date.parse(item.expires_at) - Date.now();
+  if (item.status === "expired" || left <= 0) return `<span class="left" data-left>Expired ${esc(day.format(new Date(item.expires_at)))}</span>`;
+  const frac = Math.max(0, Math.min(1, left / total)), low = frac < 1/3 ? " low" : "";
+  return `<span class="left${low}" data-left title="Until ${esc(at(item.expires_at))}"><span class="bar" aria-hidden="true"><i style="width:${(frac*100).toFixed(1)}%"></i></span>${esc(span(left))} left</span>`;
+}
+function nextHtml(){
+  // The one countdown on the page: the next collection, as a dial that empties as it gets closer.
+  if (!coll || !coll.next) return `<span><b>We check prices</b>${coll && coll.automatic === false ? "Automatic checks are paused for now." : "At every collection, twice a day."}</span>`;
+  const next = Date.parse(coll.next), last = coll.last ? Date.parse(coll.last) : next - 12 * 36e5;
+  const left = next - Date.now(), frac = Math.max(0, Math.min(1, left / Math.max(1, next - last)));
+  const c = 2 * Math.PI * 21, label = left > 0 ? span(left) : "now";
+  const short = left <= 0 ? "now" : left >= 36e5 ? Math.floor(left/36e5) + "h" : Math.max(1, Math.floor(left/6e4)) + "m";
+  return `<svg class="dial" viewBox="0 0 52 52" role="img" aria-label="Next check in ${esc(label)}">
+      <circle class="track" cx="26" cy="26" r="21" fill="none" stroke-width="5"/>
+      <circle class="arc" cx="26" cy="26" r="21" fill="none" stroke-width="5" stroke-linecap="round" transform="rotate(-90 26 26)"
+        stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${(c * (1 - frac)).toFixed(2)}"/>
+      <text x="26" y="30.5" text-anchor="middle">${esc(short)}</text></svg>
+    <span><b>We check prices</b>${left > 0 ? `Next check ${esc(at(coll.next))}, in ${esc(label)}.` : "Checking now. New deals appear in a few minutes."}${coll.last ? ` Last check ${esc(at(coll.last))}.` : ""}</span>`;
+}
+function tick(){
+  if (!me) return;
+  $("nextStep").innerHTML = nextHtml();
+  document.querySelectorAll("[data-kid]").forEach(row => {
+    const k = me.keywords.find(x => x.id === row.dataset.kid), el = row.querySelector("[data-left]");
+    if (k && el) el.outerHTML = leftHtml(k, me.tier.word_days);
+  });
+  document.querySelectorAll("[data-wid]").forEach(row => {
+    const w = me.watch.find(x => x.id === row.dataset.wid), el = row.querySelector("[data-left]");
+    if (w && el) el.outerHTML = leftHtml(w, me.tier.watch_days);
+  });
+}
+setInterval(tick, 60000);
+
+// ---- Shared bits ----
+function slotsHtml(used, total, noun){
+  return `<span class="dots" aria-hidden="true">${Array.from({length: total}, (_, i) => `<i class="${i < used ? "on" : ""}"></i>`).join("")}</span>
+    <span><b>${used}/${total}</b> ${esc(noun)} in use</span>`;
+}
+function moreHtml(label, items){
+  // items: [[text, data-attribute, danger?]]
+  return `<div class="more"><button type="button" aria-haspopup="true" aria-expanded="false" aria-label="More for ${esc(label)}">⋯</button>
+    <div class="menu" role="menu" hidden>${items.map(([t, a, d]) => `<button type="button" role="menuitem" ${a}${d ? ` class="danger"` : ""}>${esc(t)}</button>`).join("")}</div></div>`;
+}
+const closeMenus = except => document.querySelectorAll(".more .menu:not([hidden])").forEach(m => {
+  if (m !== except) { m.hidden = true; m.previousElementSibling.setAttribute("aria-expanded", "false"); }
+});
+document.addEventListener("click", e => {
+  const b = e.target.closest(".more > button");
+  if (b) { const m = b.nextElementSibling; closeMenus(m); m.hidden = !m.hidden; b.setAttribute("aria-expanded", String(!m.hidden)); return; }
+  if (!e.target.closest(".more .menu")) closeMenus();
+});
+const closeAcct = () => { const l = $("menuList"); if (l) { l.hidden = true; $("menuBtn").setAttribute("aria-expanded", "false"); } };
+document.addEventListener("click", e => { if (!e.target.closest(".acctmenu")) closeAcct(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeAcct(); closeMenus(); } });
+document.addEventListener("click", e => {
+  const a = e.target.closest("a[data-deal]");
+  if (a && navigator.sendBeacon) {
+    try { navigator.sendBeacon("/api/click", new Blob([JSON.stringify({id: a.dataset.deal, token})], {type: "application/json"})); } catch (_) {}
+  }
+});
+// Put an item first; the server searches/checks the first N that haven't expired, so this gives it a place.
+async function promote(kind, id){
+  const list = kind === "word" ? me.keywords : me.watch;
+  const ids = [id, ...list.map(x => x.id).filter(x => x !== id)];
+  const was = new Set(list.filter(x => x.status === (kind === "word" ? "searching" : "checking")).map(x => x.id));
+  me = (await api(kind === "word" ? "/api/me/keywords/order" : "/api/me/watch/order", {method: "PUT", body: JSON.stringify({ids})})).member;
+  const now = kind === "word" ? me.keywords : me.watch;
+  const out = now.find(x => was.has(x.id) && x.status !== (kind === "word" ? "searching" : "checking"));
+  const name = x => kind === "word" ? x.query : productName(x);
+  return out ? `“${name(now.find(x => x.id === id))}” now has a place. “${name(out)}” is waiting instead.` : "";
+}
+
+// ---- Shops and networks ----
+function renderChannels(){
+  const groups = {};
+  channels.forEach(c => (groups[c.group] = groups[c.group] || []).push(c));
+  $("channels").innerHTML = Object.entries(groups).map(([g, list]) => `<div class="chgroup"><h3>${esc(g)}</h3><div class="chips">${list.map(c =>
+    `<button type="button" class="chip" data-ch="${esc(c.id)}" aria-pressed="${me.channels.includes(c.id)}">${esc(c.name)}</button>`).join("")}</div></div>`).join("");
+  $("chanSummary").textContent = `Following ${me.channels.length} of ${channels.length}.`;
+  $("allChannels").classList.toggle("hidden", me.channels.length === channels.length);
+}
+async function saveChannels(list){
+  try { const r = await api("/api/me/channels", {method: "PUT", body: JSON.stringify({channels: list})}); me.channels = r.channels;
+    renderChannels(); say($("channelsMsg"), "Saved", true); setTimeout(() => show($("channelsMsg"), false), 1800); }
+  catch (err) { renderChannels(); say($("channelsMsg"), err.message, false); }
+}
+document.addEventListener("click", e => {
+  const c = e.target.closest("[data-ch]"); if (!c) return;
+  const on = c.getAttribute("aria-pressed") !== "true";
+  c.setAttribute("aria-pressed", String(on));
+  saveChannels(on ? [...me.channels, c.dataset.ch] : me.channels.filter(x => x !== c.dataset.ch));
+});
+$("allChannels").onclick = () => saveChannels(channels.map(c => c.id));
+
+// ---- Search words ----
+const MINS = [0,10,20,30,40,50,60,70];
+const minOptions = v => MINS.map(m => `<option value="${m}" ${m===v?"selected":""}>${m ? m + "%+ off" : "Any discount"}</option>`).join("");
+$("kwMin").innerHTML = minOptions(20);
+function itemRow(x){
+  const img = x.image_url ? `<img src="${esc(x.image_url)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="ph"></span>`;
+  return `<li class="item">${img}<div><div class="t">${esc(x.title)}</div>
+    <div class="m">${esc(x.store)} · <b>${eur(x.price_minor)}</b>${x.reference_minor!=null ? `<s>${eur(x.reference_minor)}</s>` : ""}${x.discount_percent!=null ? `<em>${Math.round(x.discount_percent)}% off</em>` : ""}${x.private ? " · only you" : ""}</div></div>
+    <a class="go2" data-deal="${esc(x.id)}" href="${esc(x.buy_url)}" target="_blank" rel="noopener${x.affiliate?" sponsored":""}">Go to ${esc(String(x.store).replace(".ie",""))}</a></li>`;
+}
+function wordRow(k){
+  const r = kwResults && kwResults[k.id], expired = k.status === "expired", waiting = k.status === "matching";
+  const pill = k.status === "searching" ? `<span class="pill on">Searching</span>` : waiting ? `<span class="pill wait">Waiting for a place</span>` : `<span class="pill">Expired</span>`;
+  const found = expired ? "" : !kwResults ? `<button type="button" class="found" disabled>Finding…</button>`
+    : `<button type="button" class="found${r && r.count ? " has" : ""}" data-open="${esc(k.id)}" aria-expanded="${openWords.has(k.id)}" aria-controls="d-${esc(k.id)}"><b>${r ? r.count : 0}</b>${r && r.count === 1 ? "deal" : "deals"}<span class="chev" aria-hidden="true"></span></button>`;
+  const action = expired ? `<button class="btn small" type="button" data-renew="${esc(k.id)}">Renew</button>`
+    : waiting ? `<button class="btn small quiet" type="button" data-promote="${esc(k.id)}">Search this</button>` : "";
+  const menu = moreHtml(k.query, [["Remove word", `data-delkw="${esc(k.id)}"`, true]]);
+  const ctrl = expired ? leftHtml(k, me.tier.word_days)
+    : `<select class="minsel" data-kwmin="${esc(k.id)}" aria-label="Minimum discount for ${esc(k.query)}">${minOptions(k.min_discount)}</select>${leftHtml(k, me.tier.word_days)}`;
+  let detail = "";
+  if (!expired && r) {
+    const where = k.status === "searching"
+      ? (!k.private ? "Searched for you at Harvey Norman; Amazon is already searched for it."
+         : r.searched_at ? `Searched for you at Amazon and Harvey Norman. Last Amazon search ${esc(at(r.searched_at))}.` : "Searched for you at Amazon and Harvey Norman from the next check.")
+      : `Not searched for you while it waits for a place, but it still matches deals we find in every shop.`;
+    const hidden = r.found > r.count ? ` ${r.found - r.count} more ${r.found - r.count === 1 ? "has" : "have"} a smaller discount; lower the minimum to see ${r.found - r.count === 1 ? "it" : "them"}.` : "";
+    detail = `<div class="r-detail" id="d-${esc(k.id)}" ${openWords.has(k.id) ? "" : "hidden"}><p class="info">${where}${hidden}</p>
+      ${r.deals.length ? `<ul class="items">${r.deals.map(itemRow).join("")}</ul>` : `<p class="info">No discounted products for this word right now. We'll keep looking at every check.</p>`}</div>`;
+  }
+  return `<li class="row word${expired ? " off" : ""}" data-kid="${esc(k.id)}">
+    <div class="r-main"><span class="r-name">${esc(k.query)}</span>${pill}</div>
+    <div class="r-ctrl">${ctrl}${action.replace('class="btn', 'class="act-m btn')}</div>
+    <div class="r-side">${action.replace('class="btn', 'class="act-d btn')}${found}${menu}</div>${detail}</li>`;
+}
+function renderWords(){
+  const t = me.tier, active = me.keywords.filter(k => k.status === "searching"), waiting = me.keywords.filter(k => k.status === "matching"),
+    expired = me.keywords.filter(k => k.status === "expired");
+  $("kwSlots").innerHTML = slotsHtml(active.length, t.search_words, "places");
+  $("kwRule").textContent = `${t.name} plan: ${plural(t.search_words, "word")} searched for you at a time, each for ${plural(t.word_days, "day")}. Renew a word when it runs out.`;
+  if (!me.keywords.length) { $("keywords").innerHTML = `<p class="empty"><b>No words yet.</b> Try a brand or a product, like PS5 or Garmin.</p>`; return; }
+  const group = (title, note, list) => list.length ? `<div class="group"><h3>${title} <span>${list.length}</span></h3>${note ? `<p>${note}</p>` : ""}<ul class="rows">${list.map(wordRow).join("")}</ul></div>` : "";
+  $("keywords").innerHTML = group("Searching for you", "", active)
+    + group("Waiting for a place", `All ${t.search_words} places are in use. Press Search this to swap a word in; another word waits instead.`, waiting)
+    + group("Expired", "Not searched and not used for My deals until you renew them.", expired);
+}
+async function loadKeywords(){
+  if (!me.keywords.length) { kwResults = {}; return; }
+  try { const res = await api("/api/me/keywords/results"); coll = res.collection || coll;
+    kwResults = Object.fromEntries(res.keywords.map(k => [k.id, k])); renderWords(); tick(); }
+  catch (err) { say($("kwMsg"), err.message, false); }
+}
+document.addEventListener("click", async e => {
+  const o = e.target.closest("[data-open]"), rn = e.target.closest("[data-renew]"), p = e.target.closest("[data-promote]"), d = e.target.closest("[data-delkw]");
+  if (o) {
+    const id = o.dataset.open, on = !openWords.has(id);
+    on ? openWords.add(id) : openWords.delete(id);
+    o.setAttribute("aria-expanded", String(on)); const box = $("d-" + id); if (box) box.hidden = !on;
+    return;
+  }
+  try {
+    if (rn) { me = (await api("/api/me/keywords/" + encodeURIComponent(rn.dataset.renew) + "/renew", {method: "POST"})).member; renderWords(); loadKeywords(); }
+    if (p) { const m = await promote("word", p.dataset.promote); renderWords(); if (m) say($("kwMsg"), m, true); loadKeywords(); }
+    if (d) { closeMenus(); me = (await api("/api/me/keywords/" + encodeURIComponent(d.dataset.delkw), {method: "DELETE"})).member; renderWords(); }
+  } catch (err) { say($("kwMsg"), err.message, false); }
+});
+document.addEventListener("change", async e => {
+  const sel = e.target.closest("[data-kwmin]"); if (!sel) return;
+  try { me = (await api("/api/me/keywords/" + encodeURIComponent(sel.dataset.kwmin), {method: "PUT", body: JSON.stringify({min_discount: +sel.value})})).member;
+    await loadKeywords(); } catch (err) { say($("kwMsg"), err.message, false); }
+});
+$("kwForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const q = $("kwInput").value.trim(); if (!q) return;
+  try { const r = await api("/api/me/keywords", {method: "POST", body: JSON.stringify({query: q, min_discount: +$("kwMin").value})}); me = r.member; $("kwInput").value = "";
+    const k = me.keywords.find(x => x.query === q);
+    say($("kwMsg"), !k ? `Added “${q}”.` : k.status === "searching" ? `Added “${q}”. We search for it from the next check, until ${day.format(new Date(k.expires_at))}.`
+      : `Added “${q}”. All your places are in use, so it waits; press Search this to swap it in.`, true);
+    renderWords(); loadKeywords(); } catch (err) { say($("kwMsg"), err.message, false); }
+});
+
+// ---- Products I'm watching ----
 function condHtml(c, attrs){
   const t = (c && c.type) || "any", v = c && c.value != null ? c.value : "";
-  return `<select ${attrs} data-ctype aria-label="Condition">
+  return `<select ${attrs} data-ctype aria-label="When to show it">
       <option value="any" ${t==="any"?"selected":""}>Any discount</option>
-      <option value="pct" ${t==="pct"?"selected":""}>Discount of at least</option>
+      <option value="pct" ${t==="pct"?"selected":""}>Discount at least</option>
       <option value="price" ${t==="price"?"selected":""}>Price below</option></select>
-    <span class="cval${t==="any"?" hidden":""}">${t==="price"?"€":""}<input type="number" ${attrs} data-cval min="1" step="${t==="price"?"0.01":"1"}" value="${esc(v)}" aria-label="Condition value">${t==="pct"?"%":""}</span>`;
+    <span class="cval${t==="any"?" hidden":""}">${t==="price"?"€":""}<input type="number" ${attrs} data-cval min="1" step="${t==="price"?"0.01":"1"}" value="${esc(v)}" aria-label="Target">${t==="pct"?"%":""}</span>`;
 }
-function checkHtml(w){
+$("newCond").innerHTML = condHtml({type: "any"}, "");
+$("newCond").addEventListener("change", () => $("newCond").querySelector(".cval").classList.toggle("hidden", $("newCond").querySelector("[data-ctype]").value === "any"));
+function productName(w){
   const r = watchResults && watchResults[w.id], ch = r && r.check;
-  if (w.status === "expired") return `<span class="wchk muted">Not checked while expired</span>`;
-  if (!ch) return `<span class="wchk muted">${w.status === "checking" ? "Waiting for the first check" : "Move it up to have it checked"}</span>`;
-  if (ch.status === "pending" || ch.status === "not_checked" || ch.status === "error") {
-    const nextAt = coll && coll.next ? ` (${at(coll.next)})` : "";
-    const why = ch.status === "error" ? "We couldn't read the price this time" : (ch.note || ch.error || "No price yet").replace(/\.$/, "");
-    return `<span class="wchk muted">${esc(why)}${why.includes("next collection") ? esc(nextAt) : ". We'll try again at the next collection" + esc(nextAt)}.</span>`;
-  }
+  return (ch && ch.title) || w.label || `${w.site} product ${w.key}`;
+}
+function priceHtml(w){
+  const r = watchResults && watchResults[w.id], ch = r && r.check;
+  if (w.status === "expired" || !ch || ch.price_minor == null) return `<div class="price"></div>`;
   const was = ch.reference_minor ? `<s>${eur(ch.reference_minor)}</s>` : "";
-  const off = ch.discount_percent ? `<em>${Math.round(ch.discount_percent)}% off</em>` : "";
-  const state = ch.status === "unavailable" ? "Unavailable" : ch.status === "not_found" ? "No longer listed"
-    : ch.status === "checked" ? (ch.discount_percent ? "On offer" : "No discount") : "Couldn't check";
-  const met = r.met ? `<span class="badge hit">Target reached</span>` : "";
-  return `<span class="wchk">${ch.price_minor != null ? `<b>${eur(ch.price_minor)}</b>${was}${off}` : ""}<span class="st">${state}${ch.checked_at ? " · checked " + esc(at(ch.checked_at)) : ""}</span>${met}</span>`;
+  const off = ch.discount_percent ? `${Math.round(ch.discount_percent)}% off` : "No discount now";
+  return `<div class="price"><b>${eur(ch.price_minor)}</b>${was}<em><span class="off">${off}</span>${r.met ? `<span class="pill hit">Target reached</span>` : ""}</em></div>`;
+}
+function checkText(w){
+  const r = watchResults && watchResults[w.id], ch = r && r.check;
+  if (w.status === "expired") return "Not checked while expired.";
+  if (w.status === "not_checked") return "Not checked while it waits for a place.";
+  if (!watchResults) return "Loading the last check…";
+  if (!ch) return "Waiting for the first check.";
+  const nextAt = coll && coll.next ? ` ${at(coll.next)}` : "";
+  if (ch.status === "pending" || ch.status === "not_checked" || ch.status === "error") {
+    const why = ch.status === "error" ? "We couldn't read the price this time" : (ch.note || ch.error || "No price yet").replace(/\.$/, "");
+    return why.includes("next collection") ? why + "." : `${why}. We'll try again at the next check${nextAt}.`;
+  }
+  const state = ch.status === "unavailable" ? "Out of stock" : ch.status === "not_found" ? "No longer listed by the shop" : "Price checked";
+  return `${state}${ch.checked_at ? " " + at(ch.checked_at) : ""}.`;
+}
+function prodRow(w){
+  const r = watchResults && watchResults[w.id], ch = r && r.check, expired = w.status === "expired", waiting = w.status === "not_checked";
+  const img = ch && ch.image_url ? `<img class="thumb" src="${esc(ch.image_url)}" alt="" referrerpolicy="no-referrer">` : `<span class="thumb" aria-hidden="true"></span>`;
+  const pill = w.status === "checking" ? `<span class="pill on">Checking</span>` : waiting ? `<span class="pill wait">Waiting for a place</span>` : `<span class="pill">Expired</span>`;
+  const action = expired ? `<button class="btn small" type="button" data-wrenew="${esc(w.id)}">Renew</button>`
+    : waiting ? `<button class="btn small quiet" type="button" data-wpromote="${esc(w.id)}">Check this</button>` : "";
+  return `<li class="row prod${expired ? " off" : ""}${r && r.met ? " met" : ""}" data-wid="${esc(w.id)}">${img}
+    <div class="r-main"><span class="r-name" title="${esc(productName(w))}">${esc(productName(w))}</span>
+      <span class="site"><a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.site)}</a> · ${pill}</span></div>
+    ${priceHtml(w)}
+    <div class="r-side">${action.replace('class="btn', 'class="act-d btn')}${moreHtml(productName(w), [["Stop watching", `data-delwatch="${esc(w.id)}"`, true]])}</div>
+    <div class="r-ctrl">${expired ? "" : `<span class="cond"><span class="lbl">Show it at</span> ${condHtml(w.condition, `data-wcond="${esc(w.id)}"`)}</span>`}${leftHtml(w, me.tier.watch_days)}<span>${esc(checkText(w))}</span>${action.replace('class="btn', 'class="act-m btn')}</div></li>`;
 }
 function renderWatch(){
-  const t = me.tier;
-  $("watchPlan").innerHTML = `<b>${esc(t.name)} plan:</b> your first ${t.watch_items} product${t.watch_items===1?"":"s"} that haven't expired are checked at every collection. Each product lasts ${t.watch_days} day${t.watch_days===1?"":"s"}; renew it when it expires. A product you add is checked straight away (up to ${t.instant_checks} an hour).`;
-  $("watch").innerHTML = me.watch.length ? me.watch.map((w, i) => {
-    const r = watchResults && watchResults[w.id], ch = r && r.check, expired = w.status === "expired";
-    const img = ch && ch.image_url ? `<img src="${esc(ch.image_url)}" alt="" referrerpolicy="no-referrer">` : `<span class="ph"></span>`;
-    const name = (ch && ch.title) || w.label || w.key;
-    const k = {id: w.id, status: w.status === "checking" ? "searching" : w.status, expires_at: w.expires_at};
-    return `<div class="witem${expired ? " expired" : ""}${r && r.met ? " met" : ""}" data-wid="${esc(w.id)}">
-      <span class="move"><button type="button" class="arrow" data-wmove="${i}" data-dir="-1" aria-label="Move up" ${i===0?"disabled":""}>↑</button><button type="button" class="arrow" data-wmove="${i}" data-dir="1" aria-label="Move down" ${i===me.watch.length-1?"disabled":""}>↓</button></span>
-      ${img}
-      <span class="wname"><b>${esc(name)}</b><a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.site)}</a></span>
-      ${refreshHtml(k)}${lifeHtml(k, t.watch_days)}
-      <span class="scell"><span class="badge${w.status==="checking"?" on":w.status==="expired"?" off":""}">${STATUS_TEXT[w.status]}</span></span>
-      <span class="cond">${expired ? "" : condHtml(w.condition, `data-wcond="${esc(w.id)}"`)}</span>
-      ${checkHtml(w)}
-      <span class="acts">${expired ? `<button class="btn small" type="button" data-wrenew="${esc(w.id)}">Renew</button>` : ""}<button class="btn ghost small" type="button" data-delwatch="${esc(w.id)}">Remove</button></span></div>`;
-  }).join("") : `<p class="note">No products yet. Paste a link below.</p>`;
+  const t = me.tier, active = me.watch.filter(w => w.status === "checking"), waiting = me.watch.filter(w => w.status === "not_checked"),
+    expired = me.watch.filter(w => w.status === "expired");
+  $("watchSlots").innerHTML = slotsHtml(active.length, t.watch_items, "places");
+  $("watchRule").textContent = `${t.name} plan: ${plural(t.watch_items, "product")} checked at every collection, each for ${plural(t.watch_days, "day")}. A product you add is checked straight away${t.instant_checks ? ` (up to ${t.instant_checks} an hour)` : ""}.`;
+  if (!me.watch.length) { $("watch").innerHTML = `<p class="empty"><b>Nothing watched yet.</b> Copy a product link from a shop's site and paste it above.</p>`; return; }
+  const group = (title, note, list) => list.length ? `<div class="group"><h3>${title} <span>${list.length}</span></h3>${note ? `<p>${note}</p>` : ""}<ul class="rows">${list.map(prodRow).join("")}</ul></div>` : "";
+  $("watch").innerHTML = group("Checking for you", "", active)
+    + group("Waiting for a place", `All ${t.watch_items} places are in use. Press Check this to swap a product in; another product waits instead.`, waiting)
+    + group("Expired", "Not checked until you renew them.", expired);
 }
 async function loadWatch(){
-  if (!me.watch.length) return;
+  if (!me.watch.length) { watchResults = {}; return; }
   try { const res = await api("/api/me/watch/results"); coll = res.collection || coll;
-    watchResults = Object.fromEntries(res.watch.map(w => [w.id, w])); renderWatch(); } catch (err) { say($("watchMsg"), err.message, false); }
+    watchResults = Object.fromEntries(res.watch.map(w => [w.id, w])); renderWatch(); tick(); } catch (err) { say($("watchMsg"), err.message, false); }
 }
 document.addEventListener("change", async e => {
   const sel = e.target.closest("[data-wcond]"); if (!sel) return;
@@ -459,207 +658,30 @@ document.addEventListener("change", async e => {
   catch (err) { say($("watchMsg"), err.message, false); }
 });
 document.addEventListener("click", async e => {
-  const m = e.target.closest("[data-wmove]"), rn = e.target.closest("[data-wrenew]");
+  const rn = e.target.closest("[data-wrenew]"), p = e.target.closest("[data-wpromote]"), d = e.target.closest("[data-delwatch]");
   try {
-    if (m && !m.disabled) {
-      const ids = me.watch.map(w => w.id), i = +m.dataset.wmove, j = i + +m.dataset.dir;
-      [ids[i], ids[j]] = [ids[j], ids[i]];
-      me = (await api("/api/me/watch/order", {method: "PUT", body: JSON.stringify({ids})})).member; renderWatch();
-    }
     if (rn) { me = (await api("/api/me/watch/" + encodeURIComponent(rn.dataset.wrenew) + "/renew", {method: "POST"})).member; renderWatch(); loadWatch(); }
+    if (p) { const m = await promote("watch", p.dataset.wpromote); renderWatch(); if (m) say($("watchMsg"), m, true); loadWatch(); }
+    if (d) { closeMenus(); me = (await api("/api/me/watch/" + encodeURIComponent(d.dataset.delwatch), {method: "DELETE"})).member; renderWatch(); }
   } catch (err) { say($("watchMsg"), err.message, false); }
-});
-
-// Time left on each word, and when deals are next collected
-let coll = null;
-function at(iso){
-  // "today at 07:20", "tomorrow at 19:00" or "26 Nov at 07:00", Irish time
-  const d = new Date(iso), n = new Date(), t = new Date(Date.now() + 864e5);
-  const dayPart = day.format(d) === day.format(n) ? "today" : day.format(d) === day.format(t) ? "tomorrow" : day.format(d);
-  return `${dayPart} at ${dub.format(d)}`;
-}
-function leftText(ms, long){
-  if (ms <= 0) return "Expired";
-  const m = Math.floor(ms/60000), d = Math.floor(m/1440), h = Math.floor((m%1440)/60), mm = m%60;
-  if (long) return (d ? `${d} day${d===1?"":"s"} ${h} h` : h ? `${h} h ${mm} min` : `${mm} min`) + " left";
-  return d ? `${d}d ${h}h` : h ? `${h}h ${mm}m` : `${mm}m`;
-}
-function shortLeft(ms){
-  const m = Math.max(0, Math.floor(ms/60000));
-  return m >= 1440 ? Math.floor(m/1440) + "d" : m >= 60 ? Math.floor(m/60) + "h" : m + "m";
-}
-function lifeHtml(k, days){
-  // Time left: a bar for every word or product, emptier as it runs out; orange in the last third.
-  const total = (days || me.tier.word_days) * 864e5, left = Date.parse(k.expires_at) - Date.now();
-  const frac = k.status === "expired" ? 0 : Math.max(0, Math.min(1, left / total)), low = frac > 0 && frac < 1/3 ? " low" : "";
-  return `<span class="life${low}" data-life="${esc(k.id)}"><span class="bar"><i style="width:${(frac * 100).toFixed(1)}%"></i></span><span class="left">${esc(leftText(left, true))}</span></span>`;
-}
-function refreshHtml(k){
-  // Countdown to the next collection, as a dial, for words being searched. The full dial is the gap between
-  // the last collection and the next one; it empties as the next collection gets closer.
-  if (k.status !== "searching" || !coll || !coll.next) return `<span class="rcell"></span>`;
-  const next = Date.parse(coll.next), last = coll.last ? Date.parse(coll.last) : next - 12 * 36e5;
-  const left = next - Date.now(), frac = Math.max(0, Math.min(1, left / Math.max(1, next - last)));
-  const c = 2 * Math.PI * 14, label = left > 0 ? `Next refresh in ${leftText(left)}` : "Refreshing now";
-  return `<span class="rcell" data-refresh title="${esc(label)}"><svg class="dial" viewBox="0 0 34 34" role="img" aria-label="${esc(label)}">
-    <circle class="track" cx="17" cy="17" r="14" fill="none" stroke-width="4"/>
-    <circle class="arc" cx="17" cy="17" r="14" fill="none" stroke-width="4" stroke-linecap="round" transform="rotate(-90 17 17)"
-      stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${(c * (1 - frac)).toFixed(2)}"/>
-    <text x="17" y="20.5" text-anchor="middle">${esc(left > 0 ? shortLeft(left) : "now")}</text></svg></span>`;
-}
-function tick(){
-  // Refresh the time-left bars, the refresh dials and the collection line once a minute without redrawing the list.
-  if (!me) return;
-  me.keywords.forEach(k => {
-    const row = document.querySelector(`.kw[data-id="${CSS.escape(k.id)}"]`); if (!row) return;
-    const life = row.querySelector("[data-life]"); if (life) life.outerHTML = lifeHtml(k);
-    const r = row.querySelector(".rcell"); if (r) r.outerHTML = refreshHtml(k);
-  });
-  me.watch.forEach(w => {
-    const row = document.querySelector(`.witem[data-wid="${CSS.escape(w.id)}"]`); if (!row) return;
-    const k = {id: w.id, status: w.status === "checking" ? "searching" : w.status, expires_at: w.expires_at};
-    const life = row.querySelector("[data-life]"); if (life) life.outerHTML = lifeHtml(k, me.tier.watch_days);
-    const r = row.querySelector(".rcell"); if (r) r.outerHTML = refreshHtml(k);
-  });
-  const next = coll && coll.next ? Date.parse(coll.next) - Date.now() : null;
-  $("collectNote").textContent = (coll && coll.last ? `Deals last collected ${at(coll.last)}. ` : "")
-    + (next != null && next > 0 ? `Next collection ${at(coll.next)} (in ${leftText(next)}).`
-       : coll && !coll.automatic ? "Automatic collection is paused." : "");
-}
-setInterval(tick, 60000);
-
-// Keyword results: what each search word finds right now (public deals + private Amazon results)
-let kwResults = null;
-function itemRow(x){
-  const img = x.image_url ? `<img src="${esc(x.image_url)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="ph"></span>`;
-  return `<li class="item">${img}<div><div class="t">${esc(x.title)}</div>
-    <div class="m">${esc(x.store)} · <b>${eur(x.price_minor)}</b>${x.reference_minor!=null ? `<s>${eur(x.reference_minor)}</s>` : ""}${x.discount_percent!=null ? `<em>${Math.round(x.discount_percent)}% off</em>` : ""}${x.private ? " · only you" : ""}</div></div>
-    <a class="go2" data-deal="${esc(x.id)}" href="${esc(x.buy_url)}" target="_blank" rel="noopener${x.affiliate?" sponsored":""}">Go to ${esc(String(x.store).replace(".ie",""))}</a></li>`;
-}
-async function loadKeywords(){
-  if (!me.keywords.length) return;
-  $("loadKw").disabled = true; $("loadKw").textContent = "Loading…";
-  try { const res = await api("/api/me/keywords/results"); coll = res.collection || coll;
-    kwResults = Object.fromEntries(res.keywords.map(k => [k.id, k])); renderFollow(); }
-  catch (err) { say($("kwMsg"), err.message, false); }
-  finally { $("loadKw").disabled = false; $("loadKw").textContent = "Load deals"; }
-}
-$("loadKw").onclick = loadKeywords;
-const MINS = [0,10,20,30,40,50,60,70];
-const minOptions = v => MINS.map(m => `<option value="${m}" ${m===v?"selected":""}>${m ? m + "%+ off" : "Any discount"}</option>`).join("");
-$("kwMin").innerHTML = minOptions(20);
-$("newCond").innerHTML = condHtml({type: "any"}, "");
-$("newCond").addEventListener("change", () => $("newCond").querySelector(".cval").classList.toggle("hidden", $("newCond").querySelector("[data-ctype]").value === "any"));
-// Controls inside a word's summary row must not open or close the row.
-document.addEventListener("click", e => { if (e.target.closest(".kw summary select, .kw summary .arrow, .kw summary [data-renew]")) e.preventDefault(); }, true);
-document.addEventListener("click", async e => {
-  const m = e.target.closest("[data-move]"), rn = e.target.closest("[data-renew]");
-  try {
-    if (m && !m.disabled) {
-      const ids = me.keywords.map(k => k.id), i = +m.dataset.move, j = i + +m.dataset.dir;
-      [ids[i], ids[j]] = [ids[j], ids[i]];
-      me = (await api("/api/me/keywords/order", {method: "PUT", body: JSON.stringify({ids})})).member; renderFollow();
-      if (kwResults) loadKeywords();
-    }
-    if (rn) { me = (await api("/api/me/keywords/" + encodeURIComponent(rn.dataset.renew) + "/renew", {method: "POST"})).member; renderFollow(); loadKeywords(); }
-  } catch (err) { say($("kwMsg"), err.message, false); }
-});
-document.addEventListener("change", async e => {
-  const sel = e.target.closest("[data-kwmin]"); if (!sel) return;
-  try { me = (await api("/api/me/keywords/" + encodeURIComponent(sel.dataset.kwmin), {method: "PUT", body: JSON.stringify({min_discount: +sel.value})})).member;
-    await loadKeywords(); } catch (err) { say($("kwMsg"), err.message, false); }
-});
-const closeMenu = () => { const l = $("menuList"); if (l) { l.hidden = true; $("menuBtn").setAttribute("aria-expanded", "false"); } };
-document.addEventListener("click", e => { if (!e.target.closest(".acctmenu")) closeMenu(); });
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeMenu(); });
-document.addEventListener("click", e => {
-  const a = e.target.closest("a[data-deal]");
-  if (a && navigator.sendBeacon) {
-    try { navigator.sendBeacon("/api/click", new Blob([JSON.stringify({id: a.dataset.deal, token})], {type: "application/json"})); } catch (_) {}
-  }
-});
-
-// Settings
-function renderFollow() {
-  const groups = {};
-  channels.forEach(c => (groups[c.group] = groups[c.group] || []).push(c));
-  $("chanSummary").textContent = `${me.channels.length} of ${channels.length} followed`;
-  $("channels").innerHTML = Object.entries(groups).map(([g, list]) => `<div><h3>${esc(g)}</h3>${list.map(c =>
-    `<label class="check"><input type="checkbox" value="${esc(c.id)}" ${me.channels.includes(c.id)?"checked":""}>${esc(c.name)}</label>`).join("")}</div>`).join("");
-  const open = new Set([...document.querySelectorAll(".kw[open]")].map(d => d.dataset.id));
-  const t = me.tier;
-  $("planNote").innerHTML = `<b>${esc(t.name)} plan:</b> your first ${t.search_words} word${t.search_words===1?"":"s"} that haven't expired are searched for you. Each word lasts ${t.word_days} day${t.word_days===1?"":"s"}; renew it when it expires. Use the arrows to choose which words come first.`;
-  const ids = me.keywords.map(k => k.id);
-  $("keywords").innerHTML = me.keywords.length ? me.keywords.map((k, i) => {
-    const r = kwResults && kwResults[k.id];
-    const expired = k.status === "expired";
-    const n = expired ? "" : r ? `<span class="n"><b>${r.count}</b> deal${r.count===1?"":"s"}</span>` : `<span class="n">Not loaded</span>`;
-    const minSel = expired ? "" : `<select data-kwmin="${esc(k.id)}" aria-label="Minimum discount for ${esc(k.query)}">${minOptions(k.min_discount)}</select>`;
-    const status = k.status === "searching" ? `<span class="badge on">Searching</span>`
-      : k.status === "matching" ? `<span class="badge">Not searched</span>` : `<span class="badge off">Expired</span>`;
-    const until = new Date(k.expires_at);
-    const when2 = `${esc(day.format(until))} at ${esc(dub.format(until))}`;
-    const hidden = r && r.found > r.count ? ` ${r.found - r.count} more ${r.found - r.count === 1 ? "has" : "have"} a smaller discount; lower the minimum to see ${r.found - r.count === 1 ? "it" : "them"}.` : "";
-    const info = expired ? `Expired on ${when2}. It isn't searched or used for My deals until you renew it.`
-      : (k.status === "searching"
-          ? (!k.private ? "Searched for you at Harvey Norman; Deal Radar already searches Amazon for it."
-             : r && r.searched_at ? `Searched for you at Amazon and Harvey Norman. Last Amazon search: ${esc(day.format(new Date(r.searched_at)))} at ${esc(dub.format(new Date(r.searched_at)))}.`
-             : "Searched for you at Amazon and Harvey Norman in the next collections.")
-          : `Not searched: only your first ${t.search_words} words are. It still matches deals collected from every shop.`)
-        + ` Active until ${when2}.`;
-    const list = expired ? "" : r ? (r.deals.length ? `<ul class="items">${r.deals.map(itemRow).join("")}</ul>` : `<p class="info">No discounted products found for this word right now.</p>`)
-      : `<p class="info">Press Load deals to see what this word finds.</p>`;
-    const life = lifeHtml(k);
-    const move = `<span class="move"><button type="button" class="arrow" data-move="${i}" data-dir="-1" aria-label="Move ${esc(k.query)} up" ${i===0?"disabled":""}>↑</button><button type="button" class="arrow" data-move="${i}" data-dir="1" aria-label="Move ${esc(k.query)} down" ${i===ids.length-1?"disabled":""}>↓</button></span>`;
-    const action = expired ? `<button class="btn small" type="button" data-renew="${esc(k.id)}">Renew</button>` : "";
-    return `<details class="kw${expired ? " expired" : ""}" data-id="${esc(k.id)}" ${open.has(k.id) ? "open" : ""}><summary>${move}<span class="chev" aria-hidden="true"></span>
-      <span class="q">${esc(k.query)}</span>${refreshHtml(k)}${life}<span class="scell">${status}</span><span class="mcell">${minSel}</span>${n || `<span class="n"></span>`}
-      <span class="acts">${action}<button class="btn ghost small" type="button" data-delkw="${esc(k.id)}">Remove</button></span></summary>
-      <p class="info">${info}${hidden}</p>${list}</details>`;
-  }).join("") : `<p class="note">No search words yet. Add one below.</p>`;
-  setTimeout(tick, 0);
-  renderWatch();
-}
-$("saveChannels").onclick = async () => {
-  const chosen = [...$("channels").querySelectorAll("input:checked")].map(i => i.value);
-  try { const r = await api("/api/me/channels", {method: "PUT", body: JSON.stringify({channels: chosen})}); me.channels = r.channels;
-    $("chanSummary").textContent = `${me.channels.length} of ${channels.length} followed`;
-    say($("channelsMsg"), "Saved.", true); } catch (err) { say($("channelsMsg"), err.message, false); }
-};
-$("allChannels").onclick = () => $("channels").querySelectorAll("input").forEach(i => i.checked = true);
-$("noChannels").onclick = () => $("channels").querySelectorAll("input").forEach(i => i.checked = false);
-$("kwForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const q = $("kwInput").value.trim(); if (!q) return;
-  try { const r = await api("/api/me/keywords", {method: "POST", body: JSON.stringify({query: q, min_discount: +$("kwMin").value})}); me = r.member; $("kwInput").value = "";
-    const k = me.keywords.find(x => x.query === q);
-    say($("kwMsg"), !k ? `Added “${q}”.` : k.status === "searching" ? `Added “${q}”. It's searched for you from the next collection and lasts until ${day.format(new Date(k.expires_at))}.`
-      : `Added “${q}”. Only your first ${me.tier.search_words} words are searched; move it up to search it.`, true);
-    renderFollow(); if (kwResults) loadKeywords(); } catch (err) { say($("kwMsg"), err.message, false); }
 });
 $("watchForm").addEventListener("submit", async e => {
   e.preventDefault();
-  say($("watchMsg"), "Checking now…", true);
+  say($("watchMsg"), "Adding it and checking the price now…", true);
   const btn = $("watchForm").querySelector("button[type=submit]"); btn.disabled = true;
-  setTimeout(() => btn.disabled = false, 1500);
   const type = $("newCond").querySelector("[data-ctype]").value, val = $("newCond").querySelector("[data-cval]").value;
   try { const r = await api("/api/me/watch", {method: "POST", body: JSON.stringify({url: $("watchUrl").value, label: $("watchLabel").value,
       condition: {type, value: type === "any" ? null : +val}})});
     me = r.member; $("watchUrl").value = ""; $("watchLabel").value = "";
     const w = me.watch[me.watch.length - 1], ck = r.check || {};
-    const later = w.status === "checking" ? "It's checked again at every collection." : `Only your first ${me.tier.watch_items} products are checked at each collection; move it up to keep it checked.`;
-    say($("watchMsg"), (ck.done ? (ck.met ? "Added and checked: it meets your condition. " : "Added and checked. ") : "Added. " + (ck.reason ? ck.reason + " " : "")) + later, true);
-    renderFollow(); await loadWatch();
+    const later = w.status === "checking" ? "We check it again at every collection." : "All your places are in use, so it waits; press Check this to swap it in.";
+    say($("watchMsg"), (ck.done ? (ck.met ? "Added and checked: it already hits your target. " : "Added and checked. ") : "Added. " + (ck.reason ? ck.reason + " " : "")) + later, true);
+    renderWatch(); await loadWatch();
   } catch (err) { say($("watchMsg"), err.message, false); }
+  finally { btn.disabled = false; }
 });
-document.addEventListener("click", async e => {
-  const k = e.target.closest("[data-delkw]"), w = e.target.closest("[data-delwatch]");
-  if (k) e.preventDefault();
-  try {
-    if (k) { me = (await api("/api/me/keywords/" + encodeURIComponent(k.dataset.delkw), {method: "DELETE"})).member; renderFollow(); }
-    if (w) { me = (await api("/api/me/watch/" + encodeURIComponent(w.dataset.delwatch), {method: "DELETE"})).member; renderFollow(); }
-  } catch (err) { say(k ? $("kwMsg") : $("watchMsg"), err.message, false); }
-});
+
+function renderAll(){ renderChannels(); renderWords(); renderWatch(); tick(); }
 </script>
 </body>
 </html>

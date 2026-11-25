@@ -18,6 +18,7 @@
 :root{
   --blue:#3565E0;--blue-dark:#1E48B5;--tag:#FFD43B;--tag-edge:#E9B90F;
   --ink:#16213A;--muted:#5B6578;--strike:#8A93A3;--shelf:#EEF1F5;--paper:#FFFFFF;--line:#DCE1EA;
+  --green:#16794A;--green-bg:#E5F3EB;
   --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--num:"Barlow Condensed","Arial Narrow",sans-serif;
 }
 *{box-sizing:border-box}
@@ -54,17 +55,35 @@ button.acct{background:var(--paper);cursor:pointer;display:inline-flex;align-ite
 .hidden{display:none!important}
 @media (max-width:640px){.topright{gap:8px}.acct{padding:7px 10px;font-size:14px}}
 
-/* Hero */
-.hero{background:var(--paper)}
-.hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:48px;align-items:center;padding-top:44px;padding-bottom:44px}
-h1{font-size:clamp(30px,4.2vw,48px);line-height:1.08;letter-spacing:-.025em;margin:0 0 16px;font-weight:700;max-width:18ch;text-wrap:balance}
-/* Desktop: the heading stays on one line; its size follows the text column (about 13.1 em wide, with a margin). */
-@media (min-width:861px){h1{white-space:nowrap;max-width:none;font-size:clamp(24px,calc((min(100vw,1240px) - 520px) / 14.2),48px)}}
-.lede{font-size:18px;color:var(--muted);margin:0;max-width:52ch}
-.feature{display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;align-items:center;text-decoration:none;background:var(--shelf);border-radius:4px;padding:20px}
-.feature img{width:150px;height:150px;object-fit:contain;background:var(--paper);border-radius:2px}
-.feature .label{font-size:14px;color:var(--muted);margin:0 0 4px}
-.feature .name{font-weight:500;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* Hero: heading, one sentence and three numbers; then the biggest discounts as a strip */
+.hero{background:var(--paper);border-bottom:1px solid var(--line)}
+.hero .intro{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:40px;align-items:end;padding-top:30px;padding-bottom:22px}
+h1{font-size:clamp(28px,4vw,44px);line-height:1.08;letter-spacing:-.025em;margin:0 0 10px;font-weight:700;max-width:18ch;text-wrap:balance}
+/* Desktop: the heading stays on one line; its size follows the text column. */
+@media (min-width:861px){h1{white-space:nowrap;max-width:none;font-size:clamp(24px,calc((min(100vw,1240px) - 460px) / 14.2),44px)}}
+/* Phones and tablets: one line too; the heading is about 13.2 em wide, so its size follows the screen width. */
+@media (max-width:860px){h1{white-space:nowrap;max-width:none;font-size:min(40px,calc((100vw - 40px) / 14.8))}}
+.lede{font-size:16px;color:var(--muted);margin:0;max-width:62ch}
+.stats{display:flex;gap:28px;margin:0}
+.stats div{min-width:0}
+.stats dt{font-size:13px;color:var(--muted);white-space:nowrap}
+.stats dd{margin:0;font:700 34px/1 var(--num);letter-spacing:.01em;white-space:nowrap}
+.stats dd.green{color:var(--green)}
+.best{padding-bottom:22px}
+.besth{font-size:15px;font-weight:700;margin:0 0 10px}
+.besth span{font-weight:400;color:var(--muted);font-size:14px;margin-left:6px;white-space:nowrap}
+.strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(250px,1fr);gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:2px}
+.strip::-webkit-scrollbar{display:none}
+.mini{scroll-snap-align:start;display:grid;grid-template-columns:76px minmax(0,1fr);gap:12px;align-items:center;text-decoration:none;background:var(--shelf);border-radius:6px;padding:10px 12px 10px 10px}
+.mini:hover{background:#E4E8EF}
+.mini img,.mini .ph{width:76px;height:76px;object-fit:contain;background:var(--paper);border-radius:4px;display:block}
+.mini .s{font-size:12.5px;font-weight:700;color:var(--blue)}
+.mini .n{font-size:13.5px;font-weight:500;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:1px 0 6px}
+.mini .tag{font-size:21px;padding:5px 9px 4px 20px;clip-path:polygon(10px 0,100% 0,100% 100%,10px 100%,0 50%)}
+.mini .tag::before{left:7px;width:5px;height:5px;margin-top:-2.5px}
+.mini .pl{display:flex;align-items:center;white-space:nowrap}
+.mini .s{display:block}
+.mini .pct{font-size:13px;font-weight:700;margin-left:8px}
 
 /* Price tag: the one loud element on the page */
 .tag{position:relative;display:inline-flex;align-items:center;background:var(--tag);color:var(--ink);
@@ -78,9 +97,16 @@ h1{font-size:clamp(30px,4.2vw,48px);line-height:1.08;letter-spacing:-.025em;marg
 
 /* Controls */
 .controls{position:sticky;top:0;z-index:5;background:var(--shelf);border-bottom:1px solid var(--line)}
-.controls .wrap{padding-top:14px;padding-bottom:12px}
+.controls .wrap{padding-top:10px;padding-bottom:10px}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.row+.row{margin-top:10px}
+.row+.row{margin-top:8px}
+.fbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap}
+.fbtn:hover{border-color:var(--strike)}
+.fbtn[aria-expanded=true]{border-color:var(--ink)}
+.fbtn svg{flex:none}
+.fbtn b{background:var(--blue);color:#fff;border-radius:999px;font-size:12px;min-width:20px;height:20px;line-height:20px;text-align:center;padding:0 6px}
+.fpanel{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px 14px;gap:14px 20px}
+.fpanel[hidden]{display:none}
 .seg{display:inline-flex;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:3px}
 .seg button{border:0;background:none;padding:7px 14px;border-radius:4px;cursor:pointer;font-weight:500;font-size:15px;color:var(--muted);white-space:nowrap}
 .seg button[aria-pressed=true]{background:var(--blue);color:#fff}
@@ -115,8 +141,11 @@ h1{font-size:clamp(30px,4.2vw,48px);line-height:1.08;letter-spacing:-.025em;marg
 main .wrap{padding-top:22px;padding-bottom:56px}
 .count{font-size:14px;color:var(--muted);margin:0 0 14px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-.deal{background:var(--paper);border-radius:4px;display:flex;flex-direction:column;overflow:hidden}
-.shot{height:190px;background:var(--paper);display:flex;align-items:center;justify-content:center;padding:14px;border-bottom:1px solid var(--shelf)}
+.deal{position:relative;background:var(--paper);border-radius:6px;display:flex;flex-direction:column;overflow:hidden;transition:box-shadow .15s}
+.deal:hover{box-shadow:0 6px 20px rgba(22,33,58,.10)}
+.deal:hover .title{text-decoration:underline;text-underline-offset:3px}
+.shot{position:relative;height:180px;background:var(--paper);display:flex;align-items:center;justify-content:center;padding:14px;border-bottom:1px solid var(--shelf)}
+.new{position:absolute;top:10px;left:10px;background:var(--green);color:#fff;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}
 .shot img{display:block;width:100%;height:100%;object-fit:contain}
 .shot .none{font:700 28px/1 var(--sans);color:var(--line);letter-spacing:-.02em}
 .body{padding:14px 16px 16px;display:flex;flex-direction:column;flex:1}
@@ -125,9 +154,11 @@ main .wrap{padding-top:22px;padding-bottom:56px}
 .priceline{display:flex;align-items:center;flex-wrap:wrap;row-gap:4px}
 .cond{font-size:13px;color:var(--ink);margin:10px 0 0}
 .src{font-size:12.5px;color:var(--muted);margin:6px 0 14px}
-.go{margin-top:auto;display:block;text-align:center;text-decoration:none;background:var(--blue);color:#fff;font-weight:700;font-size:15px;padding:10px 12px;border-radius:4px}
-.go:hover{background:var(--blue-dark)}
-.aff{font-size:11.5px;line-height:16px;min-height:16px;color:var(--strike);text-align:center;margin:6px 0 0}
+/* The whole card is the link to the shop; the visible link text sits at the bottom. */
+.foot{margin-top:auto;display:flex;align-items:baseline;justify-content:space-between;gap:8px;border-top:1px solid var(--shelf);padding-top:10px}
+.go{text-decoration:none;color:var(--blue);font-weight:700;font-size:14.5px}
+.go::after{content:"";position:absolute;inset:0;z-index:1}
+.aff{font-size:11.5px;color:var(--strike);white-space:nowrap}
 .empty{background:var(--paper);border-radius:4px;padding:36px;text-align:center;color:var(--muted)}
 .empty b{display:block;color:var(--ink);font-size:18px;margin-bottom:6px}
 .more[hidden]{display:none}
@@ -140,20 +171,37 @@ footer p{margin:0;max-width:62ch}
 
 @media (max-width:860px){
   .controls{position:static}
-  .hero .wrap{grid-template-columns:1fr;gap:26px;padding-top:28px;padding-bottom:28px}
+  .hero .intro{grid-template-columns:1fr;gap:16px;padding-top:22px;padding-bottom:16px}
   .checked{display:none}
   .brand img{height:46px}
   .top .wrap{height:66px}
 }
 @media (max-width:560px){
   .wrap{padding:0 16px}
-  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .body{padding:12px}
-  .shot{height:140px;padding:10px}
-  .tag{font-size:25px}
-  .feature{grid-template-columns:96px minmax(0,1fr);padding:14px;gap:14px}
-  .feature img{width:96px;height:96px}
-  .feature .tag{font-size:32px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .body{padding:10px}
+  .shot{height:120px;padding:8px}
+  .new{top:6px;left:6px}
+  .store{font-size:12px;margin:0 0 2px}
+  .title{font-size:13.5px;margin:0 0 8px}
+  .tag{font-size:22px;padding:5px 9px 4px 20px;clip-path:polygon(10px 0,100% 0,100% 100%,10px 100%,0 50%)}
+  .tag::before{left:7px;width:5px;height:5px;margin-top:-2.5px}
+  .was{font-size:13px;margin-left:6px}
+  .save{font-size:12.5px;margin-top:4px}
+  .cond{font-size:12px;margin-top:6px}
+  .src{font-size:11.5px;margin:4px 0 10px}
+  .why{margin-top:6px}
+  .foot{flex-direction:column;gap:0;padding-top:8px}
+  .go{font-size:13.5px}
+  .lede{font-size:15px}
+  .stats{gap:18px;justify-content:space-between}
+  .stats dd{font-size:28px}
+  .stats dt{font-size:12px}
+  .best{padding-bottom:16px}
+  .strip{grid-auto-columns:82%}
+  .fpanel{padding:10px}
+  .spacer{display:none}
+  .filter:not(.disc){margin-left:auto}
 
   .seg button{padding:7px 10px;font-size:14px}
   .pricebar{width:100%;margin:0 0 4px}
@@ -164,14 +212,14 @@ footer p{margin:0;max-width:62ch}
   .filter.disc .seg button{flex:1;padding:7px 0;font-size:14px}
   .long{display:none}
 }
-@media (max-width:380px){.grid{grid-template-columns:1fr}}
+@media (max-width:330px){.grid{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
 <header class="top"><div class="wrap">
   <a class="brand" href="/" aria-label="Deal Radar Ireland home"><img src="/static/dealradar-logo.png" alt="Deal Radar Ireland" width="190" height="54"></a>
-  <div class="topright"><span class="checked" id="checked"></span><a class="acct" id="acct" href="/account">Sign in</a>
+  <div class="topright"><a class="acct" id="acct" href="/account">Sign in</a>
     <div class="acctmenu hidden" id="acctmenu">
       <button class="acct" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="menuList">Account<span class="caret" aria-hidden="true"></span></button>
       <div class="menulist" id="menuList" role="menu" hidden>
@@ -184,18 +232,22 @@ footer p{margin:0;max-width:62ch}
   </div>
 </div></header>
 
-<section class="hero"><div class="wrap">
-  <div>
-    <h1>Phone and tech deals in Ireland</h1>
-    <p class="lede">Deals from Mobile123 shop, plus Vodafone, Three, eir, Tesco Mobile, Expert, Powercity, Very.ie and Amazon.ie, with the old price next to the new one so you can see the real saving.</p>
+<section class="hero">
+  <div class="wrap intro">
+    <div>
+      <h1>Phone and tech deals in Ireland</h1>
+      <p class="lede">Deals from Mobile123 shop, plus Vodafone, Three, eir, Tesco Mobile, Expert, Powercity, Very.ie and Amazon.ie, with the old price next to the new one so you can see the real saving.</p>
+    </div>
+    <dl class="stats" id="stats"></dl>
   </div>
-  <div id="feature"></div>
-</div></section>
+  <div class="wrap best" id="bestWrap" hidden><h2 class="besth">Biggest discounts right now <span>from different shops</span></h2><div class="strip" id="best"></div></div>
+</section>
 
 <div class="controls"><div class="wrap">
   <div class="row">
     <div class="seg" role="group" aria-label="Where to buy" id="kinds"></div>
     <span class="spacer"></span>
+    <button type="button" class="fbtn" id="fbtn" aria-expanded="false" aria-controls="fpanel"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Filters<b id="fcount" hidden></b></button>
     <label class="filter">Sort by
       <select id="sort" class="sort">
         <option value="pct">Biggest discount</option>
@@ -207,7 +259,7 @@ footer p{margin:0;max-width:62ch}
   <div class="row">
     <div class="chips" role="group" aria-label="Category" id="cats"></div>
   </div>
-  <div class="row">
+  <div class="row fpanel" id="fpanel" hidden>
     <div class="pricebar">
       <div class="pb-head"><span id="maxLabel">Price</span><b id="maxOut">Any price</b><span id="maxCount"></span></div>
       <div class="hist" id="hist" aria-hidden="true"></div>
@@ -277,7 +329,33 @@ function prep(x){
   x.saving = x.price_minor!=null && x.reference_minor!=null ? x.reference_minor - x.price_minor : null;
   return x;
 }
-D.forEach(prep);
+function dedupe(list){
+  // The same listing collected twice (same shop, same price, same picture or same name) is shown once.
+  const seen = new Map(), out = [];
+  const norm = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  for (const x of list) {
+    const key = [x.store, x.price_minor, x.image_url || norm(x.title)].join("|");
+    const first = seen.get(key);
+    if (first) { if (x.why) first.why = [...(first.why || []), ...x.why.filter(w => !(first.why || []).some(v => v.type===w.type && v.label===w.label))]; continue; }
+    seen.set(key, x); out.push(x);
+  }
+  return out;
+}
+D = dedupe(D.map(prep));
+
+// "New" marks deals that weren't here on the reader's previous visit (kept in this browser only).
+const NEW = new Set();
+(function markNew(){
+  if (MODE==="mine") return;
+  try {
+    const now = Date.now(), last = JSON.parse(localStorage.getItem("dr-seen") || "null");
+    let base = JSON.parse(localStorage.getItem("dr-seen-base") || "null");
+    // A visit more than 30 minutes after the last one compares against what that visit saw.
+    if (last && now - last.at > 30*60e3) { base = last.ids; localStorage.setItem("dr-seen-base", JSON.stringify(base)); }
+    if (base) { const old = new Set(base); D.forEach(x => { if (!old.has(x.id)) NEW.add(x.id); }); }
+    localStorage.setItem("dr-seen", JSON.stringify({at: now, ids: D.map(x => x.id)}));
+  } catch (_) {}
+})();
 
 const state = {kind:"all", cat:"All", max:null, min:0, full:false, sort:"pct", shown:48};
 (function readHash(){
@@ -320,7 +398,7 @@ function card(x){
   const price = x.price_minor!=null ? `<div class="priceline">${tag(x.price_minor)}${was}</div>${save}` : `<p class="save">${esc(x.summary_en || "See the offer on " + x.store)}</p>`;
   const cond = condition(x);
   return `<article class="deal">
-    <div class="shot">${img}</div>
+    <div class="shot">${img}${NEW.has(x.id) ? `<span class="new" title="New since your last visit">New</span>` : ""}</div>
     <div class="body">
       <p class="store">${esc(x.store)}</p>
       <h3 class="title">${esc(x.title)}</h3>
@@ -329,8 +407,8 @@ function card(x){
       ${x.why ? `<div class="why">${x.why.map(w => w.type==="watch" ? `<span class="w">Watching</span>`
         : w.type==="keyword" ? `<span>“${esc(w.label)}”${w.private ? " · only you" : ""}</span>` : `<span>${esc(w.label)}</span>`).join("")}</div>` : ""}
       <p class="src">${source(x)}</p>
-      <a class="go" data-deal="${esc(x.id)}" href="${esc(x.buy_url)}" target="_blank" rel="noopener${x.affiliate?" sponsored":""}">Go to ${esc(x.store.replace(".ie",""))}</a>
-      <p class="aff">${x.affiliate ? "Affiliate link" : ""}</p>
+      <div class="foot"><a class="go" data-deal="${esc(x.id)}" href="${esc(x.buy_url)}" target="_blank" rel="noopener${x.affiliate?" sponsored":""}">View at ${esc(x.store.replace(".ie",""))}</a>
+      ${x.affiliate ? `<span class="aff">Affiliate link</span>` : ""}</div>
     </div></article>`;
 }
 
@@ -403,9 +481,23 @@ function renderControls(){
   full.setAttribute("aria-pressed", String(state.full && state.min===0));
   full.disabled = state.min>0;
   document.getElementById("sort").value = state.sort;
+  const active = (state.max!=null) + (state.min>0) + (state.full && state.min===0);
+  const fc = document.getElementById("fcount"); fc.hidden = !active; fc.textContent = active;
+}
+function stats(){
+  // Three numbers under the heading: deals on now, the biggest discount, when prices were checked.
+  const pool = D.filter(x => MODE==="mine" || x.module!=="mobile123");
+  const disc = pool.filter(x => x.discount_percent!=null);
+  const top = disc.length ? Math.round(Math.max(...disc.map(x => x.discount_percent))) : null;
+  const newN = pool.filter(x => NEW.has(x.id)).length;
+  document.getElementById("stats").innerHTML =
+    `<div><dt>${MODE==="mine" ? "Deals for you" : "Deals on now"}</dt><dd>${disc.length.toLocaleString("en-IE")}</dd></div>`
+    + (newN ? `<div><dt>New since your last visit</dt><dd class="green">${newN}</dd></div>` : top!=null ? `<div><dt>Biggest discount</dt><dd>${top}%</dd></div>` : "")
+    + (GENERATED ? `<div><dt>Prices checked</dt><dd>${esc(when(GENERATED))}</dd></div>` : "");
 }
 function render(){
   renderControls();
+  stats();
   const list = D.filter(x => matches(x,false)).sort(SORTS[state.sort]);
   const grid = document.getElementById("grid");
   const safe = x => { try { return card(x); } catch (e) { console.error("deal card", x && x.id, e); return ""; } };
@@ -418,15 +510,19 @@ function render(){
   writeHash();
 }
 function feature(){
+  // The biggest discounts with a picture and a checked price, at most two per shop, as a strip under the heading.
   if (MODE==="mine") return;
-  const pick = D.filter(x => x.discount_percent!=null && x.image_url && x.price_source!=="third_party" && x.module!=="mobile123")
-               .sort((a,b)=>b.discount_percent-a.discount_percent)[0];
-  if (!pick) return;
-  document.getElementById("feature").innerHTML = `<a class="feature" data-deal="${esc(pick.id)}" href="${esc(pick.buy_url)}" target="_blank" rel="noopener${pick.affiliate?" sponsored":""}">
-    <img src="${esc(pick.image_url)}" alt="" referrerpolicy="no-referrer">
-    <div><p class="label">Biggest discount right now, at ${esc(pick.store)}</p><p class="name">${esc(pick.title)}</p>
-    <div class="priceline">${tag(pick.price_minor)}<span class="was">${eur(pick.reference_minor)}</span></div>
-    <p class="save">Save ${eur(pick.saving)} (${Math.round(pick.discount_percent)}% off)</p></div></a>`;
+  const per = {}, picks = [];
+  for (const x of D.filter(x => x.discount_percent!=null && x.image_url && x.price_source!=="third_party" && x.module!=="mobile123")
+                   .sort((a,b)=>b.discount_percent-a.discount_percent)) {
+    if ((per[x.store] = (per[x.store] || 0) + 1) > 2) continue;
+    picks.push(x); if (picks.length === 6) break;
+  }
+  if (!picks.length) return;
+  document.getElementById("best").innerHTML = picks.map(x => `<a class="mini" data-deal="${esc(x.id)}" href="${esc(x.buy_url)}" target="_blank" rel="noopener${x.affiliate?" sponsored":""}">
+    <img src="${esc(x.image_url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph'}))">
+    <span><span class="s">${esc(x.store)}</span><span class="n">${esc(x.title)}</span><span class="pl">${tag(x.price_minor)}<span class="pct">${Math.round(x.discount_percent)}% off</span></span></span></a>`).join("");
+  document.getElementById("bestWrap").hidden = false;
 }
 
 document.getElementById("kinds").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.kind=b.dataset.k; state.shown=48; render(); });
@@ -436,6 +532,9 @@ document.getElementById("min").addEventListener("click", e => { const b=e.target
 document.getElementById("full").addEventListener("click", () => { state.full=!state.full; state.shown=48; render(); });
 document.getElementById("sort").addEventListener("change", e => { state.sort=e.target.value; render(); });
 document.getElementById("more").addEventListener("click", () => { state.shown+=48; render(); });
+document.getElementById("fbtn").addEventListener("click", e => {
+  const p = document.getElementById("fpanel"); p.hidden = !p.hidden; e.currentTarget.setAttribute("aria-expanded", String(!p.hidden));
+});
 // Count clicks on shop buttons. The link itself still goes straight to the shop.
 document.addEventListener("click", e => {
   const a = e.target.closest("a[data-deal]");
@@ -487,7 +586,7 @@ if (isMember || MODE==="mine") {
         const r = await fetch("/api/me/deals", {headers: {"Authorization": "Bearer " + MEMBER.token}});
         if (!r.ok) { location.href = "/account"; return; }
         const body = await r.json();
-        D = body.deals.map(prep);
+        D = dedupe(body.deals.map(prep));
         const on = body.watch.filter(w => w.deal_id).length;
         MINE.note = body.watch.length ? ` · ${on} of ${body.watch.length} watched product${body.watch.length===1?"":"s"} on offer` : "";
         MINE.loaded = true; render();
@@ -495,7 +594,6 @@ if (isMember || MODE==="mine") {
     } catch (_) {}
   })();
 }
-if (GENERATED) document.getElementById("checked").textContent = "Prices last checked " + when(GENERATED);
 feature(); render();
 </script>
 </body>
