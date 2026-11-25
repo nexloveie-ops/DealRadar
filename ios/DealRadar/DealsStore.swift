@@ -37,6 +37,10 @@ final class DealsStore: ObservableObject {
     }
 
     @Published var deals: [Deal] = []
+    /// My deals: the member chose what to follow, so Mobile123 is part of All, and watched products that hit their target come first.
+    let mine: Bool
+
+    init(mine: Bool = false) { self.mine = mine }
     @Published var generatedAt: String?
     @Published var loading = false
     @Published var error: String?
@@ -94,8 +98,8 @@ final class DealsStore: ObservableObject {
 
     private func inKind(_ d: Deal) -> Bool {
         switch kind {
-        case .all: return d.module != "mobile123"        // Mobile123's own items only appear under Mobile123
-        default: return d.module == kind.rawValue
+        case .all: return mine || d.module != "mobile123"   // on the public list Mobile123 only appears under Mobile123
+        default: return d.tab == kind.rawValue
         }
     }
 
@@ -110,6 +114,7 @@ final class DealsStore: ObservableObject {
 
     var visible: [Deal] {
         deals.filter { matches($0) }.sorted { a, b in
+            if mine, a.targetReached != b.targetReached { return a.targetReached }
             switch sort {
             case .pct: return (a.discountPercent ?? -1) > (b.discountPercent ?? -1)
             case .eur: return (a.saving ?? -1) > (b.saving ?? -1)
@@ -129,7 +134,7 @@ final class DealsStore: ObservableObject {
     /// Networks or shops in a tab, with how many discounted deals each has.
     func shops(for k: Kind) -> [(String, Int)] {
         var counts: [String: Int] = [:]
-        deals.filter { $0.module == k.rawValue && $0.discountPercent != nil }.forEach { counts[$0.shop, default: 0] += 1 }
+        deals.filter { $0.tab == k.rawValue && $0.discountPercent != nil }.forEach { counts[$0.shop, default: 0] += 1 }
         return counts.sorted { $0.key.localizedCompare($1.key) == .orderedAscending }
     }
 

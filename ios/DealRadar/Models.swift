@@ -41,6 +41,12 @@ struct Deal: Codable, Identifiable, Hashable {
         return r - p
     }
     var shopShort: String { shop.replacingOccurrences(of: ".ie", with: "") }
+    var targetReached: Bool { why?.contains { $0.type == "watch" } ?? false }
+    /// Which tab a deal belongs to. A watched product that isn't a collected deal goes by its shop.
+    var tab: String {
+        guard module == "watch" else { return module ?? "" }
+        switch shop { case "Amazon.ie": return "amazon"; case "Mobile123": return "mobile123"; default: return "retailer" }
+    }
 }
 
 struct Reason: Codable, Hashable {
