@@ -172,6 +172,7 @@ main .wrap{padding-top:22px;padding-bottom:56px}
 .empty{background:var(--paper);border-radius:4px;padding:36px;text-align:center;color:var(--muted)}
 .empty b{display:block;color:var(--ink);font-size:18px;margin-bottom:6px}
 .more[hidden]{display:none}
+.loadnote{text-align:center;font-size:14px;color:var(--muted);margin:22px 0 0;min-height:21px}
 .more{display:block;margin:22px auto 0;border:1px solid var(--ink);background:none;padding:10px 22px;border-radius:4px;font-weight:700;cursor:pointer}
 
 footer{background:var(--paper);border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
@@ -299,6 +300,7 @@ footer p{margin:0;max-width:62ch}
 <main><div class="wrap">
   <p class="count" id="count" aria-live="polite"></p>
   <div class="grid" id="grid"></div>
+  <p class="loadnote" id="loadnote" aria-live="polite"></p>
   <button class="more" id="more" hidden>Show more deals</button>
 </div></main>
 
@@ -520,18 +522,43 @@ function stats(){
     + (newN ? `<div><dt>New since your last visit</dt><dd class="green">${newN}</dd></div>` : top!=null ? `<div><dt>Biggest discount</dt><dd>${top}%</dd></div>` : "")
     + (GENERATED ? `<div><dt>Prices checked</dt><dd>${esc(when(GENERATED))}</dd></div>` : "");
 }
+// Deals load 48 at a time: more are added automatically as the reader nears the end of the list.
+const PAGE = 48;
+let LIST = [];
+const safe = x => { try { return card(x); } catch (e) { console.error("deal card", x && x.id, e); return ""; } };
+const AUTO = "IntersectionObserver" in window;
+function loadState(){
+  const n = LIST.length, shown = Math.min(state.shown, n);
+  document.getElementById("loadnote").textContent = n <= PAGE ? "" : shown < n ? `Showing ${shown} of ${n.toLocaleString("en-IE")} deals` : `That's all ${n.toLocaleString("en-IE")} deals`;
+  document.getElementById("more").hidden = AUTO || n <= state.shown;
+}
+function loadMore(){
+  if (state.shown >= LIST.length) return;
+  const next = LIST.slice(state.shown, state.shown + PAGE);
+  state.shown += PAGE;
+  document.getElementById("grid").insertAdjacentHTML("beforeend", next.map(safe).join(""));
+  loadState();
+  fillScreen();
+}
+function fillScreen(){
+  // The observer only fires when the end marker comes into range; on a tall screen it may still be in range after a load.
+  if (!AUTO) return;
+  requestAnimationFrame(() => { if (document.getElementById("loadnote").getBoundingClientRect().top < innerHeight + 900) loadMore(); });
+}
+if (AUTO) new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) loadMore(); }, {rootMargin: "0px 0px 900px 0px"})
+  .observe(document.getElementById("loadnote"));
 function render(){
   renderControls();
   stats();
-  const list = D.filter(x => matches(x,false)).sort(SORTS[state.sort]);
+  const list = LIST = D.filter(x => matches(x,false)).sort(SORTS[state.sort]);
   const grid = document.getElementById("grid");
-  const safe = x => { try { return card(x); } catch (e) { console.error("deal card", x && x.id, e); return ""; } };
   grid.innerHTML = list.length ? list.slice(0,state.shown).map(safe).join("")
     : MODE==="mine" && !D.length ? `<div class="empty"><b>${MINE.loaded ? "Nothing you follow is on offer right now" : "Loading your deals…"}</b>${MINE.loaded ? `Prices are checked twice a day. <a href="/account">Change what you follow</a>.` : ""}</div>`
     : `<div class="empty"><b>No deals match these filters</b>Try a higher price limit, a smaller discount or another category.</div>`;
   if (!list.length) grid.style.display="block"; else grid.style.display="";
   document.getElementById("count").textContent = (list.length===1 ? "1 deal" : list.length.toLocaleString("en-IE")+" deals") + (MINE.note || "");
-  document.getElementById("more").hidden = list.length <= state.shown;
+  loadState();
+  fillScreen();
   writeHash();
 }
 function feature(){
@@ -588,7 +615,7 @@ document.getElementById("max").addEventListener("input", e => { state.max=steps[
 document.getElementById("min").addEventListener("click", e => { const b=e.target.closest("button"); if(!b) return; state.min=+b.dataset.v; state.shown=48; render(); });
 document.getElementById("full").addEventListener("click", () => { state.full=!state.full; state.shown=48; render(); });
 document.getElementById("sort").addEventListener("change", e => { state.sort=e.target.value; render(); });
-document.getElementById("more").addEventListener("click", () => { state.shown+=48; render(); });
+document.getElementById("more").addEventListener("click", loadMore);
 document.getElementById("fbtn").addEventListener("click", e => {
   const p = document.getElementById("fpanel"); p.hidden = !p.hidden; e.currentTarget.setAttribute("aria-expanded", String(!p.hidden));
 });
