@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<title>What I follow | Deal Radar Ireland</title>
+<title>Settings | Deal Radar Ireland</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -261,7 +261,7 @@ select{border:1px solid var(--line);border-radius:4px;padding:9px 10px;backgroun
   <section class="head"><div class="wrap">
     <div class="headrow">
       <div>
-        <h1>What I follow</h1>
+        <h1>Settings</h1>
         <p>Choose the shops and networks, search words and products that make up your <a href="/my-deals">My deals</a> list.</p>
       </div>
       <a class="btn" href="/my-deals">See my deals</a>
@@ -385,7 +385,7 @@ onAuthStateChanged(auth, async user => {
       <div class="acctmenu"><button class="acct" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="menuList">Account<span class="caret" aria-hidden="true"></span></button>
         <div class="menulist" id="menuList" role="menu" hidden><div class="mail">${esc(me.email)}</div>
           <a role="menuitem" href="/">All deals</a><a role="menuitem" href="/my-deals">My deals</a>
-          <a role="menuitem" href="/account" aria-current="page">What I follow</a>
+          <a role="menuitem" href="/account" aria-current="page">Settings</a>
           <button role="menuitem" type="button" id="out">Sign out</button></div></div>`;
     $("out").onclick = async () => { store("dr-member", null); await signOut(auth); location.href = "/"; };
     $("menuBtn").onclick = e => { e.stopPropagation(); const l = $("menuList"); l.hidden = !l.hidden; $("menuBtn").setAttribute("aria-expanded", String(!l.hidden)); };
@@ -579,7 +579,7 @@ document.addEventListener("click", e => {
   }
 });
 
-// What I follow
+// Settings
 function renderFollow() {
   const groups = {};
   channels.forEach(c => (groups[c.group] = groups[c.group] || []).push(c));
