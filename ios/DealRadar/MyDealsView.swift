@@ -53,7 +53,10 @@ struct MyDealsView: View {
             }
             .navigationTitle("My deals")
             .toolbarBackground(.white, for: .navigationBar)
-            .onAppear { store.deals = member.myDeals }
+            .onAppear {
+                store.deals = member.myDeals
+                if member.myDealsStale { Task { await member.loadMyDeals() } }
+            }
             .onChange(of: member.myDeals) { _, new in store.deals = new }
         }
     }

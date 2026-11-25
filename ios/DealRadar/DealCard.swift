@@ -1,5 +1,4 @@
 import SwiftUI
-import SafariServices
 
 /// One deal, laid out like a card on dealradar.ie: picture, shop, name, price tag, saving, where the price came from.
 struct DealCard: View {
@@ -158,26 +157,11 @@ struct FlowRow: Layout {
     }
 }
 
-/// Opens a shop page inside the app; affiliate links keep working.
-struct SafariView: UIViewControllerRepresentable {
-    let url: URL
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        let c = SFSafariViewController(url: url)
-        c.preferredControlTintColor = UIColor(Color.drBlue)
-        return c
-    }
-    func updateUIViewController(_ vc: SFSafariViewController, context: Context) {}
-}
-
-extension URL: @retroactive Identifiable {
-    public var id: String { absoluteString }
-}
-
 /// Grid of deal cards that opens the shop when one is tapped.
 struct DealGrid: View {
     let deals: [Deal]
     var showWhy = false
-    @State private var open: URL?
+    @Environment(\.openURL) private var openURL
 
     private let columns = [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
 
@@ -185,9 +169,10 @@ struct DealGrid: View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
             ForEach(deals) { d in
                 Button {
+                    // Opens in the phone's default browser (or the shop's own app, e.g. Amazon, if it handles the link).
                     if let s = d.buyUrl, let u = URL(string: s) {
                         API.recordClick(d.id)
-                        open = u
+                        openURL(u)
                     }
                 } label: {
                     DealCard(deal: d, showWhy: showWhy).frame(maxHeight: .infinity, alignment: .top)
@@ -195,6 +180,5 @@ struct DealGrid: View {
                 .buttonStyle(.plain)
             }
         }
-        .sheet(item: $open) { url in SafariView(url: url).ignoresSafeArea() }
     }
 }

@@ -10,6 +10,8 @@ final class MemberStore: ObservableObject {
     @Published var watchResults: [String: WatchResult] = [:]
     @Published var myDeals: [Deal] = []
     @Published var myDealsLoaded = false
+    /// Set when follows, words or watched products change, so My deals reloads the next time it is shown.
+    @Published var myDealsStale = false
     @Published var loading = false
     @Published var error: String?
     @Published var notice: String?
@@ -52,6 +54,7 @@ final class MemberStore: ObservableObject {
             let r: MyDealsResponse = try await API.get("api/me/deals", auth: true)
             myDeals = DealsStore.dedupe(r.deals)
             myDealsLoaded = true
+            myDealsStale = false
             error = nil
         } catch { self.error = error.localizedDescription }
     }
@@ -62,6 +65,7 @@ final class MemberStore: ObservableObject {
             let r: MemberResponse = try await API.call(path, method: method, json: json)
             member = r.member
             error = nil
+            myDealsStale = true
             await then?()
         } catch { self.error = error.localizedDescription }
     }
@@ -76,6 +80,7 @@ final class MemberStore: ObservableObject {
         do {
             let r: ChannelsResponse = try await API.call("api/me/channels", method: "PUT", json: ["channels": list])
             if let m = member { member = Member(email: m.email, channels: r.channels, keywords: m.keywords, watch: m.watch, tier: m.tier) }
+            myDealsStale = true
         } catch { self.error = error.localizedDescription }
     }
 
@@ -105,6 +110,7 @@ final class MemberStore: ObservableObject {
             let r: MemberResponse = try await API.call("api/me/watch", method: "POST", json: ["url": url, "label": label, "condition": cond])
             member = r.member
             error = nil
+            myDealsStale = true
             await loadWatchResults()
             notice = member?.watch.last?.status == "checking" ? "Added. We check its price at every collection."
                 : "Added. All your places are in use, so it waits; tap Check this to swap it in."
