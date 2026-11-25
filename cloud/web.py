@@ -211,6 +211,10 @@ members.admin_members(current_admin)
 app.register_blueprint(members.bp)
 import push  # noqa: E402
 app.register_blueprint(push.bp)  # the app registers phones for push notifications
+import account  # noqa: E402
+app.register_blueprint(account.bp)  # members delete their account
+import legal  # noqa: E402
+app.register_blueprint(legal.bp)  # /privacy and /support
 
 
 @app.get("/admin")

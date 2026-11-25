@@ -4,6 +4,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var member: MemberStore
+    @State private var confirmDelete = false
 
     var body: some View {
         NavigationStack {
@@ -28,8 +29,24 @@ struct SettingsView: View {
                             LabeledContent("Plan", value: m.tier.name)
                             Button("Sign out", role: .destructive) { auth.signOut() }
                         }
+                        Section {
+                            Button(role: .destructive) { confirmDelete = true } label: {
+                                if auth.busy { ProgressView() } else { Text("Delete account") }
+                            }
+                        } footer: {
+                            Text("Deletes your account and everything linked to it: shops you follow, search words, watched products and your activity. This can't be undone.")
+                        }
                     }
                     .refreshable { await member.load() }
+                    .confirmationDialog("Delete your Deal Radar account?", isPresented: $confirmDelete, titleVisibility: .visible) {
+                        Button("Delete account", role: .destructive) { Task { _ = await auth.deleteAccount() } }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text("Your follows, search words, watched products and activity are deleted. You'll be asked to confirm your sign-in first.")
+                    }
+                    .alert("Couldn't delete your account", isPresented: Binding(get: { auth.error != nil && auth.signedIn }, set: { if !$0 { auth.error = nil } })) {
+                        Button("OK", role: .cancel) {}
+                    } message: { Text(auth.error ?? "") }
                     .navigationDestination(for: String.self) { id in WordDealsView(id: id) }
                 } else if member.loading {
                     ProgressView("Loading your settings…")

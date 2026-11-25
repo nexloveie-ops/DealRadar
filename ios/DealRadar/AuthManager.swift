@@ -74,6 +74,51 @@ final class AuthManager: ObservableObject {
         }
     }
 
+    /// Deletes the account: the member's data on dealradar.ie, then the sign-in account itself.
+    /// Apple and Firebase ask for a fresh sign-in first; for Sign in with Apple the Apple token is also revoked.
+    func deleteAccount() async -> Bool {
+        guard let user = Auth.auth().currentUser else { return false }
+        busy = true
+        defer { busy = false }
+        let apple = user.providerData.contains { $0.providerID == "apple.com" }
+        do {
+            if apple {
+                let nonce = Self.randomNonce()
+                let cred = try await AppleIDRequester().request(nonce: Self.sha256(nonce))
+                guard let tokenData = cred.identityToken, let token = String(data: tokenData, encoding: .utf8),
+                      let codeData = cred.authorizationCode, let code = String(data: codeData, encoding: .utf8) else {
+                    error = "Apple didn't confirm your sign-in."; return false
+                }
+                try await user.reauthenticate(with: OAuthProvider.appleCredential(withIDToken: token, rawNonce: nonce, fullName: nil))
+                let _: Empty = try await API.call("api/me", method: "DELETE")
+                try await Auth.auth().revokeToken(withAuthorizationCode: code)
+            } else {
+                let _: Empty = try await API.call("api/me", method: "DELETE")
+            }
+            do {
+                try await user.delete()
+            } catch let e as NSError where e.code == AuthErrorCode.requiresRecentLogin.rawValue && !apple {
+                // Google: confirm the account again, then delete.
+                guard let clientID = FirebaseApp.app()?.options.clientID, let root = Self.topViewController() else { throw e }
+                GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
+                let r = try await GIDSignIn.sharedInstance.signIn(withPresenting: root)
+                guard let idToken = r.user.idToken?.tokenString else { throw e }
+                try await user.reauthenticate(with: GoogleAuthProvider.credential(withIDToken: idToken, accessToken: r.user.accessToken.tokenString))
+                try await user.delete()
+            }
+            signOut()
+            error = nil
+            return true
+        } catch let e as ASAuthorizationError where e.code == .canceled {
+            return false
+        } catch let e as NSError where e.domain == kGIDSignInErrorDomain && e.code == GIDSignInError.canceled.rawValue {
+            return false
+        } catch {
+            self.error = "Your account couldn't be deleted: \(error.localizedDescription)"
+            return false
+        }
+    }
+
     func signOut() {
         GIDSignIn.sharedInstance.signOut()
         try? Auth.auth().signOut()
@@ -89,7 +134,7 @@ final class AuthManager: ObservableObject {
         return vc
     }
 
-    private static func randomNonce(length: Int = 32) -> String {
+    static func randomNonce(length: Int = 32) -> String {
         let chars = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
         var out = ""
         var generator = SystemRandomNumberGenerator()
@@ -97,8 +142,44 @@ final class AuthManager: ObservableObject {
         return out
     }
 
-    private static func sha256(_ s: String) -> String {
+    static func sha256(_ s: String) -> String {
         SHA256.hash(data: Data(s.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+/// Asks Apple to confirm the signed-in Apple ID (used before deleting an account).
+@MainActor
+final class AppleIDRequester: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+    private var continuation: CheckedContinuation<ASAuthorizationAppleIDCredential, Error>?
+    private var keep: AppleIDRequester?
+
+    func request(nonce: String) async throws -> ASAuthorizationAppleIDCredential {
+        let req = ASAuthorizationAppleIDProvider().createRequest()
+        req.nonce = nonce
+        let c = ASAuthorizationController(authorizationRequests: [req])
+        c.delegate = self
+        c.presentationContextProvider = self
+        keep = self
+        return try await withCheckedThrowingContinuation { cont in
+            continuation = cont
+            c.performRequests()
+        }
+    }
+
+    nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        MainActor.assumeIsolated { AuthManager.topViewController()?.view.window ?? UIWindow() }
+    }
+
+    nonisolated func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        MainActor.assumeIsolated {
+            if let c = authorization.credential as? ASAuthorizationAppleIDCredential { continuation?.resume(returning: c) }
+            else { continuation?.resume(throwing: ASAuthorizationError(.failed)) }
+            continuation = nil; keep = nil
+        }
+    }
+
+    nonisolated func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        MainActor.assumeIsolated { continuation?.resume(throwing: error); continuation = nil; keep = nil }
     }
 }
 
