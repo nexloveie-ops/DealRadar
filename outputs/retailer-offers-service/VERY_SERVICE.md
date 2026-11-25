@@ -4,7 +4,7 @@ Very.ie 使用独立的 `very.py` 入口、`extensions/very/` 适配器和 `very
 
 ## 收录规则
 
-- 手机、笔记本电脑、平板、显示器、存储五个分类的 All Offers；每页200款，每类默认最多3页，并发最多3。
+- 手机、笔记本电脑、平板、显示器、存储，以及游戏主机和游戏配件（不含游戏软件）的 All Offers；每页200款，每类默认最多3页，并发最多3。
 - 按同一商品版本的 `prices.now.basePrice` 和 `prices.now.origPrice` 计算，金额保存为欧分；折扣必须严格大于20%，不使用 `prices.next` 或其他版本的对比价。
 - 沿用项目确认的 Very 全新零售规则，记录为 `condition=new_inferred`，排除明确标注翻新、二手、展示机等例外。
 - 没有库存信息时 `stock_status=unknown`，不影响收录，不宣称实时有货。

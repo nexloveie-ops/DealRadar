@@ -16,6 +16,10 @@ from .adapter import CATEGORIES, normalize, timestamp, validate_payload
 
 CLIENT_URL = 'https://cnstrc.com/js/cust/the-very-group_MgRYWn.js'
 API_ORIGIN = 'https://wpkmgeuco-zone.cnstrc.com'
+# Very category (Constructor group) -> our category. Games themselves are not collected.
+GROUPS = {'technology-mobile-phones': 'phones', 'technology-laptops': 'computers', 'technology-tablets': 'tablets',
+          'technology-pc-monitors': 'monitors', 'technology-data-storage': 'storage',
+          'gaming-consoles': 'gaming', 'gaming-accessories': 'gaming'}
 
 
 def write_json(path, value):
@@ -36,16 +40,14 @@ def validate_config(config):
     if config['minimum_discount_percent_exclusive'] != 20:
         raise ValueError('Very collection requires discount strictly greater than 20%')
     categories = config['categories']
-    if not isinstance(categories, list) or not 1 <= len(categories) <= 5:
-        raise ValueError('Expected 1–5 Very categories')
+    if not isinstance(categories, list) or not 1 <= len(categories) <= len(GROUPS):
+        raise ValueError(f'Expected 1–{len(GROUPS)} Very categories')
     seen = set()
-    groups = {'phones': 'technology-mobile-phones', 'computers': 'technology-laptops',
-              'tablets': 'technology-tablets', 'monitors': 'technology-pc-monitors', 'storage': 'technology-data-storage'}
     for category in categories:
-        cat = category['category']
-        if cat not in CATEGORIES or cat in seen or category['group_id'] != groups[cat]:
+        cat, group = category['category'], category['group_id']
+        if cat not in CATEGORIES or group in seen or GROUPS.get(group) != cat:
             raise ValueError('Unexpected or duplicate category')
-        seen.add(cat)
+        seen.add(group)
     return config
 
 
@@ -69,7 +71,7 @@ class Client:
     def read(self, url, cache_id):
         p = urllib.parse.urlparse(url)
         if not (url == CLIENT_URL or (p.scheme == 'https' and p.netloc == urllib.parse.urlparse(API_ORIGIN).netloc
-                                     and re.fullmatch(r'/browse/group_id/technology-[a-z-]+', p.path))):
+                                     and re.fullmatch(r'/browse/group_id/(?:technology|gaming)-[a-z-]+', p.path))):
             raise ValueError('Unapproved request URL')
         body_path, meta_path = self.cache/(cache_id+'.body'), self.cache/(cache_id+'.meta.json')
         if self.offline:
@@ -120,7 +122,7 @@ class Client:
         size, complete = self.config['page_size'], False
         expected = None
         for page in range(1, self.config['max_pages_per_category']+1):
-            sid = f'very-{cat}-p{page}'
+            sid = f'very-{cat}-p{page}' if group.startswith('technology-') else f'very-{group}-p{page}'
             query = urllib.parse.urlencode({'key': key, 'section': 'Products', 'page': page,
                                             'num_results_per_page': size, 'filters[offers]': 'all offers'})
             url = API_ORIGIN+'/browse/group_id/'+group+'?'+query
@@ -152,7 +154,7 @@ class Client:
                 sources.append({'id': sid, 'provider_id': 'very', 'url': url, 'fetch_status': 'failed',
                                 'adapter_status': 'failed', 'page': page, 'error': str(exc)[:250]})
                 break
-        coverage = {'category': cat, 'observed_products': len(seen_products), 'reported_products': expected,
+        coverage = {'category': cat, 'group_id': group, 'observed_products': len(seen_products), 'reported_products': expected,
                     'complete': complete, 'page_cap': self.config['max_pages_per_category']}
         return rows, rejected, sources, coverage
 
@@ -164,4 +166,4 @@ class Client:
             for future in concurrent.futures.as_completed(futures):
                 r, e, s, c = future.result()
                 rows.extend(r); rejected.extend(e); sources.extend(s); coverage.append(c)
-        return rows, rejected, sorted(sources, key=lambda s:s['id']), sorted(coverage, key=lambda c:c['category']), bootstrap
+        return rows, rejected, sorted(sources, key=lambda s:s['id']), sorted(coverage, key=lambda c:(c['category'], c['group_id'])), bootstrap

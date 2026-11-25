@@ -1,5 +1,6 @@
 """Normalize public Constructor product variants into the shared retailer format."""
 import copy
+import html
 import re
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
@@ -7,7 +8,7 @@ from urllib.parse import urljoin, urlparse
 
 METHOD = 'direct_storefront_constructor_json'
 NOT_NEW = re.compile(r'refurb|renewed|pre[ -]?owned|ex[ -]?display|display\s+(?:unit|model)|open[ -]?box|used\s+condition|grade\s+[abc]\b', re.I)
-CATEGORIES = {'phones', 'computers', 'tablets', 'monitors', 'storage'}
+CATEGORIES = {'phones', 'computers', 'tablets', 'monitors', 'storage', 'gaming'}
 
 
 def timestamp(value):
@@ -40,6 +41,14 @@ def product_url(value, product_id):
     return url
 
 
+def product_name(brand, value):
+    """Very sends names with HTML entities (&reg;) and often already starting with the brand."""
+    brand, value = (html.unescape(str(x or '')).strip() for x in (brand, value))
+    if brand and value.lower().startswith(brand.lower()):
+        return value
+    return ' '.join(x for x in (brand, value) if x)
+
+
 def validate_payload(payload):
     response = payload.get('response', {})
     total, rows = response.get('total_num_results'), response.get('results')
@@ -67,7 +76,7 @@ def normalize(payload, category, source_id, fetched_at, now, config):
             if not re.fullmatch(r'\d+', pid):
                 raise ValueError('Missing stable product ID')
             url = product_url(data.get('url'), pid)
-            title = ' '.join(str(v) for v in (data.get('brand'), item.get('value')) if v).strip()
+            title = product_name(data.get('brand'), item.get('value'))
             if not title:
                 raise ValueError('Missing product name')
             variants = item.get('variations')

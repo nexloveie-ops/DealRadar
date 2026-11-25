@@ -10,10 +10,33 @@
   "freshness_hours": 24,
   "minimum_discount_percent_exclusive": 20,
   "categories": [
-    {"category": "phones", "group_id": "technology-mobile-phones"},
-    {"category": "computers", "group_id": "technology-laptops"},
-    {"category": "tablets", "group_id": "technology-tablets"},
-    {"category": "monitors", "group_id": "technology-pc-monitors"},
-    {"category": "storage", "group_id": "technology-data-storage"}
+    {
+      "category": "phones",
+      "group_id": "technology-mobile-phones"
+    },
+    {
+      "category": "computers",
+      "group_id": "technology-laptops"
+    },
+    {
+      "category": "tablets",
+      "group_id": "technology-tablets"
+    },
+    {
+      "category": "monitors",
+      "group_id": "technology-pc-monitors"
+    },
+    {
+      "category": "storage",
+      "group_id": "technology-data-storage"
+    },
+    {
+      "category": "gaming",
+      "group_id": "gaming-consoles"
+    },
+    {
+      "category": "gaming",
+      "group_id": "gaming-accessories"
+    }
   ]
 }

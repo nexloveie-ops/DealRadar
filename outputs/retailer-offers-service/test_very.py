@@ -120,6 +120,26 @@ class VeryRules(unittest.TestCase):
             d = copy.deepcopy(CONFIG); d[key] = value
             with self.assertRaises(ValueError): validate_config(d)
 
+    def test_names_unescaped_and_brand_not_repeated(self):
+        from extensions.very.adapter import product_name
+        self.assertEqual(product_name('Playstation', 'PlayStation&reg;5 DualSense&reg; Controller &ndash; White'),
+                         'PlayStation®5 DualSense® Controller – White')
+        self.assertEqual(product_name('Test', 'Laptop'), 'Test Laptop')
+
+    def test_gaming_consoles_and_accessories_only(self):
+        self.assertIn({'category': 'gaming', 'group_id': 'gaming-consoles'}, CONFIG['categories'])
+        self.assertIn({'category': 'gaming', 'group_id': 'gaming-accessories'}, CONFIG['categories'])
+        for bad in [{'category': 'gaming', 'group_id': 'gaming-games'},            # games are not collected
+                    {'category': 'phones', 'group_id': 'gaming-consoles'},         # wrong category for the group
+                    {'category': 'gaming', 'group_id': 'gaming-consoles'}]:        # duplicate group
+            d = copy.deepcopy(CONFIG); d['categories'].append(bad)
+            with self.assertRaises(ValueError): validate_config(d)
+        offers, _ = normalize(payload(), 'gaming', 'very-gaming-consoles-p1', NOW.isoformat(), NOW, CONFIG)
+        self.assertEqual(offers[0]['product']['category'], 'gaming')
+        client = Client(CONFIG, tempfile.mkdtemp(), offline=False)
+        with self.assertRaises(ValueError):
+            client.read('https://wpkmgeuco-zone.cnstrc.com/browse/group_id/clothing-dresses?key=k', 'x')
+
     def test_repeated_page_is_not_complete(self):
         config = copy.deepcopy(CONFIG); config['page_size'] = 1
         with tempfile.TemporaryDirectory() as td:
