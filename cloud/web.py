@@ -215,6 +215,10 @@ import account  # noqa: E402
 app.register_blueprint(account.bp)  # members delete their account
 import legal  # noqa: E402
 app.register_blueprint(legal.bp)  # /privacy and /support
+import amazon_queue  # noqa: E402
+
+amazon_queue.init(db, cached_settings, lambda: members.searching_words_for_collector(db, cached_settings))
+app.register_blueprint(amazon_queue.bp)  # Cloud Scheduler: one Amazon search every N minutes
 
 
 @app.get("/admin")

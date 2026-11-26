@@ -30,6 +30,7 @@ sys.path.insert(0, str(APP / "cloud"))
 import settings as admin_settings  # noqa: E402
 import members  # noqa: E402
 import push  # noqa: E402
+import amazon_queue  # noqa: E402
 
 BATCH = 400
 RUN_RECORD_DAYS = 7  # run records in Firestore; the bucket keeps runs/ and evidence/ for 7 days too
@@ -256,6 +257,20 @@ def main():
         if "harvey_norman" in specs:
             (work / "member-words-hn.json").write_text(json.dumps(searching))
             specs["harvey_norman"]["args"] = specs["harvey_norman"]["args"] + ["--member-keywords", str(work / "member-words-hn.json")]
+        # The Amazon search queue (amazon_queue.py) searches one word every few minutes; when it is on, the Amazon
+        # collector lists its saved results instead of searching itself.
+        if specs.get("amazon", {}).get("script") == "amazon_direct.py":
+            try:
+                q = db.collection("settings").document("amazon_queue").get()
+                if q.exists and (q.to_dict() or {}).get("enabled"):
+                    valid = float(json.loads((OUTPUTS / "amazon-offers-service/config.json").read_text())
+                                  .get("direct", {}).get("price_valid_hours", 36))
+                    pool = amazon_queue.pool_for_collector(db, datetime.now(timezone.utc), valid)
+                    (work / "amazon-search-pool.json").write_text(json.dumps(pool))
+                    specs["amazon"]["args"] = specs["amazon"]["args"] + ["--search-pool", str(work / "amazon-search-pool.json")]
+                    print(f"amazon search queue: {len(pool)} saved searches", flush=True)
+            except Exception as exc:
+                print("amazon search queue not read; the collector searches itself:", exc, flush=True)
     watch_items, watch_keep = [], None  # None: not loaded, so existing check results are left alone
     if not args.load_only:
         try:

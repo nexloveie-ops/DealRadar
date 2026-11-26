@@ -156,6 +156,8 @@ def main():
                     "Searched in a small separate slot; their results go to member-offers.json, never to the public offers.")
     ap.add_argument("--watch", help="ASINs members watch (JSON [{key, url}], oldest-checked first). Checked after the searches: "
                     "product page first, then a search for the ASIN if the page hides the price and searches are left.")
+    ap.add_argument("--search-pool", help="Search results saved by the search queue (cloud/amazon_queue.py; JSON "
+                    "[{word_id, query, searched_at, rows}]). When given, these are used instead of searching here.")
     ap.add_argument("--previous", help="Previous amazon_direct offers.json: re-checked first, and kept until expiry if not reached")
     args = ap.parse_args()
     started, now = time.monotonic(), datetime.now(timezone.utc)
@@ -258,6 +260,7 @@ def main():
         listed.add(h["asin"])
         checked.add(h["asin"])
         img = image or h.get("image_url")
+        observed = h.get("observed") or observed  # a queued search: the price is as of that search, not this run
         offers.append({
             "id": "ie-amazon-" + h["asin"], "module_id": "amazon_promotions", "provider_id": "amazon_ie", "provider_name": "Amazon.ie",
             "country": "IE", "currency": "EUR", "offer_kind": "product_discount",
@@ -331,6 +334,22 @@ def main():
     # last time go first, then the ones searched longest ago (never searched first), so every word gets its turn.
     search_order = plan_searches(keywords + member_kws, stats, max_searches)
     hits = {}
+    pool = json.loads(Path(args.search_pool).read_text()) if args.search_pool and Path(args.search_pool).exists() else None
+    if pool is not None:
+        # The search queue has already searched, one word every few minutes; take its saved results instead.
+        search_order = []
+        for p in pool:
+            seen = datetime.fromisoformat(p["searched_at"])
+            qualifying = 0
+            for r in p.get("rows", []):
+                _, pct = exact_discount(r.get("price_minor"), r.get("strike_minor"))
+                if pct is not None and pct > bar([p["word_id"]]) and not NOT_NEW.search(r.get("title") or ""):
+                    qualifying += 1
+                    h = hits.setdefault(r["asin"], {**r, "keywords": set(), "origin": "amazon_search", "observed": seen})
+                    h["keywords"].add(p["word_id"])
+                    h["observed"] = min(h["observed"], seen)
+            report["searches"].append({"keyword_id": p["word_id"], "results": len(p.get("rows", [])), "qualifying": qualifying,
+                                       "searched_at": p["searched_at"], "from_queue": True})
     try:
         # 0. Re-check every Amazon deal confirmed before, so earlier finds stay current.
         for o in previous:

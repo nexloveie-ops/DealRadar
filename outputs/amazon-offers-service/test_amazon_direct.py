@@ -75,6 +75,36 @@ class SearchListingFallback(unittest.TestCase):
         self.assertEqual(got["B000000002"]["verification"]["method"], "amazon_search_listing")
 
 
+class SearchQueuePool(unittest.TestCase):
+    """With --search-pool the collector does no searches: it lists the queue's saved results, priced as of that search."""
+
+    def test_pool_rows_listed_without_searching(self):
+        import json, sys, tempfile
+        from unittest import mock
+        pool = [{"word_id": "jbl", "query": "jbl", "searched_at": "2026-11-26T09:00:00+00:00",
+                 "rows": [{"asin": "B000000001", "title": "JBL Tune 670NC headphones", "price_minor": 4000, "strike_minor": 10000,
+                           "image_url": None, "sponsored": False},
+                          {"asin": "B000000003", "title": "JBL Go speaker", "price_minor": 9000, "strike_minor": 10000,
+                           "image_url": None, "sponsored": False}]}]
+        calls = []
+
+        def get(self, url, key):
+            calls.append(url)
+            raise ad.Blocked(f"HTTP 503 at {url}")
+
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(ad.Fetcher, "get", get), mock.patch("time.sleep"):
+            open(d + "/pool.json", "w").write(json.dumps(pool))
+            with mock.patch.object(sys, "argv", ["x", "--cache", d + "/c", "--out", d + "/o", "--search-pool", d + "/pool.json"]):
+                ad.main()
+            out = json.loads(open(d + "/o/offers.json").read())["offers"]
+            report = json.loads(open(d + "/o/run-report.json").read())
+        self.assertFalse([u for u in calls if "/s?" in u])  # no searches of its own
+        self.assertEqual([o["product"]["asin"] for o in out], ["B000000001"])
+        v = out[0]["verification"]
+        self.assertEqual((v["method"], v["verified_at"]), ("amazon_search_listing", "2026-11-26T09:00:00+00:00"))
+        self.assertEqual(report["searches"][0]["from_queue"], True)
+
+
 class SearchPlan(unittest.TestCase):
     def test_productive_first_then_stalest(self):
         kws = [{"id": i} for i in "abcdef"]
